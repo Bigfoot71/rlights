@@ -92,6 +92,9 @@ int main(void)
         EndDrawing();
     }
 
+    UnloadModel(cube);
+    UnloadModel(plane);
+
     RLG_Close();
     CloseWindow();
 
