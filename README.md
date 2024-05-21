@@ -1,6 +1,6 @@
 # rlights.h
 
-`rlights.h` is a single-header library that provides a simple implementation of a lighting system for [raylib](https://www.raylib.com/). This library supports directional lights, omni-directional lights, and spotlights, as well as normal mapping to enhance the realism of your scenes.
+`rlights.h` is a single-header library that provides a simple implementation of a lighting system for [raylib](https://www.raylib.com/).
 
 ## Features
 - **Directional Lights**: Simulate sunlight or other distant light sources.
