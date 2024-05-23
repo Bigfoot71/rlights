@@ -3,6 +3,44 @@
 
 #include <raylib.h>
 
+#ifndef GLSL_VERSION
+#   ifdef PLATFORM_DESKTOP
+#       define GLSL_VERSION 330
+#   else
+#       define GLSL_VERSION 100
+#   endif //PLATFORM
+#endif //GLSL_VERSION
+
+#if GLSL_VERSION == 100
+
+#   define GLSL_VERSION_DEF     "#version 100\n"
+#   define GLSL_TEXTURE_DEF     "#define TEX texture2D\n"
+#   define GLSL_FS_OUT_DEF      ""
+
+#   define GLSL_FINAL_COLOR(x)  "gl_FragColor = " x ";"
+#   define GLSL_PRECISION(x)    "precision " x ";"
+
+#   define GLSL_VS_IN(x)        "attribute " x ";"
+#   define GLSL_FS_IN(x)        "varying " x ";"
+#   define GLSL_VS_OUT(x)       "varying " x ";"
+
+#elif GLSL_VERSION == 330
+
+#   define GLSL_VERSION_DEF     "#version 330\n"
+#   define GLSL_TEXTURE_DEF     "#define TEX texture\n"
+#   define GLSL_FS_OUT_DEF      "out vec4 _;"
+
+#   define GLSL_FINAL_COLOR(x)  "_ = " x ";"
+#   define GLSL_PRECISION(x)    ""
+
+#   define GLSL_VS_IN(x)        "in " x ";"
+#   define GLSL_FS_IN(x)        "in " x ";"
+#   define GLSL_VS_OUT(x)       "out " x ";"
+
+#else
+#   error "GLSL version not supported"
+#endif
+
 typedef enum {
     RLG_DIRECTIONAL,
     RLG_OMNILIGHT,
@@ -138,25 +176,24 @@ void RLG_DrawModelEx(Model model, Vector3 position, Vector3 rotationAxis, float 
  * specific case.
  */
 
-static const char rlgLightVS[] =
-    "#version 100\n"
+static const char rlgLightVS[] = GLSL_VERSION_DEF
 
-    "attribute vec3 vertexPosition;"
-    "attribute vec2 vertexTexCoord;"
-    "attribute vec4 vertexTangent;"
-    "attribute vec3 vertexNormal;"
-    "attribute vec4 vertexColor;"
+    GLSL_VS_IN("vec3 vertexPosition")
+    GLSL_VS_IN("vec2 vertexTexCoord")
+    GLSL_VS_IN("vec4 vertexTangent")
+    GLSL_VS_IN("vec3 vertexNormal")
+    GLSL_VS_IN("vec4 vertexColor")
 
     "uniform lowp int useNormalMap;"
     "uniform mat4 matNormal;"
     "uniform mat4 matModel;"
     "uniform mat4 mvp;"
 
-    "varying vec3 fragPosition;"
-    "varying vec2 fragTexCoord;"
-    "varying vec3 fragNormal;"
-    "varying vec4 fragColor;"
-    "varying mat3 TBN;"
+    GLSL_VS_OUT("vec3 fragPosition")
+    GLSL_VS_OUT("vec2 fragTexCoord")
+    GLSL_VS_OUT("vec3 fragNormal")
+    GLSL_VS_OUT("vec4 fragColor")
+    GLSL_VS_OUT("mat3 TBN")
 
     "void main()"
     "{"
@@ -176,21 +213,21 @@ static const char rlgLightVS[] =
         "gl_Position = mvp*vec4(vertexPosition, 1.0);"
     "}";
 
-static const char rlgLightFS[] =
-    "#version 100\n"
+static const char rlgLightFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
+
     "#define NUM_LIGHTS %i\n"
 
     "#define DIRECTIONAL_LIGHT  0\n"
     "#define OMNI_LIGHT         1\n"
     "#define SPOT_LIGHT         2\n"
 
-    "precision mediump float;"
-
-    "varying vec3 fragPosition;"
-    "varying vec2 fragTexCoord;"
-    "varying vec3 fragNormal;"
-    "varying vec4 fragColor;"
-    "varying mat3 TBN;"
+    GLSL_PRECISION("mediump float")
+    GLSL_FS_IN("vec3 fragPosition")
+    GLSL_FS_IN("vec2 fragTexCoord")
+    GLSL_FS_IN("vec3 fragNormal")
+    GLSL_FS_IN("vec4 fragColor")
+    GLSL_FS_IN("mat3 TBN")
+    GLSL_FS_OUT_DEF
 
     "struct Light {"
         "sampler2D shadowMap;"      ///< Sampler for the shadow map texture
@@ -205,7 +242,7 @@ static const char rlgLightFS[] =
         "float linear;"             ///< Linear attenuation factor
         "float quadratic;"          ///< Quadratic attenuation factor
         "float shadowMapTxlSz;"     ///< Texel size of the shadow map
-        "float depthBias;"         ///< Bias value to avoid self-shadowing artifacts
+        "float depthBias;"          ///< Bias value to avoid self-shadowing artifacts
         "lowp int type;"            ///< Type of the light (e.g., point, directional, spotlight)
         "lowp int shadow;"          ///< Indicates if the light casts shadows (1 for true, 0 for false)
         "lowp int active;"          ///< Indicates if the light is active (1 for true, 0 for false)
@@ -248,7 +285,7 @@ static const char rlgLightFS[] =
         "{"
             "for (int y = -1; y <= 1; y++)"
             "{"
-                "float pcfDepth = texture2D(lights[i].shadowMap, projCoords.xy + vec2(x, y)*lights[i].shadowMapTxlSz).r; "
+                "float pcfDepth = TEX(lights[i].shadowMap, projCoords.xy + vec2(x, y)*lights[i].shadowMapTxlSz).r; "
                 "shadow += step(depth, pcfDepth);"
             "}"
         "}"
@@ -259,8 +296,8 @@ static const char rlgLightFS[] =
     "void main()"
     "{"
         // get texture samples
-        "vec3 diffSample = texture2D(texture0, fragTexCoord).rgb*colDiffuse.rgb*fragColor.rgb;"
-        "vec3 specSample = (useSpecularMap != 0) ? texture2D(texture1, fragTexCoord).rgb*colSpecular : colSpecular;"
+        "vec3 diffSample = TEX(texture0, fragTexCoord).rgb*colDiffuse.rgb*fragColor.rgb;"
+        "vec3 specSample = (useSpecularMap != 0) ? TEX(texture1, fragTexCoord).rgb*colSpecular : colSpecular;"
 
         // ambient
         "vec3 ambientColor = colAmbient*diffSample;"
@@ -268,7 +305,7 @@ static const char rlgLightFS[] =
         // compute normals
         "vec3 normal;"
         "if (useNormalMap == 0) normal = normalize(fragNormal);"
-        "else normal = normalize(TBN*(texture2D(texture2, fragTexCoord).rgb*2.0 - 1.0));"
+        "else normal = normalize(TBN*(TEX(texture2, fragTexCoord).rgb*2.0 - 1.0));"
 
         // compute current view dir for this frag
         "vec3 viewDir = normalize(viewPos - fragPosition);"
@@ -314,36 +351,33 @@ static const char rlgLightFS[] =
             "}"
         "}"
 
-        "gl_FragColor = vec4(ambientColor + finalColor, 1.0);"
+        GLSL_FINAL_COLOR("vec4(ambientColor + finalColor, 1.0)")
     "}";
 
-static const char rlgDepthVS[] =
-    "#version 100\n"
-    "attribute vec3 vertexPosition;"
+static const char rlgDepthVS[] = GLSL_VERSION_DEF
+    GLSL_VS_IN("vec3 vertexPosition")
     "uniform mat4 mvp;"
     "void main()"
     "{"
         "gl_Position = mvp*vec4(vertexPosition, 1.0);"
     "}";
 
-static const char rlgDepthFS[] =
-    "#version 100\n"
-    "precision mediump float;"
+static const char rlgDepthFS[] = GLSL_VERSION_DEF
+    GLSL_PRECISION("mediump float")
     "void main()"
     "{"
         "gl_FragDepth = gl_FragCoord.z;"
     "}";
 
-static const char rlgShadowMapFS[] =
-    "#version 100\n"
-    "precision mediump float;"
-    "varying vec2 fragTexCoord;"
+static const char rlgShadowMapFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
+    GLSL_PRECISION("mediump float")
+    GLSL_FS_IN("vec2 fragTexCoord")
     "uniform sampler2D texture0;"
     "uniform float near;"
     "uniform float far;"
     "void main()"
     "{"
-        "float depth = texture2D(texture0, vec2(fragTexCoord.x, 1.0 - fragTexCoord.y)).r;"
+        "float depth = TEX(texture0, vec2(fragTexCoord.x, 1.0 - fragTexCoord.y)).r;"
         "depth = (2.0*near*far)/(far + near - (depth*2.0 - 1.0)*(far - near));"
         "gl_FragColor = vec4(vec3(depth/far), 1.0);"
     "}";
@@ -507,7 +541,7 @@ void RLG_Init(unsigned int count)
             .linear         = 0.0f,
             .quadratic      = 0.0f,
             .shadowMapTxlSz = 0.0f,
-            .depthBias     = 0.0f,
+            .depthBias      = 0.0f,
             .type           = RLG_DIRECTIONAL,
             .shadow         = 0,
             .active         = 0
