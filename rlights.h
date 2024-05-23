@@ -366,9 +366,11 @@ static const char rlgDepthVS[] = GLSL_VERSION_DEF
 
 static const char rlgDepthFS[] = GLSL_VERSION_DEF
     GLSL_PRECISION("mediump float")
+    GLSL_FS_OUT_DEF
     "void main()"
     "{"
-        "gl_FragDepth = gl_FragCoord.z;"
+        //"gl_FragDepth = gl_FragCoord.z;" ///< Seems to cause problems on some hardware
+        GLSL_FINAL_COLOR("vec4(gl_FragCoord.z)")
     "}";
 
 static const char rlgShadowMapFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
