@@ -24,7 +24,8 @@ Here's a basic example demonstrating how to set up and use `rlights.h` with rayl
 #include "raylib.h"
 
 #define RLIGHTS_IMPLEMENTATION
-#include "../rlights.h"
+#define GLSL_VERSION 330        ///< or 120/130/etc.. 100 is default if 'PLATFORM_DESKTOP' is not defined
+#include "rlights.h"
 
 int main(void)
 {

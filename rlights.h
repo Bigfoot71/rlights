@@ -11,9 +11,14 @@
 #   endif //PLATFORM
 #endif //GLSL_VERSION
 
-#if GLSL_VERSION == 100
+#define STRINGIFY(x) #x             ///< Undef after shader definitions
+#define TOSTRING(x) STRINGIFY(x)    ///< Undef after shader definitions
 
-#   define GLSL_VERSION_DEF     "#version 100\n"
+#define GLSL_VERSION_DEF \
+    "#version " TOSTRING(GLSL_VERSION) "\n"
+
+#if GLSL_VERSION < 330
+
 #   define GLSL_TEXTURE_DEF     "#define TEX texture2D\n"
 #   define GLSL_FS_OUT_DEF      ""
 
@@ -24,9 +29,8 @@
 #   define GLSL_FS_IN(x)        "varying " x ";"
 #   define GLSL_VS_OUT(x)       "varying " x ";"
 
-#elif GLSL_VERSION == 330
+#else
 
-#   define GLSL_VERSION_DEF     "#version 330\n"
 #   define GLSL_TEXTURE_DEF     "#define TEX texture\n"
 #   define GLSL_FS_OUT_DEF      "out vec4 _;"
 
@@ -37,8 +41,6 @@
 #   define GLSL_FS_IN(x)        "in " x ";"
 #   define GLSL_VS_OUT(x)       "out " x ";"
 
-#else
-#   error "GLSL version not supported"
 #endif
 
 typedef enum {
@@ -381,6 +383,9 @@ static const char rlgShadowMapFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
         "depth = (2.0*near*far)/(far + near - (depth*2.0 - 1.0)*(far - near));"
         "gl_FragColor = vec4(vec3(depth/far), 1.0);"
     "}";
+
+#undef TOSTRING
+#undef STRINGIFY
 
 /* Types definitions */
 
