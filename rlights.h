@@ -205,7 +205,7 @@ static const char rlgLightFS[] =
         "float linear;"             ///< Linear attenuation factor
         "float quadratic;"          ///< Quadratic attenuation factor
         "float shadowMapTxlSz;"     ///< Texel size of the shadow map
-        "float shadowBias;"         ///< Bias value to avoid self-shadowing artifacts
+        "float depthBias;"         ///< Bias value to avoid self-shadowing artifacts
         "lowp int type;"            ///< Type of the light (e.g., point, directional, spotlight)
         "lowp int shadow;"          ///< Indicates if the light casts shadows (1 for true, 0 for false)
         "lowp int active;"          ///< Indicates if the light is active (1 for true, 0 for false)
@@ -233,7 +233,7 @@ static const char rlgLightFS[] =
 
         "vec3 projCoords = p.xyz/p.w;"
         "projCoords = projCoords*0.5 + 0.5;"
-        "projCoords.z -= lights[i].shadowBias;" ///< * distance(lights[i].position, fragPosition) * X
+        "projCoords.z -= lights[i].depthBias;" ///< * distance(lights[i].position, fragPosition) * X
 
         "if (projCoords.z > 1.0 || projCoords.x > 1.0 || projCoords.y > 1.0)"
         "{"
@@ -393,7 +393,7 @@ struct RLG_LightLocs
     int linear;
     int quadratic;
     int shadowMapTxlSz;
-    int shadowBias;
+    int depthBias;
     int type;
     int shadow;
     int active;
@@ -412,7 +412,7 @@ struct RLG_Light
     float linear;
     float quadratic;
     float shadowMapTxlSz;
-    float shadowBias;
+    float depthBias;
     int type;
     int shadow;
     int active;
@@ -507,7 +507,7 @@ void RLG_Init(unsigned int count)
             .linear         = 0.0f,
             .quadratic      = 0.0f,
             .shadowMapTxlSz = 0.0f,
-            .shadowBias     = 0.0f,
+            .depthBias     = 0.0f,
             .type           = RLG_DIRECTIONAL,
             .shadow         = 0,
             .active         = 0
@@ -525,7 +525,7 @@ void RLG_Init(unsigned int count)
         locs->linear         = GetShaderLocation(RLG.lightShader, TextFormat("lights[%i].linear", i));
         locs->quadratic      = GetShaderLocation(RLG.lightShader, TextFormat("lights[%i].quadratic", i));
         locs->shadowMapTxlSz = GetShaderLocation(RLG.lightShader, TextFormat("lights[%i].shadowMapTxlSz", i));
-        locs->shadowBias     = GetShaderLocation(RLG.lightShader, TextFormat("lights[%i].shadowBias", i));
+        locs->depthBias      = GetShaderLocation(RLG.lightShader, TextFormat("lights[%i].depthBias", i));
         locs->type           = GetShaderLocation(RLG.lightShader, TextFormat("lights[%i].type", i));
         locs->shadow         = GetShaderLocation(RLG.lightShader, TextFormat("lights[%i].shadow", i));
         locs->active         = GetShaderLocation(RLG.lightShader, TextFormat("lights[%i].active", i));
@@ -1232,9 +1232,9 @@ void RLG_EnableLightShadow(unsigned int light, int shadowMapResolution)
         //       A better approach would be to calculate the bias in the shader,
         //       taking into account factors such as the distance between the
         //       light and the fragment position.
-        l->shadowBias = 0.1f*shadowMapResolution*tan(acosf(l->outerCutOff));
-        SetShaderValue(RLG.lightShader, RLG.locsLights[light].shadowBias,
-            &l->shadowBias, SHADER_UNIFORM_FLOAT);
+        l->depthBias = 0.1f*shadowMapResolution*tan(acosf(l->outerCutOff));
+        SetShaderValue(RLG.lightShader, RLG.locsLights[light].depthBias,
+            &l->depthBias, SHADER_UNIFORM_FLOAT);
     }
 
     l->shadow = 1;
@@ -1274,8 +1274,8 @@ void RLG_SetLightShadowBias(unsigned int light, float value)
         return;
     }
 
-    RLG.lights[light].shadowBias = value;
-    SetShaderValue(RLG.lightShader, RLG.locsLights[light].shadowBias,
+    RLG.lights[light].depthBias = value;
+    SetShaderValue(RLG.lightShader, RLG.locsLights[light].depthBias,
         &value, SHADER_UNIFORM_FLOAT);
 }
 
@@ -1287,7 +1287,7 @@ float RLG_GetLightShadowBias(unsigned int light)
         return 0;
     }
 
-    return RLG.lights[light].shadowBias;
+    return RLG.lights[light].depthBias;
 }
 
 // TODO: Review the operation for the CSM
