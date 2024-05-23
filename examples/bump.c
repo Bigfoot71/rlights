@@ -26,16 +26,13 @@ int main(void)
 
     // Init light system
     RLG_Init(1);
-    RLG_SetSpecular(0.2f);
     RLG_EnableNormalMap();
+    RLG_SetSpecular(0.2f, 0.2f, 0.2f);
 
     RLG_EnableLight(0);
     RLG_SetLightInnerCutOff(0, 17.5f);
     RLG_SetLightOuterCutOff(0, 27.5f);
     RLG_SetLightType(0, RLG_SPOTLIGHT);
-
-    // Set lighting shader to the model
-    model.materials[0].shader = *RLG_GetShader();
 
     // Load and set textures for the model
     Texture2D diffuse = LoadTexture("resources/atlas_albedo.png");
@@ -63,7 +60,7 @@ int main(void)
             ClearBackground(RAYWHITE);
 
             BeginMode3D(camera);
-                DrawModel(model, Vector3Zero(), 1.0f, WHITE);
+                RLG_DrawModel(model, Vector3Zero(), 1.0f, WHITE);
             EndMode3D();
 
             DrawFPS(10, 10);

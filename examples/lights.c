@@ -22,7 +22,7 @@ int main(void)
 
     // Init light system
     RLG_Init(4);
-    RLG_SetSpecular(0.2f);
+    RLG_SetSpecular(0.2f, 0.2f, 0.2f);
 
     RLG_EnableLight(0);
     RLG_SetLightDiffuseC(0, YELLOW);
@@ -48,9 +48,6 @@ int main(void)
     Model cube = LoadModelFromMesh(GenMeshCube(2.0f, 4.0f, 2.0f));
     Model plane = LoadModelFromMesh(GenMeshPlane(10.0f, 10.0f, 1, 1));
 
-    cube.materials[0].shader = *RLG_GetShader();
-    plane.materials[0].shader = *RLG_GetShader();
-
     // Main game loop
     SetTargetFPS(60);
     while (!WindowShouldClose())
@@ -72,8 +69,8 @@ int main(void)
 
             BeginMode3D(camera);
 
-                DrawModel(plane, Vector3Zero(), 1.0f, WHITE);
-                DrawModel(cube, Vector3Zero(), 1.0f, WHITE);
+                RLG_DrawModel(plane, Vector3Zero(), 1.0f, WHITE);
+                RLG_DrawModel(cube, Vector3Zero(), 1.0f, WHITE);
 
                 // Draw spheres to show where the lights are
                 for (int i = 0; i < RLG_GetLightcount(); i++)
