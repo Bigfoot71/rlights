@@ -247,7 +247,7 @@ static const char rlgLightFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
         "float depthBias;"          ///< Bias value to avoid self-shadowing artifacts
         "lowp int type;"            ///< Type of the light (e.g., point, directional, spotlight)
         "lowp int shadow;"          ///< Indicates if the light casts shadows (1 for true, 0 for false)
-        "lowp int active;"          ///< Indicates if the light is active (1 for true, 0 for false)
+        "lowp int enabled;"         ///< Indicates if the light is active (1 for true, 0 for false)
     "};"
 
     "uniform Light lights[NUM_LIGHTS];"
@@ -316,7 +316,7 @@ static const char rlgLightFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
         "vec3 finalColor = vec3(0.0);"
         "for (int i = 0; i < NUM_LIGHTS; i++)"
         "{"
-            "if (lights[i].active != 0)"
+            "if (lights[i].enabled != 0)"
             "{"
                 // get lightDir
                 "vec3 lightDir = (lights[i].type != DIRECTIONAL_LIGHT)"
@@ -435,7 +435,7 @@ struct RLG_LightLocs
     int depthBias;
     int type;
     int shadow;
-    int active;
+    int enabled;
 };
 
 struct RLG_Light
@@ -454,7 +454,7 @@ struct RLG_Light
     float depthBias;
     int type;
     int shadow;
-    int active;
+    int enabled;
 };
 
 struct RLG_ShadowMapShaderData
@@ -549,7 +549,7 @@ void RLG_Init(unsigned int count)
             .depthBias      = 0.0f,
             .type           = RLG_DIRECTIONAL,
             .shadow         = 0,
-            .active         = 0
+            .enabled        = 0
         };
 
         locs->shadowMap      = GetShaderLocation(RLG.lightShader, TextFormat("lights[%i].shadowMap", i));
@@ -567,7 +567,7 @@ void RLG_Init(unsigned int count)
         locs->depthBias      = GetShaderLocation(RLG.lightShader, TextFormat("lights[%i].depthBias", i));
         locs->type           = GetShaderLocation(RLG.lightShader, TextFormat("lights[%i].type", i));
         locs->shadow         = GetShaderLocation(RLG.lightShader, TextFormat("lights[%i].shadow", i));
-        locs->active         = GetShaderLocation(RLG.lightShader, TextFormat("lights[%i].active", i));
+        locs->enabled        = GetShaderLocation(RLG.lightShader, TextFormat("lights[%i].enabled", i));
 
         SetShaderValue(RLG.lightShader, locs->diffuse, &light->diffuse, SHADER_UNIFORM_VEC3);
         SetShaderValue(RLG.lightShader, locs->specular, &light->specular, SHADER_UNIFORM_VEC3);
@@ -820,9 +820,9 @@ void RLG_ToggleLight(unsigned int light)
         return;
     }
 
-    RLG.lights[light].active = !RLG.lights[light].active;
-    SetShaderValue(RLG.lightShader, RLG.locsLights[light].active,
-        &RLG.lights[light].active, SHADER_UNIFORM_INT);
+    RLG.lights[light].enabled = !RLG.lights[light].enabled;
+    SetShaderValue(RLG.lightShader, RLG.locsLights[light].enabled,
+        &RLG.lights[light].enabled, SHADER_UNIFORM_INT);
 }
 
 void RLG_EnableLight(unsigned int light)
@@ -833,9 +833,9 @@ void RLG_EnableLight(unsigned int light)
         return;
     }
 
-    RLG.lights[light].active = 1;
-    SetShaderValue(RLG.lightShader, RLG.locsLights[light].active,
-        &RLG.lights[light].active, SHADER_UNIFORM_INT);
+    RLG.lights[light].enabled = 1;
+    SetShaderValue(RLG.lightShader, RLG.locsLights[light].enabled,
+        &RLG.lights[light].enabled, SHADER_UNIFORM_INT);
 }
 
 void RLG_DisableLight(unsigned int light)
@@ -846,9 +846,9 @@ void RLG_DisableLight(unsigned int light)
         return;
     }
 
-    RLG.lights[light].active = 0;
-    SetShaderValue(RLG.lightShader, RLG.locsLights[light].active,
-        &RLG.lights[light].active, SHADER_UNIFORM_INT);
+    RLG.lights[light].enabled = 0;
+    SetShaderValue(RLG.lightShader, RLG.locsLights[light].enabled,
+        &RLG.lights[light].enabled, SHADER_UNIFORM_INT);
 }
 
 bool RLG_IsLightEnabled(unsigned int light)
@@ -859,7 +859,7 @@ bool RLG_IsLightEnabled(unsigned int light)
         return false;
     }
 
-    return (bool)RLG.lights[light].active;
+    return (bool)RLG.lights[light].enabled;
 }
 
 void RLG_SetLightType(unsigned int light, RLG_LightType type)
