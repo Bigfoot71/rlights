@@ -39,7 +39,7 @@ int main(void)
     RLG_SetSpecular(0.5f, 0.5f, 0.5f);
     RLG_SetViewPositionV(camera.position);
 
-    for (int i = 0; i < 2; i++)
+    for (int i = 0; i < RLG_GetLightcount(); i++)
     {
         RLG_EnableLight(i);
         RLG_SetLightType(i, RLG_SPOTLIGHT);
