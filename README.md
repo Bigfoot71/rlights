@@ -8,6 +8,7 @@
 - **Spotlights**: Lights with a specific direction and cone of influence.
 - **Normal Mapping**: Adds depth and detail to surfaces without increasing polygon count.
 - **Shadow Mapping**: Allows the rendering of cast shadows in your scenes.
+- **Integrated Shaders**: The header already contains all the shaders, but you can also use your own shaders.
 
 ## Usage
 Using `rlights.h` is straightforward. Include the header file in your project with the following setup:

@@ -21,8 +21,12 @@ typedef enum {
 extern "C" {
 #endif
 
-void RLG_Init(unsigned int count);
+void RLG_Init(unsigned int lightCount);
 void RLG_Close(void);
+
+void RLG_SetLightingShaderCode(const char *vsCode, const char *fsCode);
+void RLG_SetDepthShaderCode(const char *vsCode, const char *fsCode);
+void RLG_SetShadowMapShaderCode(const char *vsCode, const char *fsCode);
 
 const Shader* RLG_GetLightShader(void);
 const Shader* RLG_GetDepthShader(void);
@@ -135,6 +139,8 @@ void RLG_DrawModelEx(Model model, Vector3 position, Vector3 rotationAxis, float 
 #include <stdio.h>
 #include <rlgl.h>
 
+#ifndef NO_EMBEDDED_SHADERS
+
 #define STRINGIFY(x) #x             ///< Undef after shader definitions
 #define TOSTRING(x) STRINGIFY(x)    ///< Undef after shader definitions
 
@@ -180,7 +186,7 @@ static const char rlgLightVS[] = GLSL_VERSION_DEF
 #   if GLSL_VERSION > 100
     "#define NUM_LIGHTS %i\n"
     "uniform mat4 matLights[NUM_LIGHTS];"
-    GLSL_VS_OUT("vec4 fragPosLightSpace[NUM_LIGHTS];")
+    GLSL_VS_OUT("vec4 fragPosLightSpace[NUM_LIGHTS]")
 #   endif
 
     GLSL_VS_IN("vec3 vertexPosition")
@@ -236,7 +242,7 @@ static const char rlgLightFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
     GLSL_PRECISION("mediump float")
 
 #   if GLSL_VERSION > 100
-    GLSL_FS_IN("vec4 fragPosLightSpace[NUM_LIGHTS];")
+    GLSL_FS_IN("vec4 fragPosLightSpace[NUM_LIGHTS]")
 #   else
     "uniform mat4 matLights[NUM_LIGHTS];"
 #   endif
@@ -293,7 +299,7 @@ static const char rlgLightFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
 
         "vec3 projCoords = p.xyz/p.w;"
         "projCoords = projCoords*0.5 + 0.5;"
-        "projCoords.z -= lights[i].depthBias;" ///< * distance(lights[i].position, fragPosition) * X
+        "projCoords.z -= lights[i].depthBias;"
 
         "if (projCoords.z > 1.0 || projCoords.x > 1.0 || projCoords.y > 1.0)"
         "{"
@@ -410,6 +416,8 @@ static const char rlgShadowMapFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
 #undef TOSTRING
 #undef STRINGIFY
 
+#endif //NO_EMBEDDED_SHADERS
+
 /* Types definitions */
 
 struct RLG_GlobalLightLocs
@@ -503,6 +511,21 @@ static struct RLG_Core
 }
 RLG = { 0 };
 
+#ifndef NO_EMBEDDED_SHADERS
+    static const char *rlgCachedLightVS     = rlgLightVS;
+    static const char *rlgCachedLightFS     = rlgLightFS;
+    static const char *rlgCachedDepthVS     = rlgDepthVS;
+    static const char *rlgCachedDepthFS     = rlgDepthFS;
+    static const char *rlgCachedShadowMapVS = NULL;
+    static const char *rlgCachedShadowMapFS = rlgShadowMapFS;
+#else
+    static const char *rlgCachedLightVS     = NULL;
+    static const char *rlgCachedLightFS     = NULL;
+    static const char *rlgCachedDepthVS     = NULL;
+    static const char *rlgCachedDepthFS     = NULL;
+    static const char *rlgCachedShadowMapVS = NULL;
+    static const char *rlgCachedShadowMapFS = NULL;
+#endif //NO_EMBEDDED_SHADERS
 
 /* Public API */
 
@@ -522,32 +545,48 @@ void RLG_Init(unsigned int count)
         count = 99;
     }
 
-    // Format frag shader with lights count
-    char *fmtFrag = (char*)malloc(sizeof(rlgLightFS));
-    snprintf(fmtFrag, sizeof(rlgLightFS), rlgLightFS, count);
+    // We check if all the shader codes are well defined
+    if (rlgCachedLightVS == NULL) TraceLog(LOG_WARNING, "The lighting vertex shader has not been defined.");
+    if (rlgCachedLightFS == NULL) TraceLog(LOG_WARNING, "The lighting fragment shader has not been defined.");
+    if (rlgCachedDepthVS == NULL) TraceLog(LOG_WARNING, "The depth vertex shader has not been defined.");
+    if (rlgCachedDepthFS == NULL) TraceLog(LOG_WARNING, "The depth fragment shader has not been defined.");
 
-#   if GLSL_VERSION == 100
+    const char *lightVS = rlgCachedLightVS;
+    const char *lightFS = rlgCachedLightFS;
+
+#   ifndef NO_EMBEDDED_SHADERS
+
+#       if GLSL_VERSION > 100
+        bool vsFormated = (lightVS == rlgLightVS);
+        if (vsFormated)
+        {
+            // Format frag shader with lights count
+            char *fmtVert = (char*)malloc(sizeof(rlgLightVS));
+            snprintf(fmtVert, sizeof(rlgLightVS), rlgLightVS, count);
+            lightVS = fmtVert;
+        }
+#       endif
+
+        bool fsFormated = (lightFS == rlgLightFS);
+        if (fsFormated)
+        {
+            // Format frag shader with lights count
+            char *fmtFrag = (char*)malloc(sizeof(rlgLightFS));
+            snprintf(fmtFrag, sizeof(rlgLightFS), rlgLightFS, count);
+            lightFS = fmtFrag;
+        }
+
+#   endif //NO_EMBEDDED_SHADERS
 
     // Load shader and get locations
-    RLG.lightShader = LoadShaderFromMemory(rlgLightVS, fmtFrag);
+    RLG.lightShader = LoadShaderFromMemory(lightVS, lightFS);
 
-    // Free allocated memory for formated string
-    free(fmtFrag);
-
-#   else
-
-    // Format frag shader with lights count
-    char *fmtVert = (char*)malloc(sizeof(rlgLightVS));
-    snprintf(fmtVert, sizeof(rlgLightVS), rlgLightVS, count);
-
-    // Load shader and get locations
-    RLG.lightShader = LoadShaderFromMemory(fmtVert, fmtFrag);
-
-    // Free allocated memory for formated strings
-    free(fmtVert);
-    free(fmtFrag);
-
+#   ifndef NO_EMBEDDED_SHADERS
+#   if GLSL_VERSION > 100
+    if (vsFormated) free((void*)lightVS);
 #   endif
+    if (fsFormated) free((void*)lightFS);
+#   endif //NO_EMBEDDED_SHADERS
 
     // Retrieving global shader locations
     RLG.locsGlobalLight.useSpecularMap = GetShaderLocation(RLG.lightShader, "useSpecularMap");
@@ -622,10 +661,10 @@ void RLG_Init(unsigned int count)
     RLG.lightCount = count;
 
     // Load depth shader (used for shadow casting)
-    RLG.depthShader = LoadShaderFromMemory(rlgDepthVS, rlgDepthFS);
+    RLG.depthShader = LoadShaderFromMemory(rlgCachedDepthVS, rlgCachedDepthFS);
 
     // Load shadow map shader (used to render shadow maps)
-    RLG.shadowMapShader = LoadShaderFromMemory(0, rlgShadowMapFS);
+    RLG.shadowMapShader = LoadShaderFromMemory(rlgCachedShadowMapVS, rlgCachedShadowMapFS);
 
     RLG.shadowMapShaderData.near = 0.1f;
     RLG.shadowMapShaderData.far = 100.0f;
@@ -682,6 +721,24 @@ void RLG_Close(void)
     }
 
     RLG.lightCount = 0;
+}
+
+void RLG_SetLightingShaderCode(const char *vsCode, const char *fsCode)
+{
+    rlgCachedLightVS = vsCode;
+    rlgCachedLightFS = fsCode;
+}
+
+void RLG_SetDepthShaderCode(const char *vsCode, const char *fsCode)
+{
+    rlgCachedDepthVS = vsCode;
+    rlgCachedDepthFS = fsCode;
+}
+
+void RLG_SetShadowMapShaderCode(const char *vsCode, const char *fsCode)
+{
+    rlgCachedShadowMapVS = vsCode;
+    rlgCachedShadowMapFS = fsCode;
 }
 
 const Shader* RLG_GetLightShader(void)
