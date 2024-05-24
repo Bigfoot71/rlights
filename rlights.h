@@ -229,9 +229,9 @@ static const char rlgLightFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
 
     "#define NUM_LIGHTS %i\n"
 
-    "#define DIRECTIONAL_LIGHT  0\n"
-    "#define OMNI_LIGHT         1\n"
-    "#define SPOT_LIGHT         2\n"
+    "#define DIRLIGHT 0\n"
+    "#define OMNILIGHT 1\n"
+    "#define SPOTLIGHT 2\n"
 
     GLSL_PRECISION("mediump float")
 
@@ -340,7 +340,7 @@ static const char rlgLightFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
             "if (lights[i].enabled != 0)"
             "{"
                 // get lightDir
-                "vec3 lightDir = (lights[i].type != DIRECTIONAL_LIGHT)"
+                "vec3 lightDir = (lights[i].type != DIRLIGHT)"
                     "? normalize(lights[i].position - fragPosition)"
                     ": normalize(-lights[i].direction);"
 
@@ -355,7 +355,7 @@ static const char rlgLightFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
 
                 // spotlight
                 "float intensity = 1.0;"
-                "if (lights[i].type == SPOT_LIGHT)"
+                "if (lights[i].type == SPOTLIGHT)"
                 "{"
                     "float theta = dot(lightDir, normalize(-lights[i].direction));"
                     "float epsilon = (lights[i].innerCutOff - lights[i].outerCutOff);"
