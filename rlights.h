@@ -11,38 +11,6 @@
 #   endif //PLATFORM
 #endif //GLSL_VERSION
 
-#define STRINGIFY(x) #x             ///< Undef after shader definitions
-#define TOSTRING(x) STRINGIFY(x)    ///< Undef after shader definitions
-
-#define GLSL_VERSION_DEF \
-    "#version " TOSTRING(GLSL_VERSION) "\n"
-
-#if GLSL_VERSION < 330
-
-#   define GLSL_TEXTURE_DEF     "#define TEX texture2D\n"
-#   define GLSL_FS_OUT_DEF      ""
-
-#   define GLSL_FINAL_COLOR(x)  "gl_FragColor = " x ";"
-#   define GLSL_PRECISION(x)    "precision " x ";"
-
-#   define GLSL_VS_IN(x)        "attribute " x ";"
-#   define GLSL_FS_IN(x)        "varying " x ";"
-#   define GLSL_VS_OUT(x)       "varying " x ";"
-
-#else
-
-#   define GLSL_TEXTURE_DEF     "#define TEX texture\n"
-#   define GLSL_FS_OUT_DEF      "out vec4 _;"
-
-#   define GLSL_FINAL_COLOR(x)  "_ = " x ";"
-#   define GLSL_PRECISION(x)    ""
-
-#   define GLSL_VS_IN(x)        "in " x ";"
-#   define GLSL_FS_IN(x)        "in " x ";"
-#   define GLSL_VS_OUT(x)       "out " x ";"
-
-#endif
-
 typedef enum {
     RLG_DIRECTIONAL,
     RLG_OMNILIGHT,
@@ -167,18 +135,53 @@ void RLG_DrawModelEx(Model model, Vector3 position, Vector3 rotationAxis, float 
 #include <stdio.h>
 #include <rlgl.h>
 
+#define STRINGIFY(x) #x             ///< Undef after shader definitions
+#define TOSTRING(x) STRINGIFY(x)    ///< Undef after shader definitions
+
+#define GLSL_VERSION_DEF \
+    "#version " TOSTRING(GLSL_VERSION) "\n"
+
+#if GLSL_VERSION < 330
+
+#   define GLSL_TEXTURE_DEF     "#define TEX texture2D\n"
+#   define GLSL_FS_OUT_DEF      ""
+
+#   define GLSL_FINAL_COLOR(x)  "gl_FragColor = " x ";"
+#   define GLSL_PRECISION(x)    "precision " x ";"
+
+#   define GLSL_VS_IN(x)        "attribute " x ";"
+#   define GLSL_FS_IN(x)        "varying " x ";"
+#   define GLSL_VS_OUT(x)       "varying " x ";"
+
+#   define GLSL_FS_FLAT_IN(x)   "varying " x ";"
+#   define GLSL_VS_FLAT_OUT(x)  "varying " x ";"
+
+#else
+
+#   define GLSL_TEXTURE_DEF     "#define TEX texture\n"
+#   define GLSL_FS_OUT_DEF      "out vec4 _;"
+
+#   define GLSL_FINAL_COLOR(x)  "_ = " x ";"
+#   define GLSL_PRECISION(x)    ""
+
+#   define GLSL_VS_IN(x)        "in " x ";"
+#   define GLSL_FS_IN(x)        "in " x ";"
+#   define GLSL_VS_OUT(x)       "out " x ";"
+
+#   define GLSL_FS_FLAT_IN(x)   "flat in " x ";"
+#   define GLSL_VS_FLAT_OUT(x)  "flat out " x ";"
+
+#endif
+
 /* Shader */
 
-/*
- * Here we directly use the TBN matrix to transform the normals in the fragment shader
- * rather than the inverse of TBN in the vertex shader for simplicity, since we cannot
- * transmit a varying array containing all the transformed light positions in the tangent
- * space, we should thus transform them in the fragment shader. Therefore, transforming
- * only the normals directly in the fragment shader remains more optimized in this
- * specific case.
- */
-
 static const char rlgLightVS[] = GLSL_VERSION_DEF
+
+#   if GLSL_VERSION > 100
+    "#define NUM_LIGHTS %i\n"
+    "uniform mat4 matLights[NUM_LIGHTS];"
+    GLSL_VS_OUT("vec4 fragPosLightSpace[NUM_LIGHTS];")
+#   endif
 
     GLSL_VS_IN("vec3 vertexPosition")
     GLSL_VS_IN("vec2 vertexTexCoord")
@@ -195,7 +198,7 @@ static const char rlgLightVS[] = GLSL_VERSION_DEF
     GLSL_VS_OUT("vec2 fragTexCoord")
     GLSL_VS_OUT("vec3 fragNormal")
     GLSL_VS_OUT("vec4 fragColor")
-    GLSL_VS_OUT("mat3 TBN")
+    GLSL_VS_FLAT_OUT("mat3 TBN")
 
     "void main()"
     "{"
@@ -212,6 +215,13 @@ static const char rlgLightVS[] = GLSL_VERSION_DEF
             "TBN = mat3(T, B, fragNormal);"
         "}"
 
+#       if GLSL_VERSION > 100
+        "for (int i = 0; i < NUM_LIGHTS; i++)"
+        "{"
+            "fragPosLightSpace[i] = matLights[i]*vec4(fragPosition, 1.0);"
+        "}"
+#       endif
+
         "gl_Position = mvp*vec4(vertexPosition, 1.0);"
     "}";
 
@@ -224,16 +234,23 @@ static const char rlgLightFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
     "#define SPOT_LIGHT         2\n"
 
     GLSL_PRECISION("mediump float")
+
+#   if GLSL_VERSION > 100
+    GLSL_FS_IN("vec4 fragPosLightSpace[NUM_LIGHTS];")
+#   else
+    "uniform mat4 matLights[NUM_LIGHTS];"
+#   endif
+
     GLSL_FS_IN("vec3 fragPosition")
     GLSL_FS_IN("vec2 fragTexCoord")
     GLSL_FS_IN("vec3 fragNormal")
     GLSL_FS_IN("vec4 fragColor")
-    GLSL_FS_IN("mat3 TBN")
+    GLSL_FS_FLAT_IN("mat3 TBN")
+
     GLSL_FS_OUT_DEF
 
     "struct Light {"
         "sampler2D shadowMap;"      ///< Sampler for the shadow map texture
-        "mat4 matrix;"              ///< Transformation matrix for the light
         "vec3 position;"            ///< Position of the light in world coordinates
         "vec3 direction;"           ///< Direction vector of the light (for directional and spotlights)
         "vec3 diffuse;"             ///< Diffuse color of the light
@@ -268,7 +285,11 @@ static const char rlgLightFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
 
     "float ShadowCalc(int i)"
     "{"
-        "vec4 p = lights[i].matrix*vec4(fragPosition, 1.0);"  ///< TODO: Optimize this (avoid repeated calculations)
+#       if GLSL_VERSION > 100
+        "vec4 p = fragPosLightSpace[i];"
+#       else
+        "vec4 p = matLights[i]*vec4(fragPosition, 1.0);"
+#       endif
 
         "vec3 projCoords = p.xyz/p.w;"
         "projCoords = projCoords*0.5 + 0.5;"
@@ -422,8 +443,8 @@ struct RLG_ShadowMap
 
 struct RLG_LightLocs
 {
+    int vpMatrix;       ///< NOTE: Not present in the Light struct but in a separate uniform
     int shadowMap;
-    int matrix;
     int position;
     int direction;
     int diffuse;
@@ -505,9 +526,28 @@ void RLG_Init(unsigned int count)
     char *fmtFrag = (char*)malloc(sizeof(rlgLightFS));
     snprintf(fmtFrag, sizeof(rlgLightFS), rlgLightFS, count);
 
+#   if GLSL_VERSION == 100
+
     // Load shader and get locations
     RLG.lightShader = LoadShaderFromMemory(rlgLightVS, fmtFrag);
+
+    // Free allocated memory for formated string
     free(fmtFrag);
+
+#   else
+
+    // Format frag shader with lights count
+    char *fmtVert = (char*)malloc(sizeof(rlgLightVS));
+    snprintf(fmtVert, sizeof(rlgLightVS), rlgLightVS, count);
+
+    // Load shader and get locations
+    RLG.lightShader = LoadShaderFromMemory(fmtVert, fmtFrag);
+
+    // Free allocated memory for formated strings
+    free(fmtVert);
+    free(fmtFrag);
+
+#   endif
 
     // Retrieving global shader locations
     RLG.locsGlobalLight.useSpecularMap = GetShaderLocation(RLG.lightShader, "useSpecularMap");
@@ -554,8 +594,8 @@ void RLG_Init(unsigned int count)
             .enabled        = 0
         };
 
+        locs->vpMatrix       = GetShaderLocation(RLG.lightShader, TextFormat("matLights[%i]", i));
         locs->shadowMap      = GetShaderLocation(RLG.lightShader, TextFormat("lights[%i].shadowMap", i));
-        locs->matrix         = GetShaderLocation(RLG.lightShader, TextFormat("lights[%i].matrix", i));
         locs->position       = GetShaderLocation(RLG.lightShader, TextFormat("lights[%i].position", i));
         locs->direction      = GetShaderLocation(RLG.lightShader, TextFormat("lights[%i].direction", i));
         locs->diffuse        = GetShaderLocation(RLG.lightShader, TextFormat("lights[%i].diffuse", i));
@@ -1375,7 +1415,7 @@ void RLG_BeginShadowCast(unsigned int light)
     rlDisableColorBlend();
 
     Matrix viewProj = MatrixMultiply(matView, rlGetMatrixProjection());
-    SetShaderValueMatrix(RLG.lightShader, RLG.locsLights[light].matrix, viewProj);
+    SetShaderValueMatrix(RLG.lightShader, RLG.locsLights[light].vpMatrix, viewProj);
 }
 
 void RLG_EndShadowCast(void)
