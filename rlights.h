@@ -614,7 +614,7 @@ void RLG_DrawShadowMapEx(unsigned int light, int x, int y, int w, int h, float n
  * @param mesh The mesh to cast.
  * @param transform The transformation matrix to apply to the mesh.
  */
-void RLG_CastMesh(Mesh mesh, Material material, Matrix transform);
+void RLG_CastMesh(Mesh mesh, Matrix transform);
 
 /**
  * @brief Cast a model for shadow rendering.
@@ -2089,7 +2089,7 @@ void RLG_DrawShadowMapEx(unsigned int light, int x, int y, int w, int h, float n
     EndShaderMode();
 }
 
-void RLG_CastMesh(Mesh mesh, Material material, Matrix transform)
+void RLG_CastMesh(Mesh mesh, Matrix transform)
 {
     // Bind shader program
     rlEnableShader(RLG.depthShader.id);
@@ -2178,7 +2178,7 @@ void RLG_CastModelEx(Model model, Vector3 position, Vector3 rotationAxis, float 
 
     for (int i = 0; i < model.meshCount; i++)
     {
-        RLG_CastMesh(model.meshes[i], model.materials[model.meshMaterial[i]], model.transform);
+        RLG_CastMesh(model.meshes[i], model.transform);
     }
 }
 
