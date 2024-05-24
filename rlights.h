@@ -21,111 +21,660 @@ typedef enum {
 extern "C" {
 #endif
 
+/**
+ * @brief Initialize rlights with the desired lights number.
+ * 
+ * @param lightCount The number of lights to initialize in.
+ */
 void RLG_Init(unsigned int lightCount);
+
+/**
+ * @brief Close the rlights and release any allocated resources.
+ */
 void RLG_Close(void);
 
+/**
+ * @brief Set custom lighting shader code.
+ * 
+ * @note This function should be called before RLG_Init to define your own lighting shaders.
+ * 
+ * @param vsCode Vertex shader code for lighting.
+ * @param fsCode Fragment shader code for lighting.
+ */
 void RLG_SetLightingShaderCode(const char *vsCode, const char *fsCode);
+
+/**
+ * @brief Set custom depth shader code.
+ * 
+ * @note This function should be called before RLG_Init to define your own depth shaders.
+ * 
+ * @param vsCode Vertex shader code for depth.
+ * @param fsCode Fragment shader code for depth.
+ */
 void RLG_SetDepthShaderCode(const char *vsCode, const char *fsCode);
+
+/**
+ * @brief Set custom shadow map shader code.
+ * 
+ * @note This function should be called before RLG_Init to define your own shadow map shaders.
+ * 
+ * @param vsCode Vertex shader code for shadow mapping.
+ * @param fsCode Fragment shader code for shadow mapping.
+ */
 void RLG_SetShadowMapShaderCode(const char *vsCode, const char *fsCode);
 
+/**
+ * @brief Get the current lighting shader.
+ * 
+ * @return A pointer to the current Shader used for lighting.
+ */
 const Shader* RLG_GetLightShader(void);
+
+/**
+ * @brief Get the current depth shader.
+ * 
+ * @return A pointer to the current Shader used for depth rendering.
+ */
 const Shader* RLG_GetDepthShader(void);
 
+/**
+ * @brief Set the view position, corresponds to the position of your camera.
+ * 
+ * @param x The x-coordinate of the view position.
+ * @param y The y-coordinate of the view position.
+ * @param z The z-coordinate of the view position.
+ */
 void RLG_SetViewPosition(float x, float y, float z);
+
+/**
+ * @brief Set the view position using a Vector3 structure.
+ * 
+ * @param position The view position as a Vector3 structure.
+ */
 void RLG_SetViewPositionV(Vector3 position);
+
+/**
+ * @brief Get the current view position.
+ * 
+ * @return The current view position as a Vector3 structure.
+ */
 Vector3 RLG_GetViewPosition(void);
 
+/**
+ * @brief Enable the specular map in the shader.
+ */
 void RLG_EnableSpecularMap(void);
+
+/**
+ * @brief Disable the specular map in the shader.
+ */
 void RLG_DisableSpecularMap(void);
+
+/**
+ * @brief Check if the specular map is enabled.
+ * 
+ * @return true if the specular map is enabled, false otherwise.
+ */
 bool RLG_IsSpecularMapEnabled(void);
 
+/**
+ * @brief Enable the normal map in the shader.
+ */
 void RLG_EnableNormalMap(void);
+
+/**
+ * @brief Disable the normal map in the shader.
+ */
 void RLG_DisableNormalMap(void);
+
+/**
+ * @brief Check if the normal map is enabled.
+ * 
+ * @return true if the normal map is enabled, false otherwise.
+ */
 bool RLG_IsNormalMapEnabled(void);
 
+/**
+ * @brief Set the shininess value for specular highlights.
+ * 
+ * @param value The shininess value.
+ */
 void RLG_SetShininess(float value);
+
+/**
+ * @brief Get the current shininess value for specular highlights.
+ * 
+ * @return The current shininess value.
+ */
 float RLG_GetShininess(void);
 
+/**
+ * @brief Set the specular color in the shader.
+ * 
+ * @param r The red component of the specular color.
+ * @param g The green component of the specular color.
+ * @param b The blue component of the specular color.
+ */
 void RLG_SetSpecular(float r, float g, float b);
+
+/**
+ * @brief Set the specular color in the shader using a Vector3 structure.
+ * 
+ * @param color The specular color as a Vector3 structure.
+ */
 void RLG_SetSpecularV(Vector3 color);
+
+/**
+ * @brief Set the specular color for the shader using a Color structure.
+ * 
+ * @param color The specular color as a Color structure.
+ */
 void RLG_SetSpecularC(Color color);
+
+/**
+ * @brief Get the current specular color sets in the shader.
+ * 
+ * @return The current specular color as a Vector3 structure.
+ */
 Vector3 RLG_GetSpecular(void);
+
+/**
+ * @brief Get the current specular color sets in the shader as a Color structure.
+ * 
+ * @return The current specular color as a Color structure.
+ */
 Color RLG_GetSpecularC(void);
 
+/**
+ * @brief Set the ambient color in the shader.
+ * 
+ * @param r The red component of the ambient color.
+ * @param g The green component of the ambient color.
+ * @param b The blue component of the ambient color.
+ */
 void RLG_SetAmbient(float r, float g, float b);
+
+/**
+ * @brief Set the ambient color in the shader using a Vector3 structure.
+ * 
+ * @param color The ambient color as a Vector3 structure.
+ */
 void RLG_SetAmbientV(Vector3 color);
+
+/**
+ * @brief Set the ambient color in the shader using a Color structure.
+ * 
+ * @param color The ambient color as a Color structure.
+ */
 void RLG_SetAmbientC(Color color);
+
+/**
+ * @brief Get the current ambient color sets in the shader
+ * 
+ * @return The current ambient color as a Vector3 structure.
+ */
 Vector3 RLG_GetAmbient(void);
+
+/**
+ * @brief Get the current ambient color sets in the shader as a Color structure.
+ * 
+ * @return The current ambient color as a Color structure.
+ */
 Color RLG_GetAmbientC(void);
 
+/**
+ * @brief Get the number of lights initialized sets in the shader.
+ * 
+ * @return The number of lights as an unsigned integer.
+ */
 unsigned int RLG_GetLightcount(void);
 
+/**
+ * @brief Toggle the state of a specific light.
+ * 
+ * @param light The index of the light to toggle.
+ */
 void RLG_ToggleLight(unsigned int light);
+
+/**
+ * @brief Enable a specific light.
+ * 
+ * @param light The index of the light to enable.
+ */
 void RLG_EnableLight(unsigned int light);
+
+/**
+ * @brief Disable a specific light.
+ * 
+ * @param light The index of the light to disable.
+ */
 void RLG_DisableLight(unsigned int light);
+
+/**
+ * @brief Check if a specific light is enabled.
+ * 
+ * @param light The index of the light to check.
+ * @return true if the light is enabled, false otherwise.
+ */
 bool RLG_IsLightEnabled(unsigned int light);
 
+/**
+ * @brief Set the type of a specific light.
+ * 
+ * @param light The index of the light to set the type for.
+ * @param type The type of light to set.
+ */
 void RLG_SetLightType(unsigned int light, RLG_LightType type);
+
+/**
+ * @brief Get the type of a specific light.
+ * 
+ * @param light The index of the light to get the type for.
+ * @return The type of light as RLG_LightType enumeration.
+ */
 RLG_LightType RLG_GetLightType(unsigned int light);
 
+/**
+ * @brief Set the position of a specific light.
+ * 
+ * @param light The index of the light to set the position for.
+ * @param x The x-coordinate of the light position.
+ * @param y The y-coordinate of the light position.
+ * @param z The z-coordinate of the light position.
+ */
 void RLG_SetLightPosition(unsigned int light, float x, float y, float z);
+
+/**
+ * @brief Set the position of a specific light using a Vector3 structure.
+ * 
+ * @param light The index of the light to set the position for.
+ * @param position The position of the light as a Vector3 structure.
+ */
 void RLG_SetLightPositionV(unsigned int light, Vector3 position);
+
+/**
+ * @brief Get the position of a specific light.
+ * 
+ * @param light The index of the light to get the position for.
+ * @return The position of the light as a Vector3 structure.
+ */
 Vector3 RLG_GetLightPosition(unsigned int light);
 
+/**
+ * @brief Set the direction of a specific light.
+ * 
+ * @param light The index of the light to set the direction for.
+ * @param x The x-component of the light direction.
+ * @param y The y-component of the light direction.
+ * @param z The z-component of the light direction.
+ */
 void RLG_SetLightDirection(unsigned int light, float x, float y, float z);
+
+/**
+ * @brief Set the direction of a specific light using a Vector3 structure.
+ * 
+ * @param light The index of the light to set the direction for.
+ * @param direction The direction of the light as a Vector3 structure.
+ */
 void RLG_SetLightDirectionV(unsigned int light, Vector3 direction);
+
+/**
+ * @brief Get the direction of a specific light.
+ * 
+ * @param light The index of the light to get the direction for.
+ * @return The direction of the light as a Vector3 structure.
+ */
 Vector3 RLG_GetLightDirection(unsigned int light);
 
+/**
+ * @brief Set the target position of a specific light.
+ * 
+ * @param light The index of the light to set the target position for.
+ * @param x The x-coordinate of the target position.
+ * @param y The y-coordinate of the target position.
+ * @param z The z-coordinate of the target position.
+ */
 void RLG_SetLightTarget(unsigned int light, float x, float y, float z);
+
+/**
+ * @brief Set the target position of a specific light using a Vector3 structure.
+ * 
+ * @param light The index of the light to set the target position for.
+ * @param targetPosition The target position of the light as a Vector3 structure.
+ */
 void RLG_SetLightTargetV(unsigned int light, Vector3 targetPosition);
+
+/**
+ * @brief Get the target position of a specific light.
+ * 
+ * @param light The index of the light to get the target position for.
+ * @return The target position of the light as a Vector3 structure.
+ */
 Vector3 RLG_GetLightTarget(unsigned int light);
 
+/**
+ * @brief Set the diffuse color of a specific light.
+ * 
+ * @param light The index of the light to set the diffuse color for.
+ * @param r The red component of the diffuse color.
+ * @param g The green component of the diffuse color.
+ * @param b The blue component of the diffuse color.
+ */
 void RLG_SetLightDiffuse(unsigned int light, float r, float g, float b);
+
+/**
+ * @brief Set the diffuse color of a specific light using a Vector3 structure.
+ * 
+ * @param light The index of the light to set the diffuse color for.
+ * @param color The diffuse color as a Vector3 structure.
+ */
 void RLG_SetLightDiffuseV(unsigned int light, Vector3 color);
+
+/**
+ * @brief Set the diffuse color of a specific light using a Color structure.
+ * 
+ * @param light The index of the light to set the diffuse color for.
+ * @param color The diffuse color as a Color structure.
+ */
 void RLG_SetLightDiffuseC(unsigned int light, Color color);
+
+/**
+ * @brief Get the diffuse color of a specific light.
+ * 
+ * @param light The index of the light to get the diffuse color for.
+ * @return The diffuse color as a Vector3 structure.
+ */
 Vector3 RLG_GetLightDiffuse(unsigned int light);
+
+/**
+ * @brief Get the diffuse color of a specific light as a Color structure.
+ * 
+ * @param light The index of the light to get the diffuse color for.
+ * @return The diffuse color as a Color structure.
+ */
 Color RLG_GetLightDiffuseC(unsigned int light);
 
+/**
+ * @brief Set the specular color of a specific light.
+ * 
+ * @param light The index of the light to set the specular color for.
+ * @param r The red component of the specular color.
+ * @param g The green component of the specular color.
+ * @param b The blue component of the specular color.
+ */
 void RLG_SetLightSpecular(unsigned int light, float r, float g, float b);
+
+/**
+ * @brief Set the specular color of a specific light using a Vector3 structure.
+ * 
+ * @param light The index of the light to set the specular color for.
+ * @param color The specular color as a Vector3 structure.
+ */
 void RLG_SetLightSpecularV(unsigned int light, Vector3 color);
+
+/**
+ * @brief Set the specular color of a specific light using a Color structure.
+ * 
+ * @param light The index of the light to set the specular color for.
+ * @param color The specular color as a Color structure.
+ */
 void RLG_SetLightSpecularC(unsigned int light, Color color);
+
+/**
+ * @brief Get the specular color of a specific light.
+ * 
+ * @param light The index of the light to get the specular color for.
+ * @return The specular color as a Vector3 structure.
+ */
 Vector3 RLG_GetLightSpecular(unsigned int light);
+
+/**
+ * @brief Get the specular color of a specific light as a Color structure.
+ * 
+ * @param light The index of the light to get the specular color for.
+ * @return The specular color as a Color structure.
+ */
 Color RLG_GetLightSpecularC(unsigned int light);
 
+/**
+ * @brief Set the inner cutoff angle of a spotlight.
+ * 
+ * @note These functions are only applicable to spotlight types.
+ * 
+ * @param light The index of the spotlight to set the inner cutoff angle for.
+ * @param degrees The inner cutoff angle in degrees.
+ */
 void RLG_SetLightInnerCutOff(unsigned int light, float degrees);
+
+/**
+ * @brief Get the inner cutoff angle of a spotlight.
+ * 
+ * @note These functions are only applicable to spotlight types.
+ * 
+ * @param light The index of the spotlight to get the inner cutoff angle for.
+ * @return The inner cutoff angle in degrees.
+ */
 float RLG_GetLightInnerCutoff(unsigned int light);
 
+/**
+ * @brief Set the outer cutoff angle of a spotlight.
+ * 
+ * @note These functions are only applicable to spotlight types.
+ * 
+ * @param light The index of the spotlight to set the outer cutoff angle for.
+ * @param degrees The outer cutoff angle in degrees.
+ */
 void RLG_SetLightOuterCutOff(unsigned int light, float degrees);
+
+/**
+ * @brief Get the outer cutoff angle of a spotlight.
+ * 
+ * @note These functions are only applicable to spotlight types.
+ * 
+ * @param light The index of the spotlight to get the outer cutoff angle for.
+ * @return The outer cutoff angle in degrees.
+ */
 float RLG_GetLightOuterCutoff(unsigned int light);
 
+/**
+ * @brief Set the attenuation factors of a light.
+ * 
+ * @param light The index of the light to set the attenuation for.
+ * @param constant The constant attenuation factor.
+ * @param linear The linear attenuation factor.
+ * @param quadratic The quadratic attenuation factor.
+ */
 void RLG_SetLightAttenuation(unsigned int light, float constant, float linear, float quadratic);
+
+/**
+ * @brief Get the attenuation factors of a light.
+ * 
+ * @param light The index of the light to get the attenuation factors for.
+ * @param constant Pointer to store the constant attenuation factor.
+ * @param linear Pointer to store the linear attenuation factor.
+ * @param quadratic Pointer to store the quadratic attenuation factor.
+ */
 void RLG_GetLightAttenuation(unsigned int light, float* constant, float* linear, float* quadratic);
 
+/**
+ * @brief Set the quadratic attenuation factor of a light.
+ * 
+ * @param light The index of the light to set the quadratic attenuation factor for.
+ * @param quadratic The quadratic attenuation factor.
+ */
 void RLG_SetLightAttenuationQuadratic(unsigned int light, float quadratic);
+
+/**
+ * @brief Set the constant attenuation factor of a light.
+ * 
+ * @param light The index of the light to set the constant attenuation factor for.
+ * @param constant The constant attenuation factor.
+ */
 void RLG_SetLightAttenuationConstant(unsigned int light, float constant);
+
+/**
+ * @brief Set the linear attenuation factor of a light.
+ * 
+ * @param light The index of the light to set the linear attenuation factor for.
+ * @param linear The linear attenuation factor.
+ */
 void RLG_SetLightAttenuationLinear(unsigned int light, float linear);
 
+/**
+ * @brief Enable shadow casting for a light.
+ * 
+ * @param light The index of the light to enable shadow casting for.
+ * @param shadowMapResolution The resolution of the shadow map.
+ */
 void RLG_EnableLightShadow(unsigned int light, int shadowMapResolution);
+
+/**
+ * @brief Disable shadow casting for a light.
+ * 
+ * @param light The index of the light to disable shadow casting for.
+ */
 void RLG_DisableLightShadow(unsigned int light);
+
+/**
+ * @brief Check if shadow casting is enabled for a light.
+ * 
+ * @param light The index of the light to check for shadow casting.
+ * @return true if shadow casting is enabled, false otherwise.
+ */
 bool RLG_IsLightShadowEnabled(unsigned int light);
 
+/**
+ * @brief Set the bias value for shadow mapping of a light.
+ * 
+ * @param light The index of the light to set the shadow bias for.
+ * @param value The bias value to set.
+ */
 void RLG_SetLightShadowBias(unsigned int light, float value);
+
+/**
+ * @brief Get the bias value for shadow mapping of a light.
+ * 
+ * @param light The index of the light to get the shadow bias for.
+ * @return The shadow bias value.
+ */
 float RLG_GetLightShadowBias(unsigned int light);
 
+/**
+ * @brief Begin shadow casting for a specific light.
+ * 
+ * @param light The index of the light to begin shadow casting for.
+ */
 void RLG_BeginShadowCast(unsigned int light);
+
+/**
+ * @brief End shadow casting for the current light.
+ */
 void RLG_EndShadowCast(void);
 
+/**
+ * @brief Clear the shadow map.
+ * 
+ * This function clears the shadow map, removing any existing shadow data.
+ */
 void RLG_ClearShadowMap(void);
 
+/**
+ * @brief Draw the shadow map of a specific light.
+ * 
+ * This function draws the shadow map of the specified light to the screen.
+ * 
+ * @param light The index of the light whose shadow map to draw.
+ * @param x The x-coordinate of the top-left corner of the shadow map rectangle.
+ * @param y The y-coordinate of the top-left corner of the shadow map rectangle.
+ * @param w The width of the shadow map rectangle.
+ * @param h The height of the shadow map rectangle.
+ */
 void RLG_DrawShadowMap(unsigned int light, int x, int y, int w, int h);
+
+/**
+ * @brief Draw the shadow map of a specific light with extended parameters.
+ * 
+ * This function draws the shadow map of the specified light to the screen with additional parameters for near and far distances.
+ * 
+ * @param light The index of the light whose shadow map to draw.
+ * @param x The x-coordinate of the top-left corner of the shadow map rectangle.
+ * @param y The y-coordinate of the top-left corner of the shadow map rectangle.
+ * @param w The width of the shadow map rectangle.
+ * @param h The height of the shadow map rectangle.
+ * @param near The near clipping plane distance.
+ * @param far The far clipping plane distance.
+ */
 void RLG_DrawShadowMapEx(unsigned int light, int x, int y, int w, int h, float near, float far);
 
+/**
+ * @brief Cast a mesh for shadow rendering.
+ * 
+ * This function casts a mesh in the active shadow map for shadow rendering with the specified transformation.
+ * 
+ * @param mesh The mesh to cast.
+ * @param transform The transformation matrix to apply to the mesh.
+ */
 void RLG_CastMesh(Mesh mesh, Material material, Matrix transform);
+
+/**
+ * @brief Cast a model for shadow rendering.
+ * 
+ * This function casts a model in the active shadow map for shadow rendering at the specified position and scale.
+ * 
+ * @param model The model to cast.
+ * @param position The position at which to cast the model for shadow rendering.
+ * @param scale The scale at which to cast the model for shadow rendering.
+ */
 void RLG_CastModel(Model model, Vector3 position, float scale);
+
+/**
+ * @brief Cast a model into for shadow rendering with extended parameters.
+ * 
+ * This function casts a model in the active shadow map for shadow rendering at the specified position, rotation, and scale.
+ * 
+ * @param model The model to cast.
+ * @param position The position at which to cast the model for shadow rendering.
+ * @param rotationAxis The axis around which to rotate the model for shadow rendering.
+ * @param rotationAngle The angle by which to rotate the model for shadow rendering.
+ * @param scale The scale at which to cast the model for shadow rendering.
+ */
 void RLG_CastModelEx(Model model, Vector3 position, Vector3 rotationAxis, float rotationAngle, Vector3 scale);
 
+/**
+ * @brief Draw a mesh with a specified material and transformation.
+ * 
+ * This function draws a mesh with the specified material and transformation.
+ * 
+ * @param mesh The mesh to draw.
+ * @param material The material to apply to the mesh.
+ * @param transform The transformation matrix to apply to the mesh.
+ */
 void RLG_DrawMesh(Mesh mesh, Material material, Matrix transform);
+
+/**
+ * @brief Draw a model at a specified position with a specified scale and tint.
+ * 
+ * This function draws a model at the specified position with the specified scale and tint.
+ * 
+ * @param model The model to draw.
+ * @param position The position at which to draw the model.
+ * @param scale The scale at which to draw the model.
+ * @param tint The tint color to apply to the model.
+ */
 void RLG_DrawModel(Model model, Vector3 position, float scale, Color tint);
+
+/**
+ * @brief Draw a model at a specified position with a specified rotation, scale, and tint.
+ * 
+ * This function draws a model at the specified position with the specified rotation, scale, and tint.
+ * 
+ * @param model The model to draw.
+ * @param position The position at which to draw the model.
+ * @param rotationAxis The axis around which to rotate the model.
+ * @param rotationAngle The angle by which to rotate the model.
+ * @param scale The scale at which to draw the model.
+ * @param tint The tint color to apply to the model.
+ */
 void RLG_DrawModelEx(Model model, Vector3 position, Vector3 rotationAxis, float rotationAngle, Vector3 scale, Color tint);
 
 #if defined(__cplusplus)
