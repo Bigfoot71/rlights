@@ -275,6 +275,30 @@ void RLG_SetLightType(unsigned int light, RLG_LightType type);
 RLG_LightType RLG_GetLightType(unsigned int light);
 
 /**
+ * @brief Translate the position of a specific light by the given offsets.
+ * 
+ * This function adjusts the position of the specified light by adding the
+ * provided x, y, and z offsets to its current position.
+ *
+ * @param light The index of the light to translate.
+ * @param x The offset to add to the x-coordinate of the light position.
+ * @param y The offset to add to the y-coordinate of the light position.
+ * @param z The offset to add to the z-coordinate of the light position.
+ */
+void RLG_LightTranslate(unsigned int light, float x, float y, float z);
+
+/**
+ * @brief Translate the position of a specific light by the given vector.
+ * 
+ * This function adjusts the position of the specified light by adding the
+ * provided vector to its current position.
+ *
+ * @param light The index of the light to translate.
+ * @param v The vector to add to the light position.
+ */
+void RLG_LightTranslateV(unsigned int light, Vector3 v);
+
+/**
  * @brief Set the position of a specific light.
  * 
  * @param light The index of the light to set the position for.
@@ -299,6 +323,51 @@ void RLG_SetLightPositionV(unsigned int light, Vector3 position);
  * @return The position of the light as a Vector3 structure.
  */
 Vector3 RLG_GetLightPosition(unsigned int light);
+
+/**
+ * @brief Rotate the direction of a specific light around the X-axis.
+ * 
+ * This function rotates the direction vector of the specified light by the given
+ * degrees around the X-axis.
+ *
+ * @param light The index of the light to rotate.
+ * @param degrees The angle in degrees to rotate the light direction.
+ */
+void RLG_LightRotateX(unsigned int light, float degrees);
+
+/**
+ * @brief Rotate the direction of a specific light around the Y-axis.
+ * 
+ * This function rotates the direction vector of the specified light by the given
+ * degrees around the Y-axis.
+ *
+ * @param light The index of the light to rotate.
+ * @param degrees The angle in degrees to rotate the light direction.
+ */
+void RLG_LightRotateY(unsigned int light, float degrees);
+
+/**
+ * @brief Rotate the direction of a specific light around the Z-axis.
+ * 
+ * This function rotates the direction vector of the specified light by the given
+ * degrees around the Z-axis.
+ *
+ * @param light The index of the light to rotate.
+ * @param degrees The angle in degrees to rotate the light direction.
+ */
+void RLG_LightRotateZ(unsigned int light, float degrees);
+
+/**
+ * @brief Rotate the direction of a specific light around an arbitrary axis.
+ * 
+ * This function rotates the direction vector of the specified light by the given
+ * degrees around the specified axis.
+ *
+ * @param light The index of the light to rotate.
+ * @param axis The axis to rotate around.
+ * @param degrees The angle in degrees to rotate the light direction.
+ */
+void RLG_LightRotate(unsigned int light, Vector3 axis, float degrees);
 
 /**
  * @brief Set the direction of a specific light.
@@ -688,7 +757,6 @@ void RLG_DrawModelEx(Model model, Vector3 position, Vector3 rotationAxis, float 
 }
 #endif
 
-#define RLIGHTS_IMPLEMENTATION
 #ifdef RLIGHTS_IMPLEMENTATION
 
 #include <raymath.h>
@@ -1543,6 +1611,40 @@ RLG_LightType RLG_GetLightType(unsigned int light)
     return (RLG_LightType)RLG.lights[light].type;
 }
 
+void RLG_LightTranslate(unsigned int light, float x, float y, float z)
+{
+    if (light >= RLG.lightCount)
+    {
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_LightTranslate' exceeds allocated number [MAX %i]", light, RLG.lightCount);
+        return;
+    }
+
+    struct RLG_Light *l = &RLG.lights[light];
+    l->position.x += x;
+    l->position.y += y;
+    l->position.z += z;
+
+    SetShaderValue(RLG.lightShader, RLG.locsLights[light].position,
+        &l->position, SHADER_UNIFORM_VEC3);
+}
+
+void RLG_LightTranslateV(unsigned int light, Vector3 v)
+{
+    if (light >= RLG.lightCount)
+    {
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_LightTranslateV' exceeds allocated number [MAX %i]", light, RLG.lightCount);
+        return;
+    }
+
+    struct RLG_Light *l = &RLG.lights[light];
+    l->position.x += v.x;
+    l->position.y += v.y;
+    l->position.z += v.z;
+
+    SetShaderValue(RLG.lightShader, RLG.locsLights[light].position,
+        &l->position, SHADER_UNIFORM_VEC3);
+}
+
 void RLG_SetLightPosition(unsigned int light, float x, float y, float z)
 {
     RLG_SetLightPositionV(light, (Vector3) { x, y, z });
@@ -1570,6 +1672,109 @@ Vector3 RLG_GetLightPosition(unsigned int light)
     }
 
     return RLG.lights[light].position;
+}
+
+void RLG_LightRotateX(unsigned int light, float degrees)
+{
+    if (light >= RLG.lightCount)
+    {
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_LightRotateX' exceeds allocated number [MAX %i]", light, RLG.lightCount);
+        return;
+    }
+
+    struct RLG_Light *l = &RLG.lights[light];
+    float radians = DEG2RAD*degrees;
+    float c = cosf(radians);
+    float s = sinf(radians);
+
+    l->direction.y = l->direction.y*c + l->direction.z*s;
+    l->direction.z = -l->direction.y*s + l->direction.z*c;
+
+    SetShaderValue(RLG.lightShader, RLG.locsLights[light].direction,
+        &RLG.lights[light].direction, SHADER_UNIFORM_VEC3);
+}
+
+void RLG_LightRotateY(unsigned int light, float degrees)
+{
+    if (light >= RLG.lightCount)
+    {
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_LightRotateY' exceeds allocated number [MAX %i]", light, RLG.lightCount);
+        return;
+    }
+
+    struct RLG_Light *l = &RLG.lights[light];
+    float radians = DEG2RAD*degrees;
+    float c = cosf(radians);
+    float s = sinf(radians);
+
+    l->direction.x = l->direction.x*c - l->direction.z*s;
+    l->direction.z = l->direction.x*s + l->direction.z*c;
+
+    SetShaderValue(RLG.lightShader, RLG.locsLights[light].direction,
+        &RLG.lights[light].direction, SHADER_UNIFORM_VEC3);
+}
+
+void RLG_LightRotateZ(unsigned int light, float degrees)
+{
+    if (light >= RLG.lightCount)
+    {
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_LightRotateZ' exceeds allocated number [MAX %i]", light, RLG.lightCount);
+        return;
+    }
+
+    struct RLG_Light *l = &RLG.lights[light];
+    float radians = DEG2RAD*degrees;
+    float c = cosf(radians);
+    float s = sinf(radians);
+
+    l->direction.x = l->direction.x*c + l->direction.y*s;
+    l->direction.y = -l->direction.x*s + l->direction.y*c;
+
+    SetShaderValue(RLG.lightShader, RLG.locsLights[light].direction,
+        &RLG.lights[light].direction, SHADER_UNIFORM_VEC3);
+}
+
+void RLG_LightRotate(unsigned int light, Vector3 axis, float degrees)
+{
+    if (light >= RLG.lightCount)
+    {
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_LightRotate' exceeds allocated number [MAX %i]", light, RLG.lightCount);
+        return;
+    }
+
+    struct RLG_Light *l = &RLG.lights[light];
+    float radians = -DEG2RAD*degrees;
+    float halfTheta = radians*0.5f;
+
+    float sinHalfTheta = sinf(halfTheta);
+    Quaternion rotationQuat = {
+        axis.x * sinHalfTheta,
+        axis.y * sinHalfTheta,
+        axis.z * sinHalfTheta,
+        cosf(halfTheta)
+    };
+
+    // Convert the current direction vector to a quaternion
+    Vector3 normalizedAxis = Vector3Normalize(axis);
+    Quaternion directionQuat = {
+        l->direction.x,
+        l->direction.y,
+        l->direction.z,
+        0.0f
+    };
+
+    // Calculate the rotated direction quaternion
+    Quaternion rotatedQuat = QuaternionMultiply(
+        QuaternionMultiply(rotationQuat, directionQuat),
+        QuaternionInvert(rotationQuat));
+
+    // Update the light direction with the rotated direction
+    l->direction = Vector3Normalize((Vector3){
+        rotatedQuat.x, rotatedQuat.y, rotatedQuat.z
+    });
+
+    SetShaderValue(RLG.lightShader, RLG.locsLights[light].direction,
+        &RLG.lights[light].direction, SHADER_UNIFORM_VEC3);
 }
 
 void RLG_SetLightDirection(unsigned int light, float x, float y, float z)

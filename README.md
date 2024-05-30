@@ -128,9 +128,17 @@ bool RLG_IsLightEnabled(unsigned int light);
 void RLG_SetLightType(unsigned int light, RLG_LightType type);
 RLG_LightType RLG_GetLightType(unsigned int light);
 
+void RLG_LightTranslate(unsigned int light, float x, float y, float z);
+void RLG_LightTranslateV(unsigned int light, Vector3 v);
+
 void RLG_SetLightPosition(unsigned int light, float x, float y, float z);
 void RLG_SetLightPositionV(unsigned int light, Vector3 position);
 Vector3 RLG_GetLightPosition(unsigned int light);
+
+void RLG_LightRotateX(unsigned int light, float degrees);
+void RLG_LightRotateY(unsigned int light, float degrees);
+void RLG_LightRotateZ(unsigned int light, float degrees);
+void RLG_LightRotate(unsigned int light, Vector3 axis, float degrees);
 
 void RLG_SetLightDirection(unsigned int light, float x, float y, float z);
 void RLG_SetLightDirectionV(unsigned int light, Vector3 direction);
