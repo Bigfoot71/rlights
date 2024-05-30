@@ -681,6 +681,7 @@ void RLG_DrawModelEx(Model model, Vector3 position, Vector3 rotationAxis, float 
 }
 #endif
 
+#define RLIGHTS_IMPLEMENTATION
 #ifdef RLIGHTS_IMPLEMENTATION
 
 #include <raymath.h>
@@ -1465,7 +1466,7 @@ void RLG_ToggleLight(unsigned int light)
 {
     if (light >= RLG.lightCount)
     {
-        TraceLog(LOG_ERROR, "Light ID specified to 'RLG_ToggleLight' exceeds allocated number. [%i/%i]", light, RLG.lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_ToggleLight' exceeds allocated number [MAX %i]", light, RLG.lightCount);
         return;
     }
 
@@ -1478,7 +1479,7 @@ void RLG_EnableLight(unsigned int light)
 {
     if (light >= RLG.lightCount)
     {
-        TraceLog(LOG_ERROR, "Light ID specified to 'RLG_EnableLight' exceeds allocated number. [%i/%i]", light, RLG.lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_EnableLight' exceeds allocated number [MAX %i]", light, RLG.lightCount);
         return;
     }
 
@@ -1491,7 +1492,7 @@ void RLG_DisableLight(unsigned int light)
 {
     if (light >= RLG.lightCount)
     {
-        TraceLog(LOG_ERROR, "Light ID specified to 'RLG_DisableLight' exceeds allocated number. [%i/%i]", light, RLG.lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_DisableLight' exceeds allocated number [MAX %i]", light, RLG.lightCount);
         return;
     }
 
@@ -1504,7 +1505,7 @@ bool RLG_IsLightEnabled(unsigned int light)
 {
     if (light >= RLG.lightCount)
     {
-        TraceLog(LOG_ERROR, "Light ID specified to 'RLG_IsLightEnabled' exceeds allocated number. [%i/%i]", light, RLG.lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_IsLightEnabled' exceeds allocated number [MAX %i]", light, RLG.lightCount);
         return false;
     }
 
@@ -1515,7 +1516,7 @@ void RLG_SetLightType(unsigned int light, RLG_LightType type)
 {
     if (light >= RLG.lightCount)
     {
-        TraceLog(LOG_ERROR, "Light ID specified to 'RLG_SetLightType' exceeds allocated number. [%i/%i]", light, RLG.lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_SetLightType' exceeds allocated number [MAX %i]", light, RLG.lightCount);
         return;
     }
 
@@ -1528,7 +1529,7 @@ RLG_LightType RLG_GetLightType(unsigned int light)
 {
     if (light >= RLG.lightCount)
     {
-        TraceLog(LOG_ERROR, "Light ID specified to 'RLG_GetLightType' exceeds allocated number. [%i/%i]", light, RLG.lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_GetLightType' exceeds allocated number [MAX %i]", light, RLG.lightCount);
         return (RLG_LightType)0;
     }
 
@@ -1544,7 +1545,7 @@ void RLG_SetLightPositionV(unsigned int light, Vector3 position)
 {
     if (light >= RLG.lightCount)
     {
-        TraceLog(LOG_ERROR, "Light ID specified to 'RLG_SetLightPosition' exceeds allocated number. [%i/%i]", light, RLG.lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_SetLightPosition' exceeds allocated number [MAX %i]", light, RLG.lightCount);
         return;
     }
 
@@ -1557,7 +1558,7 @@ Vector3 RLG_GetLightPosition(unsigned int light)
 {
     if (light >= RLG.lightCount)
     {
-        TraceLog(LOG_ERROR, "Light ID specified to 'RLG_GetLightPosition' exceeds allocated number. [%i/%i]", light, RLG.lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_GetLightPosition' exceeds allocated number [MAX %i]", light, RLG.lightCount);
         return (Vector3) { 0 };
     }
 
@@ -1573,7 +1574,7 @@ void RLG_SetLightDirectionV(unsigned int light, Vector3 direction)
 {
     if (light >= RLG.lightCount)
     {
-        TraceLog(LOG_ERROR, "Light ID specified to 'RLG_SetLightDirection' exceeds allocated number. [%i/%i]", light, RLG.lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_SetLightDirection' exceeds allocated number [MAX %i]", light, RLG.lightCount);
         return;
     }
 
@@ -1586,7 +1587,7 @@ Vector3 RLG_GetLightDirection(unsigned int light)
 {
     if (light >= RLG.lightCount)
     {
-        TraceLog(LOG_ERROR, "Light ID specified to 'RLG_GetLightDirection' exceeds allocated number. [%i/%i]", light, RLG.lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_GetLightDirection' exceeds allocated number [MAX %i]", light, RLG.lightCount);
         return (Vector3) { 0 };
     }
 
@@ -1602,7 +1603,7 @@ void RLG_SetLightTargetV(unsigned int light, Vector3 targetPosition)
 {
     if (light >= RLG.lightCount)
     {
-        TraceLog(LOG_ERROR, "Light ID specified to 'RLG_SetLightTarget' exceeds allocated number. [%i/%i]", light, RLG.lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_SetLightTarget' exceeds allocated number [MAX %i]", light, RLG.lightCount);
         return;
     }
 
@@ -1617,7 +1618,7 @@ Vector3 RLG_GetLightTarget(unsigned int light)
 {
     if (light >= RLG.lightCount)
     {
-        TraceLog(LOG_ERROR, "Light ID specified to 'RLG_GetLightTarget' exceeds allocated number. [%i/%i]", light, RLG.lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_GetLightTarget' exceeds allocated number [MAX %i]", light, RLG.lightCount);
         return (Vector3) { 0 };
     }
 
@@ -1635,7 +1636,7 @@ void RLG_SetLightDiffuseV(unsigned int light, Vector3 color)
 {
     if (light >= RLG.lightCount)
     {
-        TraceLog(LOG_ERROR, "Light ID specified to 'RLG_SetLightDiffuse' exceeds allocated number. [%i/%i]", light, RLG.lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_SetLightDiffuse' exceeds allocated number [MAX %i]", light, RLG.lightCount);
         return;
     }
 
@@ -1648,7 +1649,7 @@ void RLG_SetLightDiffuseC(unsigned int light, Color color)
 {
     if (light >= RLG.lightCount)
     {
-        TraceLog(LOG_ERROR, "Light ID specified to 'RLG_SetLightDiffuseC' exceeds allocated number. [%i/%i]", light, RLG.lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_SetLightDiffuseC' exceeds allocated number [MAX %i]", light, RLG.lightCount);
         return;
     }
 
@@ -1666,7 +1667,7 @@ Vector3 RLG_GetLightDiffuse(unsigned int light)
 {
     if (light >= RLG.lightCount)
     {
-        TraceLog(LOG_ERROR, "Light ID specified to 'RLG_GetLightDiffuse' exceeds allocated number. [%i/%i]", light, RLG.lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_GetLightDiffuse' exceeds allocated number [MAX %i]", light, RLG.lightCount);
         return (Vector3) { 0 };
     }
 
@@ -1677,7 +1678,7 @@ Color RLG_GetLightDiffuseC(unsigned int light)
 {
     if (light >= RLG.lightCount)
     {
-        TraceLog(LOG_ERROR, "Light ID specified to 'RLG_GetLightDiffuseC' exceeds allocated number. [%i/%i]", light, RLG.lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_GetLightDiffuseC' exceeds allocated number [MAX %i]", light, RLG.lightCount);
         return BLANK;
     }
 
@@ -1698,7 +1699,7 @@ void RLG_SetLightSpecularV(unsigned int light, Vector3 color)
 {
     if (light >= RLG.lightCount)
     {
-        TraceLog(LOG_ERROR, "Light ID specified to 'RLG_SetLightSpecular' exceeds allocated number. [%i/%i]", light, RLG.lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_SetLightSpecular' exceeds allocated number [MAX %i]", light, RLG.lightCount);
         return;
     }
 
@@ -1711,7 +1712,7 @@ void RLG_SetLightSpecularC(unsigned int light, Color color)
 {
     if (light >= RLG.lightCount)
     {
-        TraceLog(LOG_ERROR, "Light ID specified to 'RLG_SetLightSpecularC' exceeds allocated number. [%i/%i]", light, RLG.lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_SetLightSpecularC' exceeds allocated number [MAX %i]", light, RLG.lightCount);
         return;
     }
 
@@ -1729,7 +1730,7 @@ Vector3 RLG_GetLightSpecular(unsigned int light)
 {
     if (light >= RLG.lightCount)
     {
-        TraceLog(LOG_ERROR, "Light ID specified to 'RLG_GetLightSpecular' exceeds allocated number. [%i/%i]", light, RLG.lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_GetLightSpecular' exceeds allocated number [MAX %i]", light, RLG.lightCount);
         return (Vector3) { 0 };
     }
 
@@ -1740,7 +1741,7 @@ Color RLG_GetLightSpecularC(unsigned int light)
 {
     if (light >= RLG.lightCount)
     {
-        TraceLog(LOG_ERROR, "Light ID specified to 'RLG_GetLightSpecularC' exceeds allocated number. [%i/%i]", light, RLG.lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_GetLightSpecularC' exceeds allocated number [MAX %i]", light, RLG.lightCount);
         return BLANK;
     }
 
@@ -1756,7 +1757,7 @@ void RLG_SetLightInnerCutOff(unsigned int light, float degrees)
 {
     if (light >= RLG.lightCount)
     {
-        TraceLog(LOG_ERROR, "Light ID specified to 'RLG_SetLightInnerCutOff' exceeds allocated number. [%i/%i]", light, RLG.lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_SetLightInnerCutOff' exceeds allocated number [MAX %i]", light, RLG.lightCount);
         return;
     }
 
@@ -1769,7 +1770,7 @@ float RLG_GetLightInnerCutoff(unsigned int light)
 {
     if (light >= RLG.lightCount)
     {
-        TraceLog(LOG_ERROR, "Light ID specified to 'RLG_GetLightInnerCutoff' exceeds allocated number. [%i/%i]", light, RLG.lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_GetLightInnerCutoff' exceeds allocated number [MAX %i]", light, RLG.lightCount);
         return 0;
     }
 
@@ -1780,7 +1781,7 @@ void RLG_SetLightOuterCutOff(unsigned int light, float degrees)
 {
     if (light >= RLG.lightCount)
     {
-        TraceLog(LOG_ERROR, "Light ID specified to 'RLG_SetLightOuterCutOff' exceeds allocated number. [%i/%i]", light, RLG.lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_SetLightOuterCutOff' exceeds allocated number [MAX %i]", light, RLG.lightCount);
         return;
     }
 
@@ -1793,7 +1794,7 @@ float RLG_GetLightOuterCutoff(unsigned int light)
 {
     if (light >= RLG.lightCount)
     {
-        TraceLog(LOG_ERROR, "Light ID specified to 'RLG_GetLightOuterCutoff' exceeds allocated number. [%i/%i]", light, RLG.lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_GetLightOuterCutoff' exceeds allocated number [MAX %i]", light, RLG.lightCount);
         return 0;
     }
 
@@ -1804,7 +1805,7 @@ void RLG_SetLightAttenuation(unsigned int light, float constant, float linear, f
 {
     if (light >= RLG.lightCount)
     {
-        TraceLog(LOG_ERROR, "Light ID specified to 'RLG_SetLightAttenuation' exceeds allocated number. [%i/%i]", light, RLG.lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_SetLightAttenuation' exceeds allocated number [MAX %i]", light, RLG.lightCount);
         return;
     }
 
@@ -1826,7 +1827,7 @@ void RLG_GetLightAttenuation(unsigned int light, float* constant, float* linear,
 {
     if (light >= RLG.lightCount)
     {
-        TraceLog(LOG_ERROR, "Light ID specified to 'RLG_GetLightAttenuation' exceeds allocated number. [%i/%i]", light, RLG.lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_GetLightAttenuation' exceeds allocated number [MAX %i]", light, RLG.lightCount);
         return;
     }
 
@@ -1839,7 +1840,7 @@ void RLG_SetLightAttenuationQuadratic(unsigned int light, float quadratic)
 {
     if (light >= RLG.lightCount)
     {
-        TraceLog(LOG_ERROR, "Light ID specified to 'RLG_SetLightAttenuationQuadratic' exceeds allocated number. [%i/%i]", light, RLG.lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_SetLightAttenuationQuadratic' exceeds allocated number [MAX %i]", light, RLG.lightCount);
         return;
     }
 
@@ -1852,7 +1853,7 @@ void RLG_SetLightAttenuationConstant(unsigned int light, float constant)
 {
     if (light >= RLG.lightCount)
     {
-        TraceLog(LOG_ERROR, "Light ID specified to 'RLG_SetLightAttenuationConstant' exceeds allocated number. [%i/%i]", light, RLG.lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_SetLightAttenuationConstant' exceeds allocated number [MAX %i]", light, RLG.lightCount);
         return;
     }
 
@@ -1865,7 +1866,7 @@ void RLG_SetLightAttenuationLinear(unsigned int light, float linear)
 {
     if (light >= RLG.lightCount)
     {
-        TraceLog(LOG_ERROR, "Light ID specified to 'RLG_SetLightAttenuationLinear' exceeds allocated number. [%i/%i]", light, RLG.lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_SetLightAttenuationLinear' exceeds allocated number [MAX %i]", light, RLG.lightCount);
         return;
     }
 
@@ -1878,15 +1879,15 @@ void RLG_EnableLightShadow(unsigned int light, int shadowMapResolution)
 {
     if (light >= RLG.lightCount)
     {
-        TraceLog(LOG_ERROR, "Light ID specified to 'RLG_EnableLightShadow' exceeds allocated number. [%i/%i]", light, RLG.lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_EnableLightShadow' exceeds allocated number [MAX %i]", light, RLG.lightCount);
         return;
     }
 
     struct RLG_Light *l = &RLG.lights[light];
 
-    if (l->type != RLG_SPOTLIGHT)
+    if (l->type == RLG_OMNILIGHT)
     {
-        TraceLog(LOG_WARNING, "Shadow mapping currently works fully only with spotlights.", light, RLG.lightCount);
+        TraceLog(LOG_WARNING, "The light [ID %i] is of type 'RLG_OMNILIGHT', shadow support for omnilights is not yet implemented, so please specify the light direction.", light, RLG.lightCount);
     }
 
     if (l->shadowMap.width != shadowMapResolution)  ///< TODO: Review for CSM
@@ -1934,7 +1935,7 @@ void RLG_DisableLightShadow(unsigned int light)
 {
     if (light >= RLG.lightCount)
     {
-        TraceLog(LOG_ERROR, "Light ID specified to 'RLG_DisableLightShadow' exceeds allocated number. [%i/%i]", light, RLG.lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_DisableLightShadow' exceeds allocated number [MAX %i]", light, RLG.lightCount);
         return;
     }
 
@@ -1947,7 +1948,7 @@ bool RLG_IsLightShadowEnabled(unsigned int light)
 {
     if (light >= RLG.lightCount)
     {
-        TraceLog(LOG_ERROR, "Light ID specified to 'RLG_IsLightShadowEnabled' exceeds allocated number. [%i/%i]", light, RLG.lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_IsLightShadowEnabled' exceeds allocated number [MAX %i]", light, RLG.lightCount);
         return false;
     }
 
@@ -1958,7 +1959,7 @@ void RLG_SetLightShadowBias(unsigned int light, float value)
 {
     if (light >= RLG.lightCount)
     {
-        TraceLog(LOG_ERROR, "Light ID specified to 'RLG_SetLightShadowBias' exceeds allocated number. [%i/%i]", light, RLG.lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_SetLightShadowBias' exceeds allocated number [MAX %i]", light, RLG.lightCount);
         return;
     }
 
@@ -1971,7 +1972,7 @@ float RLG_GetLightShadowBias(unsigned int light)
 {
     if (light >= RLG.lightCount)
     {
-        TraceLog(LOG_ERROR, "Light ID specified to 'RLG_SetLightShadowBias' exceeds allocated number. [%i/%i]", light, RLG.lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_SetLightShadowBias' exceeds allocated number [MAX %i]", light, RLG.lightCount);
         return 0;
     }
 
@@ -1983,7 +1984,7 @@ void RLG_BeginShadowCast(unsigned int light)
 {
     if (light >= RLG.lightCount)
     {
-        TraceLog(LOG_ERROR, "Light ID specified to 'RLG_BeginShadowCast' exceeds allocated number. [%i/%i]", light, RLG.lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_BeginShadowCast' exceeds allocated number [MAX %i]", light, RLG.lightCount);
         return;
     }
 
@@ -2056,7 +2057,7 @@ void RLG_DrawShadowMapEx(unsigned int light, int x, int y, int w, int h, float n
 {
     if (light >= RLG.lightCount)
     {
-        TraceLog(LOG_ERROR, "Light ID specified to 'RLG_DrawShadowMap' exceeds allocated number. [%i/%i]", light, RLG.lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_DrawShadowMap' exceeds allocated number [MAX %i]", light, RLG.lightCount);
         return;
     }
 
