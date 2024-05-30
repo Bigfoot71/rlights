@@ -522,9 +522,16 @@ void RLG_SetLightAttenuationLinear(unsigned int light, float linear);
 
 /**
  * @brief Enable shadow casting for a light.
+ *
+ * @warning Shadow casting is not fully functional for omnilights yet. Please specify the light direction.
  * 
  * @param light The index of the light to enable shadow casting for.
  * @param shadowMapResolution The resolution of the shadow map.
+ * 
+ * @todo Implement shadow casting feature for omnilights using cubemaps.
+ *       Previous attempts have been made, but it might be optimal to
+ *       directly call OpenGL functions bypassing RLGL, though this
+ *       approach could pose issues for some users...
  */
 void RLG_EnableLightShadow(unsigned int light, int shadowMapResolution);
 
