@@ -955,11 +955,12 @@ static const char rlgShadowMapFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
     "uniform sampler2D texture0;"
     "uniform float near;"
     "uniform float far;"
+    GLSL_FS_OUT_DEF
     "void main()"
     "{"
         "float depth = TEX(texture0, vec2(fragTexCoord.x, 1.0 - fragTexCoord.y)).r;"
         "depth = (2.0*near*far)/(far + near - (depth*2.0 - 1.0)*(far - near));"
-        "gl_FragColor = vec4(vec3(depth/far), 1.0);"
+        GLSL_FINAL_COLOR("vec4(vec3(depth/far), 1.0)")
     "}";
 
 #undef TOSTRING
