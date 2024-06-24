@@ -51,18 +51,14 @@ void RLG_Close(void);
 void RLG_SetCustomShaderCode(RLG_Shader shaderType, const char *vsCode, const char *fsCode);
 
 /**
- * @brief Get the current lighting shader.
+ * @brief Get the current shader of the specified type.
  * 
- * @return A pointer to the current Shader used for lighting.
- */
-const Shader* RLG_GetLightShader(void);
-
-/**
- * @brief Get the current depth shader.
+ * @param shaderType The type of shader to retrieve.
  * 
- * @return A pointer to the current Shader used for depth rendering.
+ * @return A pointer to the current Shader object used for the specified shader type.
+ *         Returns NULL if the shader type is not loaded.
  */
-const Shader* RLG_GetDepthShader(void);
+const Shader* RLG_GetShader(RLG_Shader shaderType);
 
 /**
  * @brief Set the view position, corresponds to the position of your camera.
@@ -1361,21 +1357,21 @@ void RLG_SetCustomShaderCode(RLG_Shader shaderType, const char *vsCode, const ch
     }
 }
 
-const Shader* RLG_GetLightShader(void)
+const Shader* RLG_GetShader(RLG_Shader shaderType)
 {
-    if (IsShaderReady(RLG.lightShader))
+    switch (shaderType)
     {
-        return &RLG.lightShader;
-    }
+        case RLG_SHADER_LIGHT:
+            return IsShaderReady(RLG.lightShader) ? &RLG.lightShader: NULL;
 
-    return NULL;
-}
+        case RLG_SHADER_DEPTH:
+            return IsShaderReady(RLG.depthShader) ? &RLG.depthShader: NULL;
 
-const Shader* RLG_GetDepthShader(void)
-{
-    if (IsShaderReady(RLG.depthShader))
-    {
-        return &RLG.depthShader;
+        case RLG_SHADER_SHADOW_MAP:
+            return IsShaderReady(RLG.shadowMapShader) ? &RLG.shadowMapShader: NULL;
+
+        default:
+            break;
     }
 
     return NULL;

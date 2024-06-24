@@ -85,9 +85,7 @@ void RLG_Init(unsigned int lightCount);
 void RLG_Close(void);
 
 void RLG_SetCustomShaderCode(RLG_Shader shaderType, const char *vsCode, const char *fsCode)
-
-const Shader* RLG_GetLightShader(void);
-const Shader* RLG_GetDepthShader(void);
+const Shader* RLG_GetShader(RLG_Shader shaderType);
 
 void RLG_SetViewPosition(float x, float y, float z);
 void RLG_SetViewPositionV(Vector3 position);
