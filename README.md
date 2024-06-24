@@ -84,9 +84,7 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 void RLG_Init(unsigned int lightCount);
 void RLG_Close(void);
 
-void RLG_SetLightingShaderCode(const char *vsCode, const char *fsCode);
-void RLG_SetDepthShaderCode(const char *vsCode, const char *fsCode);
-void RLG_SetShadowMapShaderCode(const char *vsCode, const char *fsCode);
+void RLG_SetCustomShaderCode(RLG_Shader shaderType, const char *vsCode, const char *fsCode)
 
 const Shader* RLG_GetLightShader(void);
 const Shader* RLG_GetDepthShader(void);

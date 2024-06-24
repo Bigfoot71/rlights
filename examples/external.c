@@ -40,7 +40,7 @@ int main(void)
     const int lightCount = 1;
 
     LoadShaderCode(lightCount, &lightVS, &lightFS);
-    RLG_SetLightingShaderCode(lightVS, lightFS);
+    RLG_SetCustomShaderCode(RLG_SHADER_LIGHT, lightVS, lightFS);
 
     RLG_Init(lightCount);
     RLG_SetSpecular(0.5f, 0.5f, 0.5f);

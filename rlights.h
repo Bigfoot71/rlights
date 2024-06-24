@@ -17,6 +17,12 @@ typedef enum {
     RLG_SPOTLIGHT
 } RLG_LightType;
 
+typedef enum {
+    RLG_SHADER_LIGHT,
+    RLG_SHADER_DEPTH,
+    RLG_SHADER_SHADOW_MAP
+} RLG_Shader;
+
 #if defined(__cplusplus)
 extern "C" {
 #endif
@@ -34,34 +40,15 @@ void RLG_Init(unsigned int lightCount);
 void RLG_Close(void);
 
 /**
- * @brief Set custom lighting shader code.
+ * @brief Set custom shader code for a specific shader type.
  * 
- * @note This function should be called before RLG_Init to define your own lighting shaders.
+ * @note This function should be called before RLG_Init to define your own shaders.
  * 
- * @param vsCode Vertex shader code for lighting.
- * @param fsCode Fragment shader code for lighting.
+ * @param shaderType The type of shader to set the custom code for.
+ * @param vsCode Vertex shader code for the specified shader type.
+ * @param fsCode Fragment shader code for the specified shader type.
  */
-void RLG_SetLightingShaderCode(const char *vsCode, const char *fsCode);
-
-/**
- * @brief Set custom depth shader code.
- * 
- * @note This function should be called before RLG_Init to define your own depth shaders.
- * 
- * @param vsCode Vertex shader code for depth.
- * @param fsCode Fragment shader code for depth.
- */
-void RLG_SetDepthShaderCode(const char *vsCode, const char *fsCode);
-
-/**
- * @brief Set custom shadow map shader code.
- * 
- * @note This function should be called before RLG_Init to define your own shadow map shaders.
- * 
- * @param vsCode Vertex shader code for shadow mapping.
- * @param fsCode Fragment shader code for shadow mapping.
- */
-void RLG_SetShadowMapShaderCode(const char *vsCode, const char *fsCode);
+void RLG_SetCustomShaderCode(RLG_Shader shaderType, const char *vsCode, const char *fsCode);
 
 /**
  * @brief Get the current lighting shader.
@@ -1349,22 +1336,29 @@ void RLG_Close(void)
     RLG.lightCount = 0;
 }
 
-void RLG_SetLightingShaderCode(const char *vsCode, const char *fsCode)
+void RLG_SetCustomShaderCode(RLG_Shader shaderType, const char *vsCode, const char *fsCode)
 {
-    rlgCachedLightVS = vsCode;
-    rlgCachedLightFS = fsCode;
-}
+    switch (shaderType)
+    {
+        case RLG_SHADER_LIGHT:
+            rlgCachedLightVS = vsCode;
+            rlgCachedLightFS = fsCode;
+            break;
 
-void RLG_SetDepthShaderCode(const char *vsCode, const char *fsCode)
-{
-    rlgCachedDepthVS = vsCode;
-    rlgCachedDepthFS = fsCode;
-}
+        case RLG_SHADER_DEPTH:
+            rlgCachedDepthVS = vsCode;
+            rlgCachedDepthFS = fsCode;
+            break;
 
-void RLG_SetShadowMapShaderCode(const char *vsCode, const char *fsCode)
-{
-    rlgCachedShadowMapVS = vsCode;
-    rlgCachedShadowMapFS = fsCode;
+        case RLG_SHADER_SHADOW_MAP:
+            rlgCachedShadowMapVS = vsCode;
+            rlgCachedShadowMapFS = fsCode;
+            break;
+
+        default:
+            TraceLog(LOG_WARNING, "Unsupported 'shaderType' passed to 'RLG_SetCustomShader'");
+            break;
+    }
 }
 
 const Shader* RLG_GetLightShader(void)
