@@ -39,14 +39,17 @@ int main(void)
         .fovy = 45.0f
     };
 
-    RLG_Init(1);
+    RLG_Context rlgCtx = RLG_CreateContext(1);
+    RLG_SetContext(rlgCtx);
+
+    RLG_SetSpecular(0.5f, 0.5f, 0.5f);
 
     RLG_EnableLight(0);
     RLG_SetLightPosition(0, 2, 2, 2);
     RLG_SetLightType(0, RLG_OMNILIGHT);
+    RLG_SetLightDiffuse(0, 0.5f, 0.0, 1.0);
 
     Model cube = LoadModelFromMesh(GenMeshCube(1, 1, 1));
-    cube.materials[0].shader = *RLG_GetShader();
 
     SetTargetFPS(60);
 
@@ -60,7 +63,7 @@ int main(void)
             ClearBackground(BLACK);
 
             BeginMode3D(camera);
-                DrawModel(cube, Vector3Zero(), 1, WHITE);
+                RLG_DrawModel(cube, Vector3Zero(), 1, WHITE);
             EndMode3D();
 
         EndDrawing();
@@ -68,7 +71,7 @@ int main(void)
 
     UnloadModel(cube);
 
-    RLG_Close();
+    RLG_DestroyContext(rlgCtx);
     CloseWindow();
 
     return 0;
@@ -81,8 +84,11 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 ## Cheatsheet
 
 ```c
-void RLG_Init(unsigned int lightCount);
-void RLG_Close(void);
+RLG_Context RLG_CreateContext(unsigned int lightCount);
+void RLG_DestroyContext(RLG_Context ctx);
+
+void RLG_SetContext(RLG_Context ctx);
+RLG_Context RLG_GetContext(void);
 
 void RLG_SetCustomShaderCode(RLG_Shader shaderType, const char *vsCode, const char *fsCode)
 const Shader* RLG_GetShader(RLG_Shader shaderType);

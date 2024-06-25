@@ -25,7 +25,9 @@ int main(void)
     UnloadImage(imMap);
 
     // Init light system
-    RLG_Init(1);
+    RLG_Context rlgCtx = RLG_CreateContext(1);
+    RLG_SetContext(rlgCtx);
+
     RLG_EnableNormalMap();
     RLG_SetSpecular(0.2f, 0.2f, 0.2f);
 
@@ -74,7 +76,7 @@ int main(void)
     UnloadTexture(normal);
     UnloadModel(model);
 
-    RLG_Close();
+    RLG_DestroyContext(rlgCtx);
     CloseWindow();
 
     return 0;

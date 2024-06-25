@@ -1,5 +1,4 @@
 #include "raylib.h"
-#include "raymath.h"
 
 #define RLIGHTS_IMPLEMENTATION
 #include "../rlights.h"
@@ -15,7 +14,9 @@ int main(void)
         .fovy = 45.0f
     };
 
-    RLG_Init(1);
+    RLG_Context rlgCtx = RLG_CreateContext(1);
+    RLG_SetContext(rlgCtx);
+
     RLG_SetSpecular(0.5f, 0.5f, 0.5f);
 
     RLG_EnableLight(0);
@@ -45,7 +46,7 @@ int main(void)
 
     UnloadModel(cube);
 
-    RLG_Close();
+    RLG_DestroyContext(rlgCtx);
     CloseWindow();
 
     return 0;

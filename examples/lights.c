@@ -21,7 +21,9 @@ int main(void)
     camera.projection = CAMERA_PERSPECTIVE;             // Camera projection type
 
     // Init light system
-    RLG_Init(4);
+    RLG_Context rlgCtx = RLG_CreateContext(4);
+    RLG_SetContext(rlgCtx);
+
     RLG_SetSpecular(0.2f, 0.2f, 0.2f);
 
     RLG_EnableLight(0);
@@ -92,7 +94,7 @@ int main(void)
     UnloadModel(cube);
     UnloadModel(plane);
 
-    RLG_Close();
+    RLG_DestroyContext(rlgCtx);
     CloseWindow();
 
     return 0;

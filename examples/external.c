@@ -42,11 +42,10 @@ int main(void)
     LoadShaderCode(lightCount, &lightVS, &lightFS);
     RLG_SetCustomShaderCode(RLG_SHADER_LIGHT, lightVS, lightFS);
 
-    RLG_Init(lightCount);
-    RLG_SetSpecular(0.5f, 0.5f, 0.5f);
+    RLG_Context rlgCtx = RLG_CreateContext(1);
+    RLG_SetContext(rlgCtx);
 
-    free(lightVS);
-    free(lightFS);
+    RLG_SetSpecular(0.5f, 0.5f, 0.5f);
 
     RLG_EnableLight(0);
     RLG_SetLightPosition(0, 2, 2, 2);
@@ -75,7 +74,7 @@ int main(void)
 
     UnloadModel(cube);
 
-    RLG_Close();
+    RLG_DestroyContext(rlgCtx);
     CloseWindow();
 
     free(lightVS);
