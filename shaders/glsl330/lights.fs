@@ -36,15 +36,18 @@ struct Light {
 uniform Light lights[NUM_LIGHTS];
 
 uniform lowp int useSpecularMap;
+uniform lowp int useEmissiveMap;
 uniform lowp int useNormalMap;
 
-uniform sampler2D texture0;   // diffuse
-uniform sampler2D texture1;   // specular
-uniform sampler2D texture2;   // normal
+uniform sampler2D texture0;     // diffuse
+uniform sampler2D texture1;     // specular
+uniform sampler2D texture2;     // normal
+uniform sampler2D texture5;     // emissive
 
-uniform vec3 colSpecular;     // sent by rlights
-uniform vec4 colDiffuse;      // sent by raylib
-uniform vec3 colAmbient;      // sent by rlights
+uniform vec3 colSpecular;       // sent by rlights
+uniform vec3 colEmissive;       // sent by rlights
+uniform vec4 colDiffuse;        // sent by raylib
+uniform vec3 colAmbient;        // sent by rlights
 
 uniform float shininess;
 uniform vec3 viewPos;
@@ -83,9 +86,6 @@ void main()
     // get texture samples
     vec3 diffSample = texture(texture0, fragTexCoord).rgb*colDiffuse.rgb*fragColor.rgb;
     vec3 specSample = (useSpecularMap != 0) ? texture(texture1, fragTexCoord).rgb*colSpecular : colSpecular;
-
-    // ambient
-    vec3 ambientColor = colAmbient*diffSample;
 
     // compute normals
     vec3 normal;
@@ -136,5 +136,16 @@ void main()
         }
     }
 
-    outColor = vec4(ambientColor + finalColor, 1.0);
+    // compute ambient
+    vec3 ambientColor = colAmbient*diffSample;
+
+    // compute emission
+    vec3 emission = colEmissive;
+    if (useEmissiveMap != 0)
+    {
+        emission *= texture(texture5, fragTexCoord).rgb;
+    }
+
+    // compute final color
+    outColor = vec4(ambientColor + finalColor + emission, 1.0);
 };

@@ -101,6 +101,10 @@ void RLG_EnableSpecularMap(void);
 void RLG_DisableSpecularMap(void);
 bool RLG_IsSpecularMapEnabled(void);
 
+void RLG_EnableEmissiveMap(void);
+void RLG_DisableEmissiveMap(void);
+bool RLG_IsEmissiveMapEnabled(void);
+
 void RLG_EnableNormalMap(void);
 void RLG_DisableNormalMap(void);
 bool RLG_IsNormalMapEnabled(void);
@@ -113,6 +117,12 @@ void RLG_SetSpecularV(Vector3 color);
 void RLG_SetSpecularC(Color color);
 Vector3 RLG_GetSpecular(void);
 Color RLG_GetSpecularC(void);
+
+void RLG_SetEmissive(float r, float g, float b);
+void RLG_SetEmissiveV(Vector3 color);
+void RLG_SetEmissiveC(Color color);
+Vector3 RLG_GetEmissive(void);
+Color RLG_GetEmissiveC(void);
 
 void RLG_SetAmbient(float r, float g, float b);
 void RLG_SetAmbientV(Vector3 color);

@@ -120,6 +120,23 @@ void RLG_DisableSpecularMap(void);
 bool RLG_IsSpecularMapEnabled(void);
 
 /**
+ * @brief Enable the emissive map in the shader.
+ */
+void RLG_EnableEmissiveMap(void);
+
+/**
+ * @brief Disable the emissive map in the shader.
+ */
+void RLG_DisableEmissiveMap(void);
+
+/**
+ * @brief Check if the emissive map is enabled.
+ * 
+ * @return true if the emissive map is enabled, false otherwise.
+ */
+bool RLG_IsEmissiveMapEnabled(void);
+
+/**
  * @brief Enable the normal map in the shader.
  */
 void RLG_EnableNormalMap(void);
@@ -186,6 +203,43 @@ Vector3 RLG_GetSpecular(void);
  * @return The current specular color as a Color structure.
  */
 Color RLG_GetSpecularC(void);
+
+/**
+ * @brief Set the emissive color in the shader.
+ * 
+ * @param r The red component of the emissive color.
+ * @param g The green component of the emissive color.
+ * @param b The blue component of the emissive color.
+ */
+void RLG_SetEmissive(float r, float g, float b);
+
+/**
+ * @brief Set the emissive color in the shader using a Vector3 structure.
+ * 
+ * @param color The emissive color as a Vector3 structure.
+ */
+void RLG_SetEmissiveV(Vector3 color);
+
+/**
+ * @brief Set the emissive color for the shader using a Color structure.
+ * 
+ * @param color The emissive color as a Color structure.
+ */
+void RLG_SetEmissiveC(Color color);
+
+/**
+ * @brief Get the current emissive color sets in the shader.
+ * 
+ * @return The current emissive color as a Vector3 structure.
+ */
+Vector3 RLG_GetEmissive(void);
+
+/**
+ * @brief Get the current emissive color sets in the shader as a Color structure.
+ * 
+ * @return The current emissive color as a Color structure.
+ */
+Color RLG_GetEmissiveC(void);
 
 /**
  * @brief Set the ambient color in the shader.
@@ -759,7 +813,6 @@ void RLG_DrawModelEx(Model model, Vector3 position, Vector3 rotationAxis, float 
 }
 #endif
 
-#define RLIGHTS_IMPLEMENTATION
 #ifdef RLIGHTS_IMPLEMENTATION
 
 #include <raymath.h>
@@ -904,13 +957,16 @@ static const char rlgLightFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
     "uniform Light lights[NUM_LIGHTS];"
 
     "uniform lowp int useSpecularMap;"
+    "uniform lowp int useEmissiveMap;"
     "uniform lowp int useNormalMap;"
 
     "uniform sampler2D texture0;"   // diffuse
     "uniform sampler2D texture1;"   // specular
     "uniform sampler2D texture2;"   // normal
+    "uniform sampler2D texture5;"   // emissive
 
     "uniform vec3 colSpecular;"     // sent by rlights
+    "uniform vec3 colEmissive;"     // sent by rlights
     "uniform vec4 colDiffuse;"      // sent by raylib
     "uniform vec3 colAmbient;"      // sent by rlights
 
@@ -955,9 +1011,6 @@ static const char rlgLightFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
         // get texture samples
         "vec3 diffSample = TEX(texture0, fragTexCoord).rgb*colDiffuse.rgb*fragColor.rgb;"
         "vec3 specSample = (useSpecularMap != 0) ? TEX(texture1, fragTexCoord).rgb*colSpecular : colSpecular;"
-
-        // ambient
-        "vec3 ambientColor = colAmbient*diffSample;"
 
         // compute normals
         "vec3 normal;"
@@ -1008,7 +1061,18 @@ static const char rlgLightFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
             "}"
         "}"
 
-        GLSL_FINAL_COLOR("vec4(ambientColor + finalColor, 1.0)")
+        // compute ambient
+        "vec3 ambientColor = colAmbient*diffSample;"
+
+        // compute emission
+        "vec3 emission = colEmissive;"
+        "if (useEmissiveMap != 0)"
+        "{"
+            "emission *= TEX(texture5, fragTexCoord).rgb;"
+        "}"
+
+        // compute final color
+        GLSL_FINAL_COLOR("vec4(ambientColor + finalColor + emission, 1.0)")
     "}";
 
 static const char rlgDepthVS[] = GLSL_VERSION_DEF
@@ -1052,22 +1116,28 @@ static const char rlgShadowMapFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
 struct RLG_GlobalLightLocs
 {
     int colSpecular;
+    int colEmissive;
     int colAmbient;
+
     int viewPos;
     int shininess;
 
     int useSpecularMap;
+    int useEmissiveMap;
     int useNormalMap;
 };
 
 struct RLG_GlobalLight
 {
     Vector3 colSpecular;
+    Vector3 colEmissive;
     Vector3 colAmbient;
+
     Vector3 viewPos;
     float shininess;
 
     int useSpecularMap;
+    int useEmissiveMap;
     int useNormalMap;
 };
 
@@ -1221,8 +1291,10 @@ RLG_Context RLG_CreateContext(unsigned int count)
 
     // Retrieving global shader locations
     ctx->locsGlobalLight.useSpecularMap = GetShaderLocation(ctx->lightShader, "useSpecularMap");
+    ctx->locsGlobalLight.useEmissiveMap = GetShaderLocation(ctx->lightShader, "useEmissiveMap");
     ctx->locsGlobalLight.useNormalMap = GetShaderLocation(ctx->lightShader, "useNormalMap");
     ctx->locsGlobalLight.colSpecular = GetShaderLocation(ctx->lightShader, "colSpecular");
+    ctx->locsGlobalLight.colEmissive = GetShaderLocation(ctx->lightShader, "colEmissive");
     ctx->locsGlobalLight.colAmbient = GetShaderLocation(ctx->lightShader, "colAmbient");
     ctx->locsGlobalLight.shininess = GetShaderLocation(ctx->lightShader, "shininess");
     ctx->locsGlobalLight.viewPos = GetShaderLocation(ctx->lightShader, "viewPos");
@@ -1230,6 +1302,7 @@ RLG_Context RLG_CreateContext(unsigned int count)
     // Define default global uniforms
     ctx->globalLight = (struct RLG_GlobalLight) { 0 };
     ctx->globalLight.colSpecular = (Vector3) { 1.0f, 1.0f, 1.0f };
+    ctx->globalLight.colEmissive = (Vector3) { 0.0f, 0.0f, 0.0f };
     ctx->globalLight.colAmbient = (Vector3) { 0.1f, 0.1f, 0.1f };
     ctx->globalLight.shininess = 32.0f;
 
@@ -1447,6 +1520,23 @@ bool RLG_IsSpecularMapEnabled(void)
     return CTX->globalLight.useSpecularMap;
 }
 
+void RLG_EnableEmissiveMap(void)
+{
+    const int v = 1;
+    SetShaderValue(CTX->lightShader, CTX->locsGlobalLight.useEmissiveMap, &v, SHADER_UNIFORM_INT);
+}
+
+void RLG_DisableEmissiveMap(void)
+{
+    const int v = 0;
+    SetShaderValue(CTX->lightShader, CTX->locsGlobalLight.useEmissiveMap, &v, SHADER_UNIFORM_INT);
+}
+
+bool RLG_IsEmissiveMapEnabled(void)
+{
+    return CTX->globalLight.useEmissiveMap;
+}
+
 void RLG_EnableNormalMap(void)
 {
     const int v = 1;
@@ -1513,6 +1603,47 @@ Color RLG_GetSpecularC(void)
         (unsigned char)(255*CTX->globalLight.colSpecular.x),
         (unsigned char)(255*CTX->globalLight.colSpecular.y),
         (unsigned char)(255*CTX->globalLight.colSpecular.z),
+        255
+    };
+}
+
+void RLG_SetEmissive(float r, float g, float b)
+{
+    CTX->globalLight.colEmissive = (Vector3) { r, g, b };
+    SetShaderValue(CTX->lightShader, CTX->locsGlobalLight.colEmissive,
+        &CTX->globalLight.colEmissive, SHADER_UNIFORM_VEC3);
+}
+
+void RLG_SetEmissiveV(Vector3 color)
+{
+    CTX->globalLight.colEmissive = color;
+    SetShaderValue(CTX->lightShader, CTX->locsGlobalLight.colEmissive,
+        &CTX->globalLight.colEmissive, SHADER_UNIFORM_VEC3);
+}
+
+void RLG_SetEmissiveC(Color color)
+{
+    CTX->globalLight.colEmissive = (Vector3) {
+        (float)color.r*(1.0f/255),
+        (float)color.g*(1.0f/255),
+        (float)color.b*(1.0f/255)
+    };
+
+    SetShaderValue(CTX->lightShader, CTX->locsGlobalLight.colEmissive,
+        &CTX->globalLight.colEmissive, SHADER_UNIFORM_VEC3);
+}
+
+Vector3 RLG_GetEmissive(void)
+{
+    return CTX->globalLight.colEmissive;
+}
+
+Color RLG_GetEmissiveC(void)
+{
+    return (Color) {
+        (unsigned char)(255*CTX->globalLight.colEmissive.x),
+        (unsigned char)(255*CTX->globalLight.colEmissive.y),
+        (unsigned char)(255*CTX->globalLight.colEmissive.z),
         255
     };
 }
