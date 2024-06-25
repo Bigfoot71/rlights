@@ -21,7 +21,7 @@ int main(void)
     RLG_Context rlgCtx = RLG_CreateContext(1);
     RLG_SetContext(rlgCtx);
 
-    RLG_SetSpecular(0.5f, 0.5f, 0.5f);
+    RLG_SetMaterialValue(RLG_MAT_SPECULAR_TINT, 0.5f);
     RLG_SetViewPositionV(camera.position);
 
     RLG_EnableLight(0);
@@ -58,9 +58,17 @@ int main(void)
 
                 RLG_DrawModel(plane, (Vector3) { 0, -0.5, 0 }, 1, WHITE);
     
-                if (isEmissive) RLG_SetEmissiveC(RED);
+                if (isEmissive)
+                {
+                    RLG_SetMaterialColor(RLG_MAT_EMISSIVE_TINT, RED);
+                }
+
                 RLG_DrawModel(cube, Vector3Zero(), 1, RED);
-                if (isEmissive) RLG_SetEmissiveC(BLACK);
+
+                if (isEmissive)
+                {
+                    RLG_SetMaterialColor(RLG_MAT_EMISSIVE_TINT, BLANK);
+                }
 
             EndMode3D();
 

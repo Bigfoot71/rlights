@@ -28,8 +28,8 @@ int main(void)
     RLG_Context rlgCtx = RLG_CreateContext(1);
     RLG_SetContext(rlgCtx);
 
-    RLG_EnableNormalMap();
-    RLG_SetSpecular(0.2f, 0.2f, 0.2f);
+    RLG_SetMap(RLG_MAP_NORMAL, true);
+    RLG_SetMaterialValue(RLG_MAT_SPECULAR_TINT, 0.2f);
 
     RLG_EnableLight(0);
     RLG_SetLightInnerCutOff(0, 17.5f);

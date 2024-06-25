@@ -11,17 +11,42 @@
 #   endif //PLATFORM
 #endif //GLSL_VERSION
 
+/**
+ * @brief Enum representing different types of lights.
+ */
 typedef enum {
     RLG_DIRECTIONAL,        ///< Enum representing a directional light type.
     RLG_OMNILIGHT,          ///< Enum representing an omnilight type.
     RLG_SPOTLIGHT           ///< Enum representing a spotlight type.
 } RLG_LightType;
 
+/**
+ * @brief Enum representing different types of shaders.
+ */
 typedef enum {
     RLG_SHADER_LIGHT,       ///< Enum representing the lighting shader.
     RLG_SHADER_DEPTH,       ///< Enum representing the depth shader.
     RLG_SHADER_SHADOW_MAP   ///< Enum representing the shadow map shader.
 } RLG_Shader;
+
+/**
+ * @brief Enum representing different types of material maps.
+ */
+typedef enum {
+    RLG_MAP_SPECULAR,       ///< Specular map used for reflecting light.
+    RLG_MAP_EMISSIVE,       ///< Emissive map used for emitting light.
+    RLG_MAP_NORMAL          ///< Normal map used for bump mapping.
+} RLG_MaterialMap;
+
+/**
+ * @brief Enum representing different material properties.
+ */
+typedef enum {
+    RLG_MAT_SPECULAR_TINT,  ///< Specular tint property of the material.
+    RLG_MAT_EMISSIVE_TINT,  ///< Emissive tint property of the material.
+    RLG_MAT_AMBIENT_TINT,   ///< Ambient tint property of the material.
+    RLG_MAT_SHININESS       ///< Shininess property of the material.
+} RLG_MaterialProperty;
 
 typedef void* RLG_Context;  ///< Opaque type for a lighting context handle.
 
@@ -103,180 +128,52 @@ void RLG_SetViewPositionV(Vector3 position);
 Vector3 RLG_GetViewPosition(void);
 
 /**
- * @brief Enable the specular map in the shader.
- */
-void RLG_EnableSpecularMap(void);
-
-/**
- * @brief Disable the specular map in the shader.
- */
-void RLG_DisableSpecularMap(void);
-
-/**
- * @brief Check if the specular map is enabled.
+ * @brief Activate or deactivate texture sampling in the materials of models.
  * 
- * @return true if the specular map is enabled, false otherwise.
+ * @param map The material map to modify.
+ * @param active Boolean value indicating whether to activate (true) or deactivate (false) texture sampling.
  */
-bool RLG_IsSpecularMapEnabled(void);
+void RLG_SetMap(RLG_MaterialMap map, bool active);
 
 /**
- * @brief Enable the emissive map in the shader.
- */
-void RLG_EnableEmissiveMap(void);
-
-/**
- * @brief Disable the emissive map in the shader.
- */
-void RLG_DisableEmissiveMap(void);
-
-/**
- * @brief Check if the emissive map is enabled.
+ * @brief Check if texture sampling is enabled for a given material map.
  * 
- * @return true if the emissive map is enabled, false otherwise.
+ * @param map The material map to check.
+ * @return True if texture sampling is enabled, false otherwise.
  */
-bool RLG_IsEmissiveMapEnabled(void);
+bool RLG_IsMapEnabled(RLG_MaterialMap map);
 
 /**
- * @brief Enable the normal map in the shader.
- */
-void RLG_EnableNormalMap(void);
-
-/**
- * @brief Disable the normal map in the shader.
- */
-void RLG_DisableNormalMap(void);
-
-/**
- * @brief Check if the normal map is enabled.
+ * @brief Set a float value for a specific material property.
  * 
- * @return true if the normal map is enabled, false otherwise.
+ * @param mat The material property to set the value for.
+ * @param value The float value to assign to the material property.
  */
-bool RLG_IsNormalMapEnabled(void);
+void RLG_SetMaterialValue(RLG_MaterialProperty mat, float value);
 
 /**
- * @brief Set the shininess value for specular highlights.
+ * @brief Set a color value for a specific material property.
  * 
- * @param value The shininess value.
+ * @param mat The material property to set the color for.
+ * @param color The color to assign to the material property.
  */
-void RLG_SetShininess(float value);
+void RLG_SetMaterialColor(RLG_MaterialProperty mat, Color color);
 
 /**
- * @brief Get the current shininess value for specular highlights.
+ * @brief Get the float value of a specific material property.
  * 
- * @return The current shininess value.
+ * @param mat The material property to retrieve the value from.
+ * @return The float value of the specified material property.
  */
-float RLG_GetShininess(void);
+float RLG_GetMaterialValue(RLG_MaterialProperty mat);
 
 /**
- * @brief Set the specular color in the shader.
+ * @brief Get the color value of a specific material property.
  * 
- * @param r The red component of the specular color.
- * @param g The green component of the specular color.
- * @param b The blue component of the specular color.
+ * @param mat The material property to retrieve the color from.
+ * @return The color value of the specified material property.
  */
-void RLG_SetSpecular(float r, float g, float b);
-
-/**
- * @brief Set the specular color in the shader using a Vector3 structure.
- * 
- * @param color The specular color as a Vector3 structure.
- */
-void RLG_SetSpecularV(Vector3 color);
-
-/**
- * @brief Set the specular color for the shader using a Color structure.
- * 
- * @param color The specular color as a Color structure.
- */
-void RLG_SetSpecularC(Color color);
-
-/**
- * @brief Get the current specular color sets in the shader.
- * 
- * @return The current specular color as a Vector3 structure.
- */
-Vector3 RLG_GetSpecular(void);
-
-/**
- * @brief Get the current specular color sets in the shader as a Color structure.
- * 
- * @return The current specular color as a Color structure.
- */
-Color RLG_GetSpecularC(void);
-
-/**
- * @brief Set the emissive color in the shader.
- * 
- * @param r The red component of the emissive color.
- * @param g The green component of the emissive color.
- * @param b The blue component of the emissive color.
- */
-void RLG_SetEmissive(float r, float g, float b);
-
-/**
- * @brief Set the emissive color in the shader using a Vector3 structure.
- * 
- * @param color The emissive color as a Vector3 structure.
- */
-void RLG_SetEmissiveV(Vector3 color);
-
-/**
- * @brief Set the emissive color for the shader using a Color structure.
- * 
- * @param color The emissive color as a Color structure.
- */
-void RLG_SetEmissiveC(Color color);
-
-/**
- * @brief Get the current emissive color sets in the shader.
- * 
- * @return The current emissive color as a Vector3 structure.
- */
-Vector3 RLG_GetEmissive(void);
-
-/**
- * @brief Get the current emissive color sets in the shader as a Color structure.
- * 
- * @return The current emissive color as a Color structure.
- */
-Color RLG_GetEmissiveC(void);
-
-/**
- * @brief Set the ambient color in the shader.
- * 
- * @param r The red component of the ambient color.
- * @param g The green component of the ambient color.
- * @param b The blue component of the ambient color.
- */
-void RLG_SetAmbient(float r, float g, float b);
-
-/**
- * @brief Set the ambient color in the shader using a Vector3 structure.
- * 
- * @param color The ambient color as a Vector3 structure.
- */
-void RLG_SetAmbientV(Vector3 color);
-
-/**
- * @brief Set the ambient color in the shader using a Color structure.
- * 
- * @param color The ambient color as a Color structure.
- */
-void RLG_SetAmbientC(Color color);
-
-/**
- * @brief Get the current ambient color sets in the shader
- * 
- * @return The current ambient color as a Vector3 structure.
- */
-Vector3 RLG_GetAmbient(void);
-
-/**
- * @brief Get the current ambient color sets in the shader as a Color structure.
- * 
- * @return The current ambient color as a Color structure.
- */
-Color RLG_GetAmbientC(void);
+Color RLG_GetMaterialColor(RLG_MaterialProperty mat);
 
 /**
  * @brief Get the number of lights initialized sets in the shader.
@@ -1503,190 +1400,161 @@ Vector3 RLG_GetViewPosition(void)
     return CTX->globalLight.viewPos;
 }
 
-void RLG_EnableSpecularMap(void)
+void RLG_SetMap(RLG_MaterialMap map, bool active)
 {
-    const int v = 1;
-    SetShaderValue(CTX->lightShader, CTX->locsGlobalLight.useSpecularMap, &v, SHADER_UNIFORM_INT);
+    int v = (int)active;
+
+    switch (map)
+    {
+        case RLG_MAP_SPECULAR:
+            CTX->globalLight.useSpecularMap = active;
+            SetShaderValue(CTX->lightShader, CTX->locsGlobalLight.useSpecularMap, &v, SHADER_UNIFORM_INT);
+            break;
+
+        case RLG_MAP_EMISSIVE:
+            CTX->globalLight.useEmissiveMap = active;
+            SetShaderValue(CTX->lightShader, CTX->locsGlobalLight.useEmissiveMap, &v, SHADER_UNIFORM_INT);
+            break;
+
+        case RLG_MAP_NORMAL:
+            CTX->globalLight.useNormalMap = active;
+            SetShaderValue(CTX->lightShader, CTX->locsGlobalLight.useNormalMap, &v, SHADER_UNIFORM_INT);
+            break;
+
+        default:
+            break;
+    }
 }
 
-void RLG_DisableSpecularMap(void)
+bool RLG_IsMapEnabled(RLG_MaterialMap map)
 {
-    const int v = 0;
-    SetShaderValue(CTX->lightShader, CTX->locsGlobalLight.useSpecularMap, &v, SHADER_UNIFORM_INT);
+    switch (map)
+    {
+        case RLG_MAP_SPECULAR:
+            return CTX->globalLight.useSpecularMap;
+
+        case RLG_MAP_EMISSIVE:
+            return CTX->globalLight.useEmissiveMap;
+
+        case RLG_MAP_NORMAL:
+            return CTX->globalLight.useNormalMap;
+
+        default:
+            break;
+    }
+
+    return false;
 }
 
-bool RLG_IsSpecularMapEnabled(void)
+void RLG_SetMaterialValue(RLG_MaterialProperty mat, float value)
 {
-    return CTX->globalLight.useSpecularMap;
+    switch (mat)
+    {
+        case RLG_MAT_SPECULAR_TINT:
+            CTX->globalLight.colSpecular = (Vector3) { value, value, value };
+            SetShaderValue(CTX->lightShader, CTX->locsGlobalLight.colSpecular,
+                &CTX->globalLight.colSpecular, SHADER_UNIFORM_VEC3);
+            break;
+
+        case RLG_MAT_EMISSIVE_TINT:
+            CTX->globalLight.colEmissive = (Vector3) { value, value, value };
+            SetShaderValue(CTX->lightShader, CTX->locsGlobalLight.colEmissive,
+                &CTX->globalLight.colEmissive, SHADER_UNIFORM_VEC3);
+            break;
+
+        case RLG_MAT_AMBIENT_TINT:
+            CTX->globalLight.colAmbient = (Vector3) { value, value, value };
+            SetShaderValue(CTX->lightShader, CTX->locsGlobalLight.colAmbient,
+                &CTX->globalLight.colAmbient, SHADER_UNIFORM_VEC3);
+            break;
+
+        case RLG_MAT_SHININESS:
+            CTX->globalLight.shininess = value;
+            SetShaderValue(CTX->lightShader, CTX->locsGlobalLight.shininess,
+                &value, SHADER_UNIFORM_FLOAT);
+            break;
+
+        default:
+            break;
+    }
 }
 
-void RLG_EnableEmissiveMap(void)
+void RLG_SetMaterialColor(RLG_MaterialProperty mat, Color color)
 {
-    const int v = 1;
-    SetShaderValue(CTX->lightShader, CTX->locsGlobalLight.useEmissiveMap, &v, SHADER_UNIFORM_INT);
-}
-
-void RLG_DisableEmissiveMap(void)
-{
-    const int v = 0;
-    SetShaderValue(CTX->lightShader, CTX->locsGlobalLight.useEmissiveMap, &v, SHADER_UNIFORM_INT);
-}
-
-bool RLG_IsEmissiveMapEnabled(void)
-{
-    return CTX->globalLight.useEmissiveMap;
-}
-
-void RLG_EnableNormalMap(void)
-{
-    const int v = 1;
-    SetShaderValue(CTX->lightShader, CTX->locsGlobalLight.useNormalMap, &v, SHADER_UNIFORM_INT);
-}
-
-void RLG_DisableNormalMap(void)
-{
-    const int v = 0;
-    SetShaderValue(CTX->lightShader, CTX->locsGlobalLight.useNormalMap, &v, SHADER_UNIFORM_INT);
-}
-
-bool RLG_IsNormalMapEnabled(void)
-{
-    return CTX->globalLight.useNormalMap;
-}
-
-void RLG_SetShininess(float value)
-{
-    CTX->globalLight.shininess = value;
-    SetShaderValue(CTX->lightShader, CTX->locsGlobalLight.shininess,
-        &CTX->globalLight.shininess, SHADER_UNIFORM_FLOAT);
-}
-
-float RLG_GetShininess(void)
-{
-    return CTX->globalLight.shininess;
-}
-
-void RLG_SetSpecular(float r, float g, float b)
-{
-    CTX->globalLight.colSpecular = (Vector3) { r, g, b };
-    SetShaderValue(CTX->lightShader, CTX->locsGlobalLight.colSpecular,
-        &CTX->globalLight.colSpecular, SHADER_UNIFORM_VEC3);
-}
-
-void RLG_SetSpecularV(Vector3 color)
-{
-    CTX->globalLight.colSpecular = color;
-    SetShaderValue(CTX->lightShader, CTX->locsGlobalLight.colSpecular,
-        &CTX->globalLight.colSpecular, SHADER_UNIFORM_VEC3);
-}
-
-void RLG_SetSpecularC(Color color)
-{
-    CTX->globalLight.colSpecular = (Vector3) {
-        (float)color.r*(1.0f/255),
-        (float)color.g*(1.0f/255),
-        (float)color.b*(1.0f/255)
+    Vector3 nCol = (Vector3) {
+        (float)color.r/255,
+        (float)color.g/255,
+        (float)color.b/255
     };
 
-    SetShaderValue(CTX->lightShader, CTX->locsGlobalLight.colSpecular,
-        &CTX->globalLight.colSpecular, SHADER_UNIFORM_VEC3);
+    switch (mat)
+    {
+        case RLG_MAT_SPECULAR_TINT:
+            CTX->globalLight.colSpecular = nCol;
+            SetShaderValue(CTX->lightShader, CTX->locsGlobalLight.colSpecular,
+                &nCol, SHADER_UNIFORM_VEC3);
+            break;
+
+        case RLG_MAT_EMISSIVE_TINT:
+            CTX->globalLight.colEmissive = nCol;
+            SetShaderValue(CTX->lightShader, CTX->locsGlobalLight.colEmissive,
+                &nCol, SHADER_UNIFORM_VEC3);
+            break;
+
+        case RLG_MAT_AMBIENT_TINT:
+            CTX->globalLight.colAmbient = nCol;
+            SetShaderValue(CTX->lightShader, CTX->locsGlobalLight.colAmbient,
+                &nCol, SHADER_UNIFORM_VEC3);
+            break;
+
+        default:
+            break;
+    }
 }
 
-Vector3 RLG_GetSpecular(void)
+float RLG_GetMaterialValue(RLG_MaterialProperty mat)
 {
-    return CTX->globalLight.colSpecular;
+    switch (mat)
+    {
+        case RLG_MAT_SHININESS:
+            return CTX->globalLight.shininess;
+
+        default:
+            break;
+    }
+
+    return 0;
 }
 
-Color RLG_GetSpecularC(void)
+Color RLG_GetMaterialColor(RLG_MaterialProperty mat)
 {
-    return (Color) {
-        (unsigned char)(255*CTX->globalLight.colSpecular.x),
-        (unsigned char)(255*CTX->globalLight.colSpecular.y),
-        (unsigned char)(255*CTX->globalLight.colSpecular.z),
-        255
-    };
-}
+    Color result = BLACK;
 
-void RLG_SetEmissive(float r, float g, float b)
-{
-    CTX->globalLight.colEmissive = (Vector3) { r, g, b };
-    SetShaderValue(CTX->lightShader, CTX->locsGlobalLight.colEmissive,
-        &CTX->globalLight.colEmissive, SHADER_UNIFORM_VEC3);
-}
+    switch (mat)
+    {
+        case RLG_MAT_SPECULAR_TINT:
+            result.r = (unsigned char)(255*CTX->globalLight.colSpecular.x);
+            result.g = (unsigned char)(255*CTX->globalLight.colSpecular.y);
+            result.b = (unsigned char)(255*CTX->globalLight.colSpecular.z);
+            break;
 
-void RLG_SetEmissiveV(Vector3 color)
-{
-    CTX->globalLight.colEmissive = color;
-    SetShaderValue(CTX->lightShader, CTX->locsGlobalLight.colEmissive,
-        &CTX->globalLight.colEmissive, SHADER_UNIFORM_VEC3);
-}
+        case RLG_MAT_EMISSIVE_TINT:
+            result.r = (unsigned char)(255*CTX->globalLight.colEmissive.x);
+            result.g = (unsigned char)(255*CTX->globalLight.colEmissive.y);
+            result.b = (unsigned char)(255*CTX->globalLight.colEmissive.z);
+            break;
 
-void RLG_SetEmissiveC(Color color)
-{
-    CTX->globalLight.colEmissive = (Vector3) {
-        (float)color.r*(1.0f/255),
-        (float)color.g*(1.0f/255),
-        (float)color.b*(1.0f/255)
-    };
+        case RLG_MAT_AMBIENT_TINT:
+            result.r = (unsigned char)(255*CTX->globalLight.colAmbient.x);
+            result.g = (unsigned char)(255*CTX->globalLight.colAmbient.y);
+            result.b = (unsigned char)(255*CTX->globalLight.colAmbient.z);
+            break;
 
-    SetShaderValue(CTX->lightShader, CTX->locsGlobalLight.colEmissive,
-        &CTX->globalLight.colEmissive, SHADER_UNIFORM_VEC3);
-}
+        default:
+            break;
+    }
 
-Vector3 RLG_GetEmissive(void)
-{
-    return CTX->globalLight.colEmissive;
-}
-
-Color RLG_GetEmissiveC(void)
-{
-    return (Color) {
-        (unsigned char)(255*CTX->globalLight.colEmissive.x),
-        (unsigned char)(255*CTX->globalLight.colEmissive.y),
-        (unsigned char)(255*CTX->globalLight.colEmissive.z),
-        255
-    };
-}
-
-void RLG_SetAmbient(float r, float g, float b)
-{
-    CTX->globalLight.colAmbient = (Vector3) { r, g, b };
-    SetShaderValue(CTX->lightShader, CTX->locsGlobalLight.colAmbient,
-        &CTX->globalLight.colAmbient, SHADER_UNIFORM_VEC3);
-}
-
-void RLG_SetAmbientV(Vector3 color)
-{
-    CTX->globalLight.colAmbient = color;
-    SetShaderValue(CTX->lightShader, CTX->locsGlobalLight.colAmbient,
-        &CTX->globalLight.colAmbient, SHADER_UNIFORM_VEC3);
-}
-
-void RLG_SetAmbientC(Color color)
-{
-    CTX->globalLight.colAmbient = (Vector3) {
-        (float)color.r*(1.0f/255),
-        (float)color.g*(1.0f/255),
-        (float)color.b*(1.0f/255)
-    };
-
-    SetShaderValue(CTX->lightShader, CTX->locsGlobalLight.colAmbient,
-        &CTX->globalLight.colAmbient, SHADER_UNIFORM_VEC3);
-}
-
-Vector3 RLG_GetAmbient(void)
-{
-    return CTX->globalLight.colAmbient;
-}
-
-Color RLG_GetAmbientC(void)
-{
-    return (Color) {
-        (unsigned char)(255*CTX->globalLight.colAmbient.x),
-        (unsigned char)(255*CTX->globalLight.colAmbient.y),
-        (unsigned char)(255*CTX->globalLight.colAmbient.z),
-        255
-    };
+    return result;
 }
 
 unsigned int RLG_GetLightcount(void)

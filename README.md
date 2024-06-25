@@ -97,38 +97,14 @@ void RLG_SetViewPosition(float x, float y, float z);
 void RLG_SetViewPositionV(Vector3 position);
 Vector3 RLG_GetViewPosition(void);
 
-void RLG_EnableSpecularMap(void);
-void RLG_DisableSpecularMap(void);
-bool RLG_IsSpecularMapEnabled(void);
+void RLG_SetMap(RLG_MaterialMap map, bool active);
+bool RLG_IsMapEnabled(RLG_MaterialMap map);
 
-void RLG_EnableEmissiveMap(void);
-void RLG_DisableEmissiveMap(void);
-bool RLG_IsEmissiveMapEnabled(void);
+void RLG_SetMaterialValue(RLG_MaterialValue mat, float value);
+void RLG_SetMaterialColor(RLG_MaterialValue mat, Color color);
 
-void RLG_EnableNormalMap(void);
-void RLG_DisableNormalMap(void);
-bool RLG_IsNormalMapEnabled(void);
-
-void RLG_SetShininess(float value);
-float RLG_GetShininess(void);
-
-void RLG_SetSpecular(float r, float g, float b);
-void RLG_SetSpecularV(Vector3 color);
-void RLG_SetSpecularC(Color color);
-Vector3 RLG_GetSpecular(void);
-Color RLG_GetSpecularC(void);
-
-void RLG_SetEmissive(float r, float g, float b);
-void RLG_SetEmissiveV(Vector3 color);
-void RLG_SetEmissiveC(Color color);
-Vector3 RLG_GetEmissive(void);
-Color RLG_GetEmissiveC(void);
-
-void RLG_SetAmbient(float r, float g, float b);
-void RLG_SetAmbientV(Vector3 color);
-void RLG_SetAmbientC(Color color);
-Vector3 RLG_GetAmbient(void);
-Color RLG_GetAmbientC(void);
+float RLG_GetMaterialValue(RLG_MaterialValue mat);
+Color RLG_GetMaterialColor(RLG_MaterialValue mat);
 
 unsigned int RLG_GetLightcount(void);
 

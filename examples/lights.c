@@ -24,7 +24,7 @@ int main(void)
     RLG_Context rlgCtx = RLG_CreateContext(4);
     RLG_SetContext(rlgCtx);
 
-    RLG_SetSpecular(0.2f, 0.2f, 0.2f);
+    RLG_SetMaterialValue(RLG_MAT_SPECULAR_TINT, 0.2f);
 
     RLG_EnableLight(0);
     RLG_SetLightDiffuseC(0, YELLOW);
