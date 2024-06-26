@@ -130,11 +130,11 @@ void main()
 
     // Compute metallic factor; if a metalness map is used, sample it
     float metallic = metalness;
-    if (useMetalnessMap != 0) metallic *= texture(texture1, fragTexCoord).r;
+    if (useMetalnessMap != 0) metallic *= texture(texture1, fragTexCoord).b;
 
     // Compute roughness factor; if a roughness map is used, sample it
     float rough = roughness;
-    if (useRoughnessMap != 0) rough *= texture(texture3, fragTexCoord).r;
+    if (useRoughnessMap != 0) rough *= texture(texture3, fragTexCoord).g;
 
     // Compute F0 (reflectance at normal incidence) based on the metallic factor
     vec3 F0 = ComputeF0(metallic, specular, albedo);
@@ -256,7 +256,7 @@ void main()
     // Compute ambient occlusion
     if (useOcclusionMap != 0)
     {
-        float ao = TEX(texture4, fragTexCoord);
+        float ao = TEX(texture4, fragTexCoord).r;
         diffuse *= ao;
     }
 
