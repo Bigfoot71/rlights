@@ -407,14 +407,14 @@ Vector3 RLG_GetLightTarget(unsigned int light);
  *       directly call OpenGL functions bypassing RLGL, though this
  *       approach could pose issues for some users...
  */
-void RLG_EnableLightShadow(unsigned int light, int shadowMapResolution);
+void RLG_EnableShadow(unsigned int light, int shadowMapResolution);
 
 /**
  * @brief Disable shadow casting for a light.
  * 
  * @param light The index of the light to disable shadow casting for.
  */
-void RLG_DisableLightShadow(unsigned int light);
+void RLG_DisableShadow(unsigned int light);
 
 /**
  * @brief Check if shadow casting is enabled for a light.
@@ -422,7 +422,7 @@ void RLG_DisableLightShadow(unsigned int light);
  * @param light The index of the light to check for shadow casting.
  * @return true if shadow casting is enabled, false otherwise.
  */
-bool RLG_IsLightShadowEnabled(unsigned int light);
+bool RLG_IsShadowEnabled(unsigned int light);
 
 /**
  * @brief Set the bias value for shadow mapping of a light.
@@ -430,7 +430,7 @@ bool RLG_IsLightShadowEnabled(unsigned int light);
  * @param light The index of the light to set the shadow bias for.
  * @param value The bias value to set.
  */
-void RLG_SetLightShadowBias(unsigned int light, float value);
+void RLG_SetShadowBias(unsigned int light, float value);
 
 /**
  * @brief Get the bias value for shadow mapping of a light.
@@ -438,7 +438,7 @@ void RLG_SetLightShadowBias(unsigned int light, float value);
  * @param light The index of the light to get the shadow bias for.
  * @return The shadow bias value.
  */
-float RLG_GetLightShadowBias(unsigned int light);
+float RLG_GetShadowBias(unsigned int light);
 
 /**
  * @brief Begin shadow casting for a specific light.
@@ -562,7 +562,6 @@ void RLG_DrawModelEx(Model model, Vector3 position, Vector3 rotationAxis, float 
 }
 #endif
 
-#define RLIGHTS_IMPLEMENTATION
 #ifdef RLIGHTS_IMPLEMENTATION
 
 #include <raymath.h>
@@ -1944,11 +1943,11 @@ Vector3 RLG_GetLightTarget(unsigned int light)
         rlgCtx->lights[light].direction);
 }
 
-void RLG_EnableLightShadow(unsigned int light, int shadowMapResolution)
+void RLG_EnableShadow(unsigned int light, int shadowMapResolution)
 {
     if (light >= rlgCtx->lightCount)
     {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_EnableLightShadow' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_EnableShadow' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
         return;
     }
 
@@ -2000,11 +1999,11 @@ void RLG_EnableLightShadow(unsigned int light, int shadowMapResolution)
         &rlgCtx->lights[light].shadow, SHADER_UNIFORM_INT);
 }
 
-void RLG_DisableLightShadow(unsigned int light)
+void RLG_DisableShadow(unsigned int light)
 {
     if (light >= rlgCtx->lightCount)
     {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_DisableLightShadow' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_DisableShadow' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
         return;
     }
 
@@ -2013,22 +2012,22 @@ void RLG_DisableLightShadow(unsigned int light)
         &rlgCtx->lights[light].shadow, SHADER_UNIFORM_INT);
 }
 
-bool RLG_IsLightShadowEnabled(unsigned int light)
+bool RLG_IsShadowEnabled(unsigned int light)
 {
     if (light >= rlgCtx->lightCount)
     {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_IsLightShadowEnabled' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_IsShadowEnabled' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
         return false;
     }
 
     return rlgCtx->lights[light].shadow;
 }
 
-void RLG_SetLightShadowBias(unsigned int light, float value)
+void RLG_SetShadowBias(unsigned int light, float value)
 {
     if (light >= rlgCtx->lightCount)
     {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_SetLightShadowBias' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_SetShadowBias' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
         return;
     }
 
@@ -2037,11 +2036,11 @@ void RLG_SetLightShadowBias(unsigned int light, float value)
         &value, SHADER_UNIFORM_FLOAT);
 }
 
-float RLG_GetLightShadowBias(unsigned int light)
+float RLG_GetShadowBias(unsigned int light)
 {
     if (light >= rlgCtx->lightCount)
     {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_SetLightShadowBias' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_GetShadowBias' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
         return 0;
     }
 

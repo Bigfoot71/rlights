@@ -144,14 +144,14 @@ void RLG_SetLightTarget(unsigned int light, float x, float y, float z);
 void RLG_SetLightTargetV(unsigned int light, Vector3 targetPosition);
 Vector3 RLG_GetLightTarget(unsigned int light);
 
-void RLG_EnableLightShadow(unsigned int light, int shadowMapResolution);
-void RLG_DisableLightShadow(unsigned int light);
-bool RLG_IsLightShadowEnabled(unsigned int light);
-
-void RLG_SetLightShadowBias(unsigned int light, float value);
-float RLG_GetLightShadowBias(unsigned int light);
-
 /* Shadow Casting Management */
+
+void RLG_EnableShadow(unsigned int light, int shadowMapResolution);
+void RLG_DisableShadow(unsigned int light);
+bool RLG_IsShadowEnabled(unsigned int light);
+
+void RLG_SetShadowBias(unsigned int light, float value);
+float RLG_GetShadowBias(unsigned int light);
 
 void RLG_BeginShadowCast(unsigned int light);
 void RLG_EndShadowCast(void);

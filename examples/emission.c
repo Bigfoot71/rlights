@@ -27,7 +27,7 @@ int main(void)
     RLG_SetLight(0, true);
 
     RLG_SetLightType(0, RLG_SPOTLIGHT);
-    RLG_EnableLightShadow(0, 1024);
+    RLG_EnableShadow(0, 1024);
 
     RLG_SetLightXYZ(0, RLG_LIGHT_POSITION, -5, 5, -5);
     RLG_SetLightTarget(0, 0, 0, 0);

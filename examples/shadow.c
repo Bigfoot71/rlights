@@ -46,7 +46,7 @@ int main(void)
         RLG_SetLight(i, true);
         RLG_SetLightType(i, RLG_SPOTLIGHT);
 
-        RLG_EnableLightShadow(i, 1024);
+        RLG_EnableShadow(i, 1024);
         RLG_SetLightXYZ(i, RLG_LIGHT_DIFFUSE, 1 - i, 0.0f, i);
 
         int s = i == 0 ? 1 : -1;
