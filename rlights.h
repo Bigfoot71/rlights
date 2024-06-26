@@ -52,7 +52,7 @@ typedef enum {
     RLG_LIGHT_POSITION,
     RLG_LIGHT_DIRECTION,
     RLG_LIGHT_DIFFUSE,
-    RLG_LIGHT_SPECULAR,
+    RLG_LIGHT_SPECULAR_TINT,
     RLG_LIGHT_INNER_CUTOFF,
     RLG_LIGHT_OUTER_CUTOFF,
     RLG_LIGHT_ATTENUATION_CLQ,
@@ -159,34 +159,34 @@ bool RLG_IsMapEnabled(RLG_MaterialMap map);
 /**
  * @brief Set a float value for a specific material property.
  * 
- * @param mat The material property to set the value for.
+ * @param property The material property to set the value for.
  * @param value The float value to assign to the material property.
  */
-void RLG_SetMaterialValue(RLG_MaterialProperty mat, float value);
+void RLG_SetMaterialValue(RLG_MaterialProperty property, float value);
 
 /**
  * @brief Set a color value for a specific material property.
  * 
- * @param mat The material property to set the color for.
+ * @param property The material property to set the color for.
  * @param color The color to assign to the material property.
  */
-void RLG_SetMaterialColor(RLG_MaterialProperty mat, Color color);
+void RLG_SetMaterialColor(RLG_MaterialProperty property, Color color);
 
 /**
  * @brief Get the float value of a specific material property.
  * 
- * @param mat The material property to retrieve the value from.
+ * @param property The material property to retrieve the value from.
  * @return The float value of the specified material property.
  */
-float RLG_GetMaterialValue(RLG_MaterialProperty mat);
+float RLG_GetMaterialValue(RLG_MaterialProperty property);
 
 /**
  * @brief Get the color value of a specific material property.
  * 
- * @param mat The material property to retrieve the color from.
+ * @param property The material property to retrieve the color from.
  * @return The color value of the specified material property.
  */
-Color RLG_GetMaterialColor(RLG_MaterialProperty mat);
+Color RLG_GetMaterialColor(RLG_MaterialProperty property);
 
 /**
  * @brief Get the number of lights initialized sets in the shader.
@@ -1303,9 +1303,9 @@ bool RLG_IsMapEnabled(RLG_MaterialMap map)
     return false;
 }
 
-void RLG_SetMaterialValue(RLG_MaterialProperty mat, float value)
+void RLG_SetMaterialValue(RLG_MaterialProperty property, float value)
 {
-    switch (mat)
+    switch (property)
     {
         case RLG_MAT_SPECULAR_TINT:
             rlgCtx->globalLight.colSpecular = (Vector3) { value, value, value };
@@ -1336,7 +1336,7 @@ void RLG_SetMaterialValue(RLG_MaterialProperty mat, float value)
     }
 }
 
-void RLG_SetMaterialColor(RLG_MaterialProperty mat, Color color)
+void RLG_SetMaterialColor(RLG_MaterialProperty property, Color color)
 {
     Vector3 nCol = (Vector3) {
         (float)color.r/255,
@@ -1344,7 +1344,7 @@ void RLG_SetMaterialColor(RLG_MaterialProperty mat, Color color)
         (float)color.b/255
     };
 
-    switch (mat)
+    switch (property)
     {
         case RLG_MAT_SPECULAR_TINT:
             rlgCtx->globalLight.colSpecular = nCol;
@@ -1369,9 +1369,9 @@ void RLG_SetMaterialColor(RLG_MaterialProperty mat, Color color)
     }
 }
 
-float RLG_GetMaterialValue(RLG_MaterialProperty mat)
+float RLG_GetMaterialValue(RLG_MaterialProperty property)
 {
-    switch (mat)
+    switch (property)
     {
         case RLG_MAT_SHININESS:
             return rlgCtx->globalLight.shininess;
@@ -1383,11 +1383,11 @@ float RLG_GetMaterialValue(RLG_MaterialProperty mat)
     return 0;
 }
 
-Color RLG_GetMaterialColor(RLG_MaterialProperty mat)
+Color RLG_GetMaterialColor(RLG_MaterialProperty property)
 {
     Color result = BLACK;
 
-    switch (mat)
+    switch (property)
     {
         case RLG_MAT_SPECULAR_TINT:
             result.r = (unsigned char)(255*rlgCtx->globalLight.colSpecular.x);
@@ -1496,7 +1496,7 @@ void RLG_SetLightValue(unsigned int light, RLG_LightProperty property, float val
                 &rlgCtx->lights[light].diffuse, SHADER_UNIFORM_VEC3);
             break;
 
-        case RLG_LIGHT_SPECULAR:
+        case RLG_LIGHT_SPECULAR_TINT:
             rlgCtx->lights[light].specular = (Vector3) { value, value, value };
             SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].specular,
                 &rlgCtx->lights[light].specular, SHADER_UNIFORM_VEC3);
@@ -1562,7 +1562,7 @@ void RLG_SetLightXYZ(unsigned int light, RLG_LightProperty property, float x, fl
                 &value, SHADER_UNIFORM_VEC3);
             break;
 
-        case RLG_LIGHT_SPECULAR:
+        case RLG_LIGHT_SPECULAR_TINT:
             rlgCtx->lights[light].specular = value;
             SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].specular,
                 &value, SHADER_UNIFORM_VEC3);
@@ -1610,7 +1610,7 @@ void RLG_SetLightVec3(unsigned int light, RLG_LightProperty property, Vector3 va
                 &value, SHADER_UNIFORM_VEC3);
             break;
 
-        case RLG_LIGHT_SPECULAR:
+        case RLG_LIGHT_SPECULAR_TINT:
             rlgCtx->lights[light].specular = value;
             SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].specular,
                 &value, SHADER_UNIFORM_VEC3);
@@ -1652,7 +1652,7 @@ void RLG_SetLightColor(unsigned int light, RLG_LightProperty property, Color col
                 &value, SHADER_UNIFORM_VEC3);
             break;
 
-        case RLG_LIGHT_SPECULAR:
+        case RLG_LIGHT_SPECULAR_TINT:
             rlgCtx->lights[light].specular = value;
             SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].specular,
                 &value, SHADER_UNIFORM_VEC3);
@@ -1726,7 +1726,7 @@ Vector3 RLG_GetLightVec3(unsigned int light, RLG_LightProperty property)
             result = rlgCtx->lights[light].diffuse;
             break;
 
-        case RLG_LIGHT_SPECULAR:
+        case RLG_LIGHT_SPECULAR_TINT:
             result = rlgCtx->lights[light].specular;
             break;
 
@@ -1761,7 +1761,7 @@ Color RLG_GetLightColor(unsigned int light, RLG_LightProperty property)
             result.b = 255*rlgCtx->lights[light].diffuse.z;
             break;
 
-        case RLG_LIGHT_SPECULAR:
+        case RLG_LIGHT_SPECULAR_TINT:
             result.r = 255*rlgCtx->lights[light].specular.x;
             result.g = 255*rlgCtx->lights[light].specular.y;
             result.b = 255*rlgCtx->lights[light].specular.z;

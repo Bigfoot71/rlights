@@ -107,10 +107,10 @@ Vector3 RLG_GetViewPosition(void);
 void RLG_SetMap(RLG_MaterialMap map, bool active);
 bool RLG_IsMapEnabled(RLG_MaterialMap map);
 
-void RLG_SetMaterialValue(RLG_MaterialProperty mat, float value);
-void RLG_SetMaterialColor(RLG_MaterialProperty mat, Color color);
-float RLG_GetMaterialValue(RLG_MaterialProperty mat);
-Color RLG_GetMaterialColor(RLG_MaterialProperty mat);
+void RLG_SetMaterialValue(RLG_MaterialProperty property, float value);
+void RLG_SetMaterialColor(RLG_MaterialProperty property, Color color);
+float RLG_GetMaterialValue(RLG_MaterialProperty property);
+Color RLG_GetMaterialColor(RLG_MaterialProperty property);
 
 /* Lighting Management */
 
