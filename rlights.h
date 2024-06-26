@@ -33,7 +33,8 @@ typedef enum {
  * @brief Enum representing different types of material maps.
  */
 typedef enum {
-    RLG_MAP_SPECULAR,       ///< Specular map used for reflecting light.
+    RLG_MAP_METALNESS,      ///< Metalness map used to define the metallic property of the material.
+    RLG_MAP_ROUGHNESS,      ///< Roughness map used to define the surface roughness of the material.
     RLG_MAP_EMISSIVE,       ///< Emissive map used for emitting light.
     RLG_MAP_NORMAL          ///< Normal map used for bump mapping.
 } RLG_MaterialMap;
@@ -42,26 +43,28 @@ typedef enum {
  * @brief Enum representing different material properties.
  */
 typedef enum {
-    RLG_MAT_SPECULAR_TINT,  ///< Specular tint property of the material.
     RLG_MAT_EMISSIVE_TINT,  ///< Emissive tint property of the material.
     RLG_MAT_AMBIENT_TINT,   ///< Ambient tint property of the material.
-    RLG_MAT_SHININESS       ///< Shininess property of the material.
+    RLG_MAT_METALNESS,      ///< Metalness property defining the metallic nature of the material.
+    RLG_MAT_ROUGHNESS,      ///< Roughness property defining the surface roughness of the material.
+    RLG_MAT_SPECULAR        ///< Specular property defining the specular reflection of the material.
 } RLG_MaterialProperty;
 
 /**
  * @brief Enum representing different properties of a light.
  */
 typedef enum {
-    RLG_LIGHT_POSITION,                ///< Position of the light.
-    RLG_LIGHT_DIRECTION,               ///< Direction of the light.
-    RLG_LIGHT_DIFFUSE,                 ///< Diffuse color of the light.
-    RLG_LIGHT_SPECULAR_TINT,           ///< Specular tint color of the light.
-    RLG_LIGHT_INNER_CUTOFF,            ///< Inner cutoff angle of a spotlight.
-    RLG_LIGHT_OUTER_CUTOFF,            ///< Outer cutoff angle of a spotlight.
-    RLG_LIGHT_ATTENUATION_CLQ,         ///< Attenuation coefficients (constant, linear, quadratic) of the light.
-    RLG_LIGHT_ATTENUATION_CONSTANT,    ///< Constant attenuation coefficient of the light.
-    RLG_LIGHT_ATTENUATION_LINEAR,      ///< Linear attenuation coefficient of the light.
-    RLG_LIGHT_ATTENUATION_QUADRATIC    ///< Quadratic attenuation coefficient of the light.
+    RLG_LIGHT_POSITION,                 ///< Position of the light.
+    RLG_LIGHT_DIRECTION,                ///< Direction of the light.
+    RLG_LIGHT_COLOR,                    ///< Diffuse color of the light.
+    RLG_LIGHT_SPECULAR,                 ///< Specular tint color of the light.
+    RLG_LIGHT_SIZE,                     ///< Radius of the light's influence (only for spotlight and omnidirectional light).
+    RLG_LIGHT_INNER_CUTOFF,             ///< Inner cutoff angle of a spotlight.
+    RLG_LIGHT_OUTER_CUTOFF,             ///< Outer cutoff angle of a spotlight.
+    RLG_LIGHT_ATTENUATION_CLQ,          ///< Attenuation coefficients (constant, linear, quadratic) of the light.
+    RLG_LIGHT_ATTENUATION_CONSTANT,     ///< Constant attenuation coefficient of the light.
+    RLG_LIGHT_ATTENUATION_LINEAR,       ///< Linear attenuation coefficient of the light.
+    RLG_LIGHT_ATTENUATION_QUADRATIC     ///< Quadratic attenuation coefficient of the light.
 } RLG_LightProperty;
 
 typedef void* RLG_Context;  ///< Opaque type for a lighting context handle.
@@ -267,13 +270,12 @@ void RLG_SetLightXYZ(unsigned int light, RLG_LightProperty property, float x, fl
 void RLG_SetLightVec3(unsigned int light, RLG_LightProperty property, Vector3 value);
 
 /**
- * @brief Set a color value for a specific light property.
+ * @brief Set a color value for a specific light.
  * 
  * @param light The index of the light to modify.
- * @param property The light property to set the color for.
- * @param color The color to assign to the light property.
+ * @param color The color to assign to the light.
  */
-void RLG_SetLightColor(unsigned int light, RLG_LightProperty property, Color color);
+void RLG_SetLightColor(unsigned int light, Color color);
 
 /**
  * @brief Get the float value of a specific light property.
@@ -294,13 +296,12 @@ float RLG_GetLightValue(unsigned int light, RLG_LightProperty property);
 Vector3 RLG_GetLightVec3(unsigned int light, RLG_LightProperty property);
 
 /**
- * @brief Get the color value of a specific light property.
+ * @brief Get the color value of a specific light.
  * 
  * @param light The index of the light to retrieve the value from.
- * @param property The light property to retrieve the color value for.
- * @return The color value of the specified light property.
+ * @return The color value of the specified light.
  */
-Color RLG_GetLightColor(unsigned int light, RLG_LightProperty property);
+Color RLG_GetLightColor(unsigned int light);
 
 /**
  * @brief Translate the position of a specific light by the given offsets.
@@ -565,7 +566,6 @@ void RLG_DrawModelEx(Model model, Vector3 position, Vector3 rotationAxis, float 
 }
 #endif
 
-#define RLIGHTS_IMPLEMENTATION
 #ifdef RLIGHTS_IMPLEMENTATION
 
 #include <raymath.h>
@@ -673,6 +673,8 @@ static const char rlgLightFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
     "#define OMNILIGHT 1\n"
     "#define SPOTLIGHT 2\n"
 
+    "#define PI 3.1415926535897932384626433832795028\n"
+
     GLSL_PRECISION("mediump float")
 
 #   if GLSL_VERSION > 100
@@ -693,8 +695,9 @@ static const char rlgLightFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
         "sampler2D shadowMap;"      ///< Sampler for the shadow map texture
         "vec3 position;"            ///< Position of the light in world coordinates
         "vec3 direction;"           ///< Direction vector of the light (for directional and spotlights)
-        "vec3 diffuse;"             ///< Diffuse color of the light
-        "vec3 specular;"            ///< Specular color of the light
+        "vec3 color;"               ///< Diffuse color of the light
+        "float specular;"           ///< Specular amount of the light
+        "float size;"
         "float innerCutOff;"        ///< Inner cutoff angle for spotlights (cosine of the angle)
         "float outerCutOff;"        ///< Outer cutoff angle for spotlights (cosine of the angle)
         "float constant;"           ///< Constant attenuation factor
@@ -709,24 +712,57 @@ static const char rlgLightFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
 
     "uniform Light lights[NUM_LIGHTS];"
 
-    "uniform lowp int useSpecularMap;"
+    "uniform lowp int useMetalnessMap;"
+    "uniform lowp int useRoughnessMap;"
     "uniform lowp int useEmissiveMap;"
     "uniform lowp int useNormalMap;"
 
-    "uniform sampler2D texture0;"   // diffuse
-    "uniform sampler2D texture1;"   // specular
+    "uniform sampler2D texture0;"   // albedo
+    "uniform sampler2D texture1;"   // metalness
     "uniform sampler2D texture2;"   // normal
+    "uniform sampler2D texture3;"   // roughness
     "uniform sampler2D texture5;"   // emissive
 
-    "uniform vec3 colSpecular;"     // sent by rlights
     "uniform vec3 colEmissive;"     // sent by rlights
     "uniform vec4 colDiffuse;"      // sent by raylib
     "uniform vec3 colAmbient;"      // sent by rlights
 
-    "uniform float shininess;"
+    "uniform float metalness;"
+    "uniform float roughness;"
+    "uniform float specular;"
+
     "uniform vec3 viewPos;"
 
-    "float ShadowCalc(int i)"
+    "float DistributionGGX(float cosTheta, float alpha)"
+    "{"
+        "float a = cosTheta*alpha;"
+        "float k = alpha/(1.0 - cosTheta*cosTheta + a*a);"
+        "return k*k*(1.0/PI);"
+    "}"
+
+    // From Earl Hammon, Jr. "PBR Diffuse Lighting for GGX+Smith Microsurfaces"
+    // SEE: https://www.gdcvault.com/play/1024478/PBR-Diffuse-Lighting-for-GGX
+    "float GeometrySmith(float NdotL, float NdotV, float alpha)"
+    "{"
+        "return 0.5/mix(2.0*NdotL*NdotV, NdotL + NdotV, alpha);"
+    "}"
+
+    "float SchlickFresnel(float u)"
+    "{"
+        "float m = 1.0 - u;"
+        "float m2 = m*m;"
+        "return m2*m2*m;" // pow(m,5)
+    "}"
+
+    "vec3 ComputeF0(float metallic, float specular, vec3 albedo)"
+    "{"
+        "float dielectric = 0.16*specular*specular;"
+        // use albedo*metallic as colored specular reflectance at 0 angle for metallic materials
+        // SEE: https://google.github.io/filament/Filament.md.html
+        "return mix(vec3(dielectric), albedo, vec3(metallic));"
+    "}"
+
+    "float Shadow(int i)"
     "{"
 #       if GLSL_VERSION > 100
         "vec4 p = fragPosLightSpace[i];"
@@ -751,7 +787,7 @@ static const char rlgLightFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
         "{"
             "for (int y = -1; y <= 1; y++)"
             "{"
-                "float pcfDepth = TEX(lights[i].shadowMap, projCoords.xy + vec2(x, y)*lights[i].shadowMapTxlSz).r; "
+                "float pcfDepth = TEX(lights[i].shadowMap, projCoords.xy + vec2(x, y)*lights[i].shadowMapTxlSz).r;"
                 "shadow += step(depth, pcfDepth);"
             "}"
         "}"
@@ -761,71 +797,141 @@ static const char rlgLightFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
 
     "void main()"
     "{"
-        // get texture samples
-        "vec3 diffSample = TEX(texture0, fragTexCoord).rgb*colDiffuse.rgb*fragColor.rgb;"
-        "vec3 specSample = (useSpecularMap != 0) ? TEX(texture1, fragTexCoord).rgb*colSpecular : colSpecular;"
+        // Compute albedo (base color) by sampling the texture and multiplying by the diffuse color
+        "vec3 albedo = TEX(texture0, fragTexCoord).rgb;"
+        "albedo *= colDiffuse.rgb*fragColor.rgb;"
 
-        // compute normals
-        "vec3 normal;"
-        "if (useNormalMap == 0) normal = normalize(fragNormal);"
-        "else normal = normalize(TBN*(TEX(texture2, fragTexCoord).rgb*2.0 - 1.0));"
+        // Compute metallic factor; if a metalness map is used, sample it
+        "float metallic = metalness;"
+        "if (useMetalnessMap != 0) metallic *= TEX(texture1, fragTexCoord).r;"
 
-        // compute current view dir for this frag
-        "vec3 viewDir = normalize(viewPos - fragPosition);"
+        // Compute roughness factor; if a roughness map is used, sample it
+        "float rough = roughness;"
+        "if (useRoughnessMap != 0) rough *= TEX(texture3, fragTexCoord).r;"
 
-        // process lights
-        "vec3 finalColor = vec3(0.0);"
+        // Compute F0 (reflectance at normal incidence) based on the metallic factor
+        "vec3 F0 = ComputeF0(metallic, specular, albedo);"
+
+        // Compute the normal vector; if a normal map is used, transform it to tangent space
+        "vec3 N = (useNormalMap == 0) ? normalize(fragNormal)"
+            ": normalize(TBN*(TEX(texture2, fragTexCoord).rgb*2.0 - 1.0));"
+
+        // Compute the view direction vector for this fragment
+        "vec3 V = normalize(viewPos - fragPosition);"
+
+        // Compute the dot product of the normal and view direction
+        "float NdotV = dot(N, V);"
+        "float cNdotV = max(NdotV, 1e-4);"  // Clamped to avoid division by zero
+
+        // Initialize diffuse and specular lighting accumulators
+        "vec3 diffLighting = vec3(0.0);"
+        "vec3 specLighting = vec3(0.0);"
+
+        // Loop through all lights
         "for (int i = 0; i < NUM_LIGHTS; i++)"
         "{"
             "if (lights[i].enabled != 0)"
             "{"
-                // get lightDir
-                "vec3 lightDir = (lights[i].type != DIRLIGHT)"
-                    "? normalize(lights[i].position - fragPosition)"
-                    ": normalize(-lights[i].direction);"
+                "float size_A = 0.0;"
+                "vec3 L = vec3(0.0);"
 
-                // diffuse
-                "float diff = max(dot(normal, lightDir), 0.0);"
-                "vec3 diffuse = lights[i].diffuse*diffSample*diff;"
+                // Compute the light direction vector
+                "if (lights[i].type != DIRLIGHT)"
+                "{"
+                    "vec3 LV = lights[i].position - fragPosition;"
+                    "L = normalize(LV);"
 
-                // specular (Blinn-Phong)
-                "vec3 halfwayDir = normalize(lightDir + viewDir);"
-                "float spec = pow(max(dot(normal, halfwayDir), 0.0), shininess);"
-                "vec3 specular = lights[i].specular*specSample*spec;"
+                    // If the light has a size, compute the attenuation factor based on the distance
+                    "if (lights[i].size > 0.0)"
+                    "{"
+                        "float t = lights[i].size/max(0.001, length(LV));"
+                        "size_A = max(0.0, 1.0 - 1.0/sqrt(1.0 + t*t));"
+                    "}"
+                "}"
+                "else"
+                "{"
+                    // For directional lights, use the negative direction as the light direction
+                    "L = normalize(-lights[i].direction);"
+                "}"
 
-                // spotlight
+                // Compute the dot product of the normal and light direction, adjusted by size_A
+                "float NdotL = min(size_A + dot(N, L), 1.0);"
+                "float cNdotL = max(NdotL, 0.0);" // clamped NdotL
+
+                // Compute the halfway vector between the view and light directions
+                "vec3 H = normalize(V + L);"
+                "float cNdotH = clamp(size_A + dot(N, H), 0.0, 1.0);"
+                "float cLdotH = clamp(size_A + dot(L, H), 0.0, 1.0);"
+
+                // Compute diffuse lighting (Burley model) if the material is not fully metallic
+                "vec3 diffLight = vec3(0.0);"
+                "if (metallic < 1.0)"
+                "{"
+                    "float FD90_minus_1 = 2.0*cLdotH*cLdotH*rough - 0.5;"
+                    "float FdV = 1.0 + FD90_minus_1*SchlickFresnel(cNdotV);"
+                    "float FdL = 1.0 + FD90_minus_1*SchlickFresnel(cNdotL);"
+
+                    "float diffBRDF = (1.0/PI)*FdV*FdL*cNdotL;"
+                    "diffLight = diffBRDF*lights[i].color;"
+                "}"
+
+                // Compute specular lighting using the Schlick-GGX model
+                // NOTE: When roughness is 0, specular light should not be entirely disabled.
+                // TODO: Handle perfect mirror reflection when roughness is 0.
+                "vec3 specLight = vec3(0.0);"
+                "if (rough > 0.0)"
+                "{"
+                    "float alphaGGX = rough*rough;"
+                    "float D = DistributionGGX(cNdotH, alphaGGX);"
+                    "float G = GeometrySmith(cNdotL, cNdotV, alphaGGX);"
+
+                    "float cLdotH5 = SchlickFresnel(cLdotH);"
+                    "float F90 = clamp(50.0*F0.g, 0.0, 1.0);"
+                    "vec3 F = F0 + (F90 - F0)*cLdotH5;"
+
+                    "vec3 specBRDF = cNdotL*D*F*G;"
+                    "specLight = specBRDF*lights[i].color*lights[i].specular;"
+                "}"
+
+                // Apply spotlight effect if the light is a spotlight
                 "float intensity = 1.0;"
                 "if (lights[i].type == SPOTLIGHT)"
                 "{"
-                    "float theta = dot(lightDir, normalize(-lights[i].direction));"
+                    "float theta = dot(L, normalize(-lights[i].direction));"
                     "float epsilon = (lights[i].innerCutOff - lights[i].outerCutOff);"
-                    "intensity = smoothstep(0.0, 1.0, (theta - lights[i].outerCutOff) / epsilon);"
+                    "intensity = smoothstep(0.0, 1.0, (theta - lights[i].outerCutOff)/epsilon);"
                 "}"
 
-                // attenuation
+                // Apply attenuation based on the distance from the light
                 "float distance    = length(lights[i].position - fragPosition);"
-                "float attenuation = 1.0/(lights[i].constant + lights[i].linear*distance + lights[i].quadratic*(distance*distance));"
+                "float attenuation = 1.0/(lights[i].constant +"
+                                         "lights[i].linear*distance +"
+                                         "lights[i].quadratic*(distance*distance));"
 
-                // shadow
-                "float shadow = (lights[i].shadow != 0) ? ShadowCalc(i) : 1.0;"
+                // Apply shadow factor if the light casts shadows
+                "float shadow = (lights[i].shadow != 0) ? Shadow(i) : 1.0;"
 
-                // add final light color
-                "finalColor += (diffuse + specular)*intensity*attenuation*shadow;"
+                // Compute the final intensity factor combining intensity, attenuation, and shadow
+                "float factor = intensity*attenuation*shadow;"
+
+                // Accumulate the diffuse and specular lighting contributions
+                "diffLighting += diffLight*factor;"
+                "specLighting += specLight*factor;"
             "}"
         "}"
 
-        // compute ambient
-        "vec3 ambientColor = colAmbient*diffSample;"
+        // Compute the final diffuse color, including ambient and diffuse lighting contributions
+        "vec3 diffuse = albedo*(colAmbient + diffLighting);"
 
-        // compute emission
+        // Compute emission color; if an emissive map is used, sample it
         "vec3 emission = colEmissive;"
         "if (useEmissiveMap != 0)"
         "{"
             "emission *= TEX(texture5, fragTexCoord).rgb;"
         "}"
 
-        // compute final color
-        GLSL_FINAL_COLOR("vec4(ambientColor + finalColor + emission, 1.0)")
+        // Compute the final fragment color by combining diffuse, specular, and emission contributions
+        GLSL_FINAL_COLOR("vec4(diffuse + specLighting + emission, 1.0)")
     "}";
 
 static const char rlgDepthVS[] = GLSL_VERSION_DEF
@@ -868,28 +974,34 @@ static const char rlgShadowMapFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
 
 struct RLG_GlobalLightLocs
 {
-    int colSpecular;
     int colEmissive;
     int colAmbient;
 
     int viewPos;
-    int shininess;
 
-    int useSpecularMap;
+    int metalness;
+    int roughness;
+    int specular;
+
+    int useMetalnessMap;
+    int useRoughnessMap;
     int useEmissiveMap;
     int useNormalMap;
 };
 
 struct RLG_GlobalLight
 {
-    Vector3 colSpecular;
     Vector3 colEmissive;
     Vector3 colAmbient;
 
     Vector3 viewPos;
-    float shininess;
 
-    int useSpecularMap;
+    float metalness;
+    float roughness;
+    float specular;
+
+    int useMetalnessMap;
+    int useRoughnessMap;
     int useEmissiveMap;
     int useNormalMap;
 };
@@ -903,12 +1015,13 @@ struct RLG_ShadowMap
 
 struct RLG_LightLocs
 {
-    int vpMatrix;       ///< NOTE: Not present in the Light struct but in a separate uniform
+    int vpMatrix;       ///< NOTE: Not present in the Light shader struct but in a separate uniform
     int shadowMap;
     int position;
     int direction;
-    int diffuse;
+    int color;
     int specular;
+    int size;
     int innerCutOff;
     int outerCutOff;
     int constant;
@@ -926,8 +1039,9 @@ struct RLG_Light
     struct RLG_ShadowMap shadowMap;
     Vector3 position;
     Vector3 direction;
-    Vector3 diffuse;
-    Vector3 specular;
+    Vector3 color;
+    float specular;
+    float size;
     float innerCutOff;
     float outerCutOff;
     float constant;
@@ -1047,26 +1161,29 @@ RLG_Context RLG_CreateContext(unsigned int count)
 #   endif //NO_EMBEDDED_SHADERS
 
     // Retrieving global shader locations
-    rlgCtx->locsGlobalLight.useSpecularMap = GetShaderLocation(rlgCtx->lightShader, "useSpecularMap");
+    rlgCtx->locsGlobalLight.useMetalnessMap = GetShaderLocation(rlgCtx->lightShader, "useMetalnessMap");
+    rlgCtx->locsGlobalLight.useRoughnessMap = GetShaderLocation(rlgCtx->lightShader, "useRoughnessMap");
     rlgCtx->locsGlobalLight.useEmissiveMap = GetShaderLocation(rlgCtx->lightShader, "useEmissiveMap");
     rlgCtx->locsGlobalLight.useNormalMap = GetShaderLocation(rlgCtx->lightShader, "useNormalMap");
-    rlgCtx->locsGlobalLight.colSpecular = GetShaderLocation(rlgCtx->lightShader, "colSpecular");
     rlgCtx->locsGlobalLight.colEmissive = GetShaderLocation(rlgCtx->lightShader, "colEmissive");
     rlgCtx->locsGlobalLight.colAmbient = GetShaderLocation(rlgCtx->lightShader, "colAmbient");
-    rlgCtx->locsGlobalLight.shininess = GetShaderLocation(rlgCtx->lightShader, "shininess");
+    rlgCtx->locsGlobalLight.metalness = GetShaderLocation(rlgCtx->lightShader, "metalness");
+    rlgCtx->locsGlobalLight.roughness = GetShaderLocation(rlgCtx->lightShader, "roughness");
+    rlgCtx->locsGlobalLight.specular = GetShaderLocation(rlgCtx->lightShader, "specular");
     rlgCtx->locsGlobalLight.viewPos = GetShaderLocation(rlgCtx->lightShader, "viewPos");
 
     // Define default global uniforms
     rlgCtx->globalLight = (struct RLG_GlobalLight) { 0 };
-    rlgCtx->globalLight.colSpecular = (Vector3) { 1.0f, 1.0f, 1.0f };
     rlgCtx->globalLight.colEmissive = (Vector3) { 0.0f, 0.0f, 0.0f };
     rlgCtx->globalLight.colAmbient = (Vector3) { 0.1f, 0.1f, 0.1f };
-    rlgCtx->globalLight.shininess = 32.0f;
+    rlgCtx->globalLight.metalness = 0.0f;
+    rlgCtx->globalLight.roughness = 1.0f;
+    rlgCtx->globalLight.specular = 1.0f;
 
     // Send default globals uniforms (no need to send zero-values)
-    SetShaderValue(rlgCtx->lightShader, rlgCtx->locsGlobalLight.colSpecular, &rlgCtx->globalLight.colSpecular, SHADER_UNIFORM_VEC3);
     SetShaderValue(rlgCtx->lightShader, rlgCtx->locsGlobalLight.colAmbient, &rlgCtx->globalLight.colAmbient, SHADER_UNIFORM_VEC3);
-    SetShaderValue(rlgCtx->lightShader, rlgCtx->locsGlobalLight.shininess, &rlgCtx->globalLight.shininess, SHADER_UNIFORM_FLOAT);
+    SetShaderValue(rlgCtx->lightShader, rlgCtx->locsGlobalLight.roughness, &rlgCtx->globalLight.roughness, SHADER_UNIFORM_FLOAT);
+    SetShaderValue(rlgCtx->lightShader, rlgCtx->locsGlobalLight.specular, &rlgCtx->globalLight.specular, SHADER_UNIFORM_FLOAT);
 
     // Allocation and initialization of the desired number of lights
     rlgCtx->lights = (struct RLG_Light*)malloc(count*sizeof(struct RLG_Light));
@@ -1080,8 +1197,9 @@ RLG_Context RLG_CreateContext(unsigned int count)
             .shadowMap      = (struct RLG_ShadowMap) { 0 },
             .position       = (Vector3) { 0 },
             .direction      = (Vector3) { 0 },
-            .diffuse        = (Vector3) { 1.0f, 1.0f, 1.0f },
-            .specular       = (Vector3) { 1.0f, 1.0f, 1.0f },
+            .color          = (Vector3) { 1.0f, 1.0f, 1.0f },
+            .specular       = 1.0f,
+            .size           = 0.0f,
             .innerCutOff    = -1.0f,
             .outerCutOff    = -1.0f,
             .constant       = 1.0f,
@@ -1098,8 +1216,9 @@ RLG_Context RLG_CreateContext(unsigned int count)
         locs->shadowMap      = GetShaderLocation(rlgCtx->lightShader, TextFormat("lights[%i].shadowMap", i));
         locs->position       = GetShaderLocation(rlgCtx->lightShader, TextFormat("lights[%i].position", i));
         locs->direction      = GetShaderLocation(rlgCtx->lightShader, TextFormat("lights[%i].direction", i));
-        locs->diffuse        = GetShaderLocation(rlgCtx->lightShader, TextFormat("lights[%i].diffuse", i));
+        locs->color          = GetShaderLocation(rlgCtx->lightShader, TextFormat("lights[%i].color", i));
         locs->specular       = GetShaderLocation(rlgCtx->lightShader, TextFormat("lights[%i].specular", i));
+        locs->size           = GetShaderLocation(rlgCtx->lightShader, TextFormat("lights[%i].size", i));
         locs->innerCutOff    = GetShaderLocation(rlgCtx->lightShader, TextFormat("lights[%i].innerCutOff", i));
         locs->outerCutOff    = GetShaderLocation(rlgCtx->lightShader, TextFormat("lights[%i].outerCutOff", i));
         locs->constant       = GetShaderLocation(rlgCtx->lightShader, TextFormat("lights[%i].constant", i));
@@ -1111,8 +1230,8 @@ RLG_Context RLG_CreateContext(unsigned int count)
         locs->shadow         = GetShaderLocation(rlgCtx->lightShader, TextFormat("lights[%i].shadow", i));
         locs->enabled        = GetShaderLocation(rlgCtx->lightShader, TextFormat("lights[%i].enabled", i));
 
-        SetShaderValue(rlgCtx->lightShader, locs->diffuse, &light->diffuse, SHADER_UNIFORM_VEC3);
-        SetShaderValue(rlgCtx->lightShader, locs->specular, &light->specular, SHADER_UNIFORM_VEC3);
+        SetShaderValue(rlgCtx->lightShader, locs->color, &light->color, SHADER_UNIFORM_VEC3);
+        SetShaderValue(rlgCtx->lightShader, locs->specular, &light->specular, SHADER_UNIFORM_FLOAT);
         SetShaderValue(rlgCtx->lightShader, locs->innerCutOff, &light->innerCutOff, SHADER_UNIFORM_FLOAT);
         SetShaderValue(rlgCtx->lightShader, locs->outerCutOff, &light->outerCutOff, SHADER_UNIFORM_FLOAT);
         SetShaderValue(rlgCtx->lightShader, locs->constant, &light->constant, SHADER_UNIFORM_FLOAT);
@@ -1266,9 +1385,14 @@ void RLG_SetMap(RLG_MaterialMap map, bool active)
 
     switch (map)
     {
-        case RLG_MAP_SPECULAR:
-            rlgCtx->globalLight.useSpecularMap = active;
-            SetShaderValue(rlgCtx->lightShader, rlgCtx->locsGlobalLight.useSpecularMap, &v, SHADER_UNIFORM_INT);
+        case RLG_MAP_METALNESS:
+            rlgCtx->globalLight.useMetalnessMap = active;
+            SetShaderValue(rlgCtx->lightShader, rlgCtx->locsGlobalLight.useMetalnessMap, &v, SHADER_UNIFORM_INT);
+            break;
+
+        case RLG_MAP_ROUGHNESS:
+            rlgCtx->globalLight.useRoughnessMap = active;
+            SetShaderValue(rlgCtx->lightShader, rlgCtx->locsGlobalLight.useRoughnessMap, &v, SHADER_UNIFORM_INT);
             break;
 
         case RLG_MAP_EMISSIVE:
@@ -1288,34 +1412,33 @@ void RLG_SetMap(RLG_MaterialMap map, bool active)
 
 bool RLG_IsMapEnabled(RLG_MaterialMap map)
 {
+    bool result = false;
+
     switch (map)
     {
-        case RLG_MAP_SPECULAR:
-            return rlgCtx->globalLight.useSpecularMap;
+        case RLG_MAP_METALNESS:
+            result = rlgCtx->globalLight.useMetalnessMap;
+
+        case RLG_MAP_ROUGHNESS:
+            result = rlgCtx->globalLight.useRoughnessMap;
 
         case RLG_MAP_EMISSIVE:
-            return rlgCtx->globalLight.useEmissiveMap;
+            result = rlgCtx->globalLight.useEmissiveMap;
 
         case RLG_MAP_NORMAL:
-            return rlgCtx->globalLight.useNormalMap;
+            result = rlgCtx->globalLight.useNormalMap;
 
         default:
             break;
     }
 
-    return false;
+    return result;
 }
 
 void RLG_SetMaterialValue(RLG_MaterialProperty property, float value)
 {
     switch (property)
     {
-        case RLG_MAT_SPECULAR_TINT:
-            rlgCtx->globalLight.colSpecular = (Vector3) { value, value, value };
-            SetShaderValue(rlgCtx->lightShader, rlgCtx->locsGlobalLight.colSpecular,
-                &rlgCtx->globalLight.colSpecular, SHADER_UNIFORM_VEC3);
-            break;
-
         case RLG_MAT_EMISSIVE_TINT:
             rlgCtx->globalLight.colEmissive = (Vector3) { value, value, value };
             SetShaderValue(rlgCtx->lightShader, rlgCtx->locsGlobalLight.colEmissive,
@@ -1328,10 +1451,22 @@ void RLG_SetMaterialValue(RLG_MaterialProperty property, float value)
                 &rlgCtx->globalLight.colAmbient, SHADER_UNIFORM_VEC3);
             break;
 
-        case RLG_MAT_SHININESS:
-            rlgCtx->globalLight.shininess = value;
-            SetShaderValue(rlgCtx->lightShader, rlgCtx->locsGlobalLight.shininess,
+        case RLG_MAT_METALNESS:
+            rlgCtx->globalLight.metalness = value;
+            SetShaderValue(rlgCtx->lightShader, rlgCtx->locsGlobalLight.metalness,
                 &value, SHADER_UNIFORM_FLOAT);
+            break;
+
+        case RLG_MAT_ROUGHNESS:
+            rlgCtx->globalLight.roughness = value;
+            SetShaderValue(rlgCtx->lightShader, rlgCtx->locsGlobalLight.roughness,
+                &value, SHADER_UNIFORM_FLOAT);
+            break;
+
+        case RLG_MAT_SPECULAR:
+            rlgCtx->globalLight.specular = value;
+            SetShaderValue(rlgCtx->lightShader, rlgCtx->locsGlobalLight.specular,
+                &rlgCtx->globalLight.specular, SHADER_UNIFORM_FLOAT);
             break;
 
         default:
@@ -1349,12 +1484,6 @@ void RLG_SetMaterialColor(RLG_MaterialProperty property, Color color)
 
     switch (property)
     {
-        case RLG_MAT_SPECULAR_TINT:
-            rlgCtx->globalLight.colSpecular = nCol;
-            SetShaderValue(rlgCtx->lightShader, rlgCtx->locsGlobalLight.colSpecular,
-                &nCol, SHADER_UNIFORM_VEC3);
-            break;
-
         case RLG_MAT_EMISSIVE_TINT:
             rlgCtx->globalLight.colEmissive = nCol;
             SetShaderValue(rlgCtx->lightShader, rlgCtx->locsGlobalLight.colEmissive,
@@ -1376,8 +1505,14 @@ float RLG_GetMaterialValue(RLG_MaterialProperty property)
 {
     switch (property)
     {
-        case RLG_MAT_SHININESS:
-            return rlgCtx->globalLight.shininess;
+        case RLG_MAT_METALNESS:
+            return rlgCtx->globalLight.metalness;
+
+        case RLG_MAT_ROUGHNESS:
+            return rlgCtx->globalLight.roughness;
+
+        case RLG_MAT_SPECULAR:
+            return rlgCtx->globalLight.specular;
 
         default:
             break;
@@ -1392,12 +1527,6 @@ Color RLG_GetMaterialColor(RLG_MaterialProperty property)
 
     switch (property)
     {
-        case RLG_MAT_SPECULAR_TINT:
-            result.r = (unsigned char)(255*rlgCtx->globalLight.colSpecular.x);
-            result.g = (unsigned char)(255*rlgCtx->globalLight.colSpecular.y);
-            result.b = (unsigned char)(255*rlgCtx->globalLight.colSpecular.z);
-            break;
-
         case RLG_MAT_EMISSIVE_TINT:
             result.r = (unsigned char)(255*rlgCtx->globalLight.colEmissive.x);
             result.g = (unsigned char)(255*rlgCtx->globalLight.colEmissive.y);
@@ -1493,16 +1622,22 @@ void RLG_SetLightValue(unsigned int light, RLG_LightProperty property, float val
 
     switch (property)
     {
-        case RLG_LIGHT_DIFFUSE:
-            rlgCtx->lights[light].diffuse = (Vector3) { value, value, value };
-            SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].diffuse,
-                &rlgCtx->lights[light].diffuse, SHADER_UNIFORM_VEC3);
+        case RLG_LIGHT_COLOR:
+            rlgCtx->lights[light].color = (Vector3) { value, value, value };
+            SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].color,
+                &rlgCtx->lights[light].color, SHADER_UNIFORM_VEC3);
             break;
 
-        case RLG_LIGHT_SPECULAR_TINT:
-            rlgCtx->lights[light].specular = (Vector3) { value, value, value };
+        case RLG_LIGHT_SPECULAR:
+            rlgCtx->lights[light].specular = value;
             SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].specular,
-                &rlgCtx->lights[light].specular, SHADER_UNIFORM_VEC3);
+                &rlgCtx->lights[light].specular, SHADER_UNIFORM_FLOAT);
+            break;
+
+        case RLG_LIGHT_SIZE:
+            rlgCtx->lights[light].size = value;
+            SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].size,
+                &rlgCtx->lights[light].size, SHADER_UNIFORM_FLOAT);
             break;
 
         case RLG_LIGHT_INNER_CUTOFF:
@@ -1559,15 +1694,9 @@ void RLG_SetLightXYZ(unsigned int light, RLG_LightProperty property, float x, fl
                 &value, SHADER_UNIFORM_VEC3);
             break;
 
-        case RLG_LIGHT_DIFFUSE:
-            rlgCtx->lights[light].diffuse = value;
-            SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].diffuse,
-                &value, SHADER_UNIFORM_VEC3);
-            break;
-
-        case RLG_LIGHT_SPECULAR_TINT:
-            rlgCtx->lights[light].specular = value;
-            SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].specular,
+        case RLG_LIGHT_COLOR:
+            rlgCtx->lights[light].color = value;
+            SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].color,
                 &value, SHADER_UNIFORM_VEC3);
             break;
 
@@ -1607,15 +1736,9 @@ void RLG_SetLightVec3(unsigned int light, RLG_LightProperty property, Vector3 va
                 &value, SHADER_UNIFORM_VEC3);
             break;
 
-        case RLG_LIGHT_DIFFUSE:
-            rlgCtx->lights[light].diffuse = value;
-            SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].diffuse,
-                &value, SHADER_UNIFORM_VEC3);
-            break;
-
-        case RLG_LIGHT_SPECULAR_TINT:
-            rlgCtx->lights[light].specular = value;
-            SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].specular,
+        case RLG_LIGHT_COLOR:
+            rlgCtx->lights[light].color = value;
+            SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].color,
                 &value, SHADER_UNIFORM_VEC3);
             break;
 
@@ -1633,7 +1756,7 @@ void RLG_SetLightVec3(unsigned int light, RLG_LightProperty property, Vector3 va
     }
 }
 
-void RLG_SetLightColor(unsigned int light, RLG_LightProperty property, Color color)
+void RLG_SetLightColor(unsigned int light, Color color)
 {
     if (light >= rlgCtx->lightCount)
     {
@@ -1641,29 +1764,14 @@ void RLG_SetLightColor(unsigned int light, RLG_LightProperty property, Color col
         return;
     }
 
-    Vector3 value = {
-        color.r/255.0f,
-        color.g/255.0f,
-        color.b/255.0f
-    };
+    Vector3 nCol = { 0 };
+    nCol.x = color.r/255.0f;
+    nCol.y = color.g/255.0f;
+    nCol.z = color.b/255.0f;
 
-    switch (property)
-    {
-        case RLG_LIGHT_DIFFUSE:
-            rlgCtx->lights[light].diffuse = value;
-            SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].diffuse,
-                &value, SHADER_UNIFORM_VEC3);
-            break;
-
-        case RLG_LIGHT_SPECULAR_TINT:
-            rlgCtx->lights[light].specular = value;
-            SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].specular,
-                &value, SHADER_UNIFORM_VEC3);
-            break;
-
-        default:
-            break;
-    }
+    rlgCtx->lights[light].color = nCol;
+    SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].color,
+        &nCol, SHADER_UNIFORM_VEC3);
 }
 
 float RLG_GetLightValue(unsigned int light, RLG_LightProperty property)
@@ -1678,6 +1786,14 @@ float RLG_GetLightValue(unsigned int light, RLG_LightProperty property)
 
     switch (property)
     {
+        case RLG_LIGHT_SPECULAR:
+            result = rlgCtx->lights[light].specular;
+            break;
+
+        case RLG_LIGHT_SIZE:
+            result = rlgCtx->lights[light].size;
+            break;
+
         case RLG_LIGHT_INNER_CUTOFF:
             result = acosf(rlgCtx->lights[light].innerCutOff)*RAD2DEG;    // REVIEW: Store in degrees in RAM?
             break;
@@ -1725,12 +1841,8 @@ Vector3 RLG_GetLightVec3(unsigned int light, RLG_LightProperty property)
             result = rlgCtx->lights[light].direction;
             break;
 
-        case RLG_LIGHT_DIFFUSE:
-            result = rlgCtx->lights[light].diffuse;
-            break;
-
-        case RLG_LIGHT_SPECULAR_TINT:
-            result = rlgCtx->lights[light].specular;
+        case RLG_LIGHT_COLOR:
+            result = rlgCtx->lights[light].color;
             break;
 
         case RLG_LIGHT_ATTENUATION_CLQ:
@@ -1746,7 +1858,7 @@ Vector3 RLG_GetLightVec3(unsigned int light, RLG_LightProperty property)
     return result;
 }
 
-Color RLG_GetLightColor(unsigned int light, RLG_LightProperty property)
+Color RLG_GetLightColor(unsigned int light)
 {
     Color result = BLACK;
 
@@ -1756,23 +1868,9 @@ Color RLG_GetLightColor(unsigned int light, RLG_LightProperty property)
         return result;
     }
 
-    switch (property)
-    {
-        case RLG_LIGHT_DIFFUSE:
-            result.r = 255*rlgCtx->lights[light].diffuse.x;
-            result.g = 255*rlgCtx->lights[light].diffuse.y;
-            result.b = 255*rlgCtx->lights[light].diffuse.z;
-            break;
-
-        case RLG_LIGHT_SPECULAR_TINT:
-            result.r = 255*rlgCtx->lights[light].specular.x;
-            result.g = 255*rlgCtx->lights[light].specular.y;
-            result.b = 255*rlgCtx->lights[light].specular.z;
-            break;
-
-        default:
-            break;
-    }
+    result.r = 255*rlgCtx->lights[light].color.x;
+    result.g = 255*rlgCtx->lights[light].color.y;
+    result.b = 255*rlgCtx->lights[light].color.z;
 
     return result;
 }

@@ -38,7 +38,6 @@ int main(void)
     RLG_Context rlgCtx = RLG_CreateContext(2);
     RLG_SetContext(rlgCtx);
 
-    RLG_SetMaterialValue(RLG_MAT_SPECULAR_TINT, 0.5f);
     RLG_SetViewPositionV(camera.position);
 
     for (int i = 0; i < RLG_GetLightcount(); i++)
@@ -47,7 +46,7 @@ int main(void)
         RLG_SetLightType(i, RLG_SPOTLIGHT);
 
         RLG_EnableShadow(i, 1024);
-        RLG_SetLightXYZ(i, RLG_LIGHT_DIFFUSE, 1 - i, 0.0f, i);
+        RLG_SetLightXYZ(i, RLG_LIGHT_COLOR, 1 - i, 0.0f, i);
 
         int s = i == 0 ? 1 : -1;
         RLG_SetLightXYZ(i, RLG_LIGHT_POSITION, s*5, 2.5f, s*5);
@@ -87,7 +86,7 @@ int main(void)
                 for (int i = 0; i < RLG_GetLightcount(); i++)
                 {
                     DrawSphere(RLG_GetLightVec3(i, RLG_LIGHT_POSITION),
-                        0.1f, RLG_GetLightColor(i, RLG_LIGHT_DIFFUSE));
+                        0.1f, RLG_GetLightColor(i));
                 }
                 draw(false);
             EndMode3D();

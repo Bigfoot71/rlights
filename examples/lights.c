@@ -4,47 +4,35 @@
 #define RLIGHTS_IMPLEMENTATION
 #include "../rlights.h"
 
+void Init_OmniLight(unsigned int light, Vector3 position, Color color)
+{
+    RLG_SetLight(light, true);
+    RLG_SetLightColor(light, color);
+    RLG_SetLightType(light, RLG_OMNILIGHT);
+    RLG_SetLightVec3(light, RLG_LIGHT_POSITION, position);
+}
+
 int main(void)
 {
-    const int screenWidth = 800;
-    const int screenHeight = 450;
-
     SetConfigFlags(FLAG_MSAA_4X_HINT);  // Enable Multi Sampling Anti Aliasing 4x (if available)
-    InitWindow(screenWidth, screenHeight, "multiple lights");
+    InitWindow(800, 600, "multiple lights");
 
     // Define the camera to look into our 3d world
     Camera camera = { 0 };
     camera.position = (Vector3){ 2.0f, 4.0f, 6.0f };    // Camera position
     camera.target = (Vector3){ 0.0f, 0.5f, 0.0f };      // Camera looking at point
     camera.up = (Vector3){ 0.0f, 1.0f, 0.0f };          // Camera up vector (rotation towards target)
-    camera.fovy = 45.0f;                                // Camera field-of-view Y
+    camera.fovy = 60.0f;                                // Camera field-of-view Y
     camera.projection = CAMERA_PERSPECTIVE;             // Camera projection type
 
     // Init light system
     RLG_Context rlgCtx = RLG_CreateContext(4);
     RLG_SetContext(rlgCtx);
 
-    RLG_SetMaterialValue(RLG_MAT_SPECULAR_TINT, 0.2f);
-
-    RLG_SetLight(0, true);
-    RLG_SetLightType(0, RLG_OMNILIGHT);
-    RLG_SetLightColor(0, RLG_LIGHT_DIFFUSE, YELLOW);
-    RLG_SetLightXYZ(0, RLG_LIGHT_POSITION, -2, 1, -2);
-
-    RLG_SetLight(1, true);
-    RLG_SetLightType(1, RLG_OMNILIGHT);
-    RLG_SetLightColor(1, RLG_LIGHT_DIFFUSE, RED);
-    RLG_SetLightXYZ(1, RLG_LIGHT_POSITION, 2, 1, 2);
-
-    RLG_SetLight(2, true);
-    RLG_SetLightType(2, RLG_OMNILIGHT);
-    RLG_SetLightColor(2, RLG_LIGHT_DIFFUSE, GREEN);
-    RLG_SetLightXYZ(2, RLG_LIGHT_POSITION, -2, 1, 2);
-
-    RLG_SetLight(3, true);
-    RLG_SetLightType(3, RLG_OMNILIGHT);
-    RLG_SetLightColor(3, RLG_LIGHT_DIFFUSE, BLUE);
-    RLG_SetLightXYZ(3, RLG_LIGHT_POSITION, 2, 1, -2);
+    Init_OmniLight(0, (Vector3) { -2, 1, -2 }, YELLOW);
+    Init_OmniLight(1, (Vector3) { 2, 1, 2 }, RED);
+    Init_OmniLight(2, (Vector3) { -2, 1, 2 }, GREEN);
+    Init_OmniLight(3, (Vector3) { 2, 1, -2 }, BLUE);
 
     // Generate meshes/models
     Model cube = LoadModelFromMesh(GenMeshCube(2.0f, 4.0f, 2.0f));
@@ -57,7 +45,29 @@ int main(void)
         // Update
         UpdateCamera(&camera, CAMERA_ORBITAL);
         RLG_SetViewPositionV(camera.position);
-        
+
+        // Check key inputs to config material values
+        int metalness = IsKeyPressed(KEY_RIGHT) - IsKeyPressed(KEY_LEFT);
+        if (metalness)
+        {
+            float newVal = RLG_GetMaterialValue(RLG_MAT_METALNESS)+metalness*0.05f;
+            RLG_SetMaterialValue(RLG_MAT_METALNESS, Clamp(newVal, 0.0f, 1.0f));
+        }
+
+        float roughness = IsKeyPressed(KEY_UP) - IsKeyPressed(KEY_DOWN);
+        if (roughness)
+        {
+            float newVal = RLG_GetMaterialValue(RLG_MAT_ROUGHNESS)+roughness*0.05f;
+            RLG_SetMaterialValue(RLG_MAT_ROUGHNESS, Clamp(newVal, 0.0f, 1.0f));
+        }
+
+        float specular = IsKeyPressed(KEY_P) - IsKeyPressed(KEY_M);
+        if (specular)
+        {
+            float newVal = RLG_GetMaterialValue(RLG_MAT_SPECULAR)+specular*0.05f;
+            RLG_SetMaterialValue(RLG_MAT_SPECULAR, Clamp(newVal, 0.0f, 1.0f));
+        }
+
         // Check key inputs to enable/disable lights
         if (IsKeyPressed(KEY_Y)) RLG_ToggleLight(0);
         if (IsKeyPressed(KEY_R)) RLG_ToggleLight(1);
@@ -67,7 +77,7 @@ int main(void)
         // Draw
         BeginDrawing();
 
-            ClearBackground(RAYWHITE);
+            ClearBackground(BLACK);
 
             BeginMode3D(camera);
 
@@ -80,12 +90,12 @@ int main(void)
                     if (RLG_IsLightEnabled(i))
                     {
                         DrawSphereEx(RLG_GetLightVec3(i, RLG_LIGHT_POSITION),
-                            0.2f, 8, 8, RLG_GetLightColor(i, RLG_LIGHT_DIFFUSE));
+                            0.2f, 8, 8, RLG_GetLightColor(i));
                     }
                     else
                     {
                         DrawSphereWires(RLG_GetLightVec3(i, RLG_LIGHT_POSITION),
-                            0.2f, 8, 8, ColorAlpha(RLG_GetLightColor(i, RLG_LIGHT_DIFFUSE), 0.3f));
+                            0.2f, 8, 8, ColorAlpha(RLG_GetLightColor(i), 0.3f));
                     }
                 }
 
@@ -93,8 +103,11 @@ int main(void)
 
             EndMode3D();
 
-            DrawFPS(10, 10);
-            DrawText("Use keys [Y][R][G][B] to toggle lights", 10, 40, 20, DARKGRAY);
+            DrawText(TextFormat("[AL/AR] Metalness: %.2f", RLG_GetMaterialValue(RLG_MAT_METALNESS)), 10, 10, 20, WHITE);
+            DrawText(TextFormat("[AU/AD] Roughness: %.2f", RLG_GetMaterialValue(RLG_MAT_ROUGHNESS)), 10, 40, 20, WHITE);
+            DrawText(TextFormat("[M/P]: Specular: %.2f", RLG_GetMaterialValue(RLG_MAT_SPECULAR)), 10, 70, 20, WHITE);
+            DrawText("Use keys [Y][R][G][B] to toggle lights", 420, 10, 20, WHITE);
+            DrawFPS(10, 570);
 
         EndDrawing();
     }

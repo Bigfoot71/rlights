@@ -29,7 +29,6 @@ int main(void)
     RLG_SetContext(rlgCtx);
 
     RLG_SetMap(RLG_MAP_NORMAL, true);
-    RLG_SetMaterialValue(RLG_MAT_SPECULAR_TINT, 0.2f);
 
     RLG_SetLight(0, true);
     RLG_SetLightType(0, RLG_SPOTLIGHT);

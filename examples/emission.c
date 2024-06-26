@@ -21,7 +21,6 @@ int main(void)
     RLG_Context rlgCtx = RLG_CreateContext(1);
     RLG_SetContext(rlgCtx);
 
-    RLG_SetMaterialValue(RLG_MAT_SPECULAR_TINT, 0.5f);
     RLG_SetViewPositionV(camera.position);
 
     RLG_SetLight(0, true);

@@ -42,12 +42,10 @@ int main(void)
     RLG_Context rlgCtx = RLG_CreateContext(1);
     RLG_SetContext(rlgCtx);
 
-    RLG_SetMaterialValue(RLG_MAT_SPECULAR_TINT, 0.5f);
-
     RLG_SetLight(0, true);
     RLG_SetLightType(0, RLG_OMNILIGHT);
     RLG_SetLightXYZ(0, RLG_LIGHT_POSITION, 2, 2, 2);
-    RLG_SetLightXYZ(0, RLG_LIGHT_DIFFUSE, 0.5f, 0.0, 1.0);
+    RLG_SetLightXYZ(0, RLG_LIGHT_COLOR, 0.5f, 0.0, 1.0);
 
     Model cube = LoadModelFromMesh(GenMeshCube(1, 1, 1));
 
@@ -126,11 +124,11 @@ RLG_LightType RLG_GetLightType(unsigned int light);
 void RLG_SetLightValue(unsigned int light, RLG_LightProperty property, float value);
 void RLG_SetLightXYZ(unsigned int light, RLG_LightProperty property, float x, float y, float z);
 void RLG_SetLightVec3(unsigned int light, RLG_LightProperty property, Vector3 value);
-void RLG_SetLightColor(unsigned int light, RLG_LightProperty property, Color color);
+void RLG_SetLightColor(unsigned int light, Color color);
 
 float RLG_GetLightValue(unsigned int light, RLG_LightProperty property);
 Vector3 RLG_GetLightVec3(unsigned int light, RLG_LightProperty property);
-Color RLG_GetLightColor(unsigned int light, RLG_LightProperty property);
+Color RLG_GetLightColor(unsigned int light);
 
 void RLG_LightTranslate(unsigned int light, float x, float y, float z);
 void RLG_LightTranslateV(unsigned int light, Vector3 v);
