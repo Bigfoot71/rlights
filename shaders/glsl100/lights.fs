@@ -41,6 +41,7 @@ uniform Light lights[NUM_LIGHTS];
 
 uniform lowp int useMetalnessMap;
 uniform lowp int useRoughnessMap;
+uniform lowp int useOcclusionMap;
 uniform lowp int useEmissiveMap;
 uniform lowp int useNormalMap;
 
@@ -48,6 +49,7 @@ uniform sampler2D texture0;   // albedo
 uniform sampler2D texture1;   // metalness
 uniform sampler2D texture2;   // normal
 uniform sampler2D texture3;   // roughness
+uniform sampler2D texture4;   // occlusion
 uniform sampler2D texture5;   // emissive
 
 uniform vec3 colEmissive;     // sent by rlights
@@ -248,6 +250,13 @@ void main()
 
     // Compute the final diffuse color, including ambient and diffuse lighting contributions
     vec3 diffuse = albedo*(colAmbient + diffLighting);
+
+    // Compute ambient occlusion
+    if (useOcclusionMap != 0)
+    {
+        float ao = TEX(texture4, fragTexCoord);
+        diffuse *= ao;
+    }
 
     // Compute emission color; if an emissive map is used, sample it
     vec3 emission = colEmissive;

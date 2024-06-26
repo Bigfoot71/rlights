@@ -35,6 +35,7 @@ typedef enum {
 typedef enum {
     RLG_MAP_METALNESS,      ///< Metalness map used to define the metallic property of the material.
     RLG_MAP_ROUGHNESS,      ///< Roughness map used to define the surface roughness of the material.
+    RLG_MAP_OCCLUSION,      ///< Occlusion map used to define ambient occlusion, affecting the shading of the material.
     RLG_MAP_EMISSIVE,       ///< Emissive map used for emitting light.
     RLG_MAP_NORMAL          ///< Normal map used for bump mapping.
 } RLG_MaterialMap;
@@ -716,6 +717,7 @@ static const char rlgLightFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
 
     "uniform lowp int useMetalnessMap;"
     "uniform lowp int useRoughnessMap;"
+    "uniform lowp int useOcclusionMap;"
     "uniform lowp int useEmissiveMap;"
     "uniform lowp int useNormalMap;"
 
@@ -723,6 +725,7 @@ static const char rlgLightFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
     "uniform sampler2D texture1;"   // metalness
     "uniform sampler2D texture2;"   // normal
     "uniform sampler2D texture3;"   // roughness
+    "uniform sampler2D texture4;"   // occlusion
     "uniform sampler2D texture5;"   // emissive
 
     "uniform vec3 colEmissive;"     // sent by rlights
@@ -928,6 +931,13 @@ static const char rlgLightFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
         // Compute the final diffuse color, including ambient and diffuse lighting contributions
         "vec3 diffuse = albedo*(colAmbient + diffLighting);"
 
+        // Compute ambient occlusion
+        "if (useOcclusionMap != 0)"
+        "{"
+            "float ao = TEX(texture4, fragTexCoord);"
+            "diffuse *= ao;"
+        "}"
+
         // Compute emission color; if an emissive map is used, sample it
         "vec3 emission = colEmissive;"
         "if (useEmissiveMap != 0)"
@@ -997,6 +1007,7 @@ struct RLG_Material
 
         int useMetalnessMap;
         int useRoughnessMap;
+        int useOcclusionMap;
         int useEmissiveMap;
         int useNormalMap;
     }
@@ -1013,6 +1024,7 @@ struct RLG_Material
 
         int useMetalnessMap;
         int useRoughnessMap;
+        int useOcclusionMap;
         int useEmissiveMap;
         int useNormalMap;
     }
@@ -1187,6 +1199,7 @@ RLG_Context RLG_CreateContext(unsigned int count)
     // Retrieving global shader locations
     rlgCtx->material.locs.useMetalnessMap = GetShaderLocation(rlgCtx->lightShader, "useMetalnessMap");
     rlgCtx->material.locs.useRoughnessMap = GetShaderLocation(rlgCtx->lightShader, "useRoughnessMap");
+    rlgCtx->material.locs.useOcclusionMap = GetShaderLocation(rlgCtx->lightShader, "useOcclusionMap");
     rlgCtx->material.locs.useEmissiveMap = GetShaderLocation(rlgCtx->lightShader, "useEmissiveMap");
     rlgCtx->material.locs.useNormalMap = GetShaderLocation(rlgCtx->lightShader, "useNormalMap");
     rlgCtx->material.locs.colEmissive = GetShaderLocation(rlgCtx->lightShader, "colEmissive");
@@ -1410,6 +1423,11 @@ void RLG_SetMap(RLG_MaterialMap map, bool active)
             SetShaderValue(rlgCtx->lightShader, rlgCtx->material.locs.useRoughnessMap, &v, SHADER_UNIFORM_INT);
             break;
 
+        case RLG_MAP_OCCLUSION:
+            rlgCtx->material.data.useOcclusionMap = active;
+            SetShaderValue(rlgCtx->lightShader, rlgCtx->material.locs.useOcclusionMap, &v, SHADER_UNIFORM_INT);
+            break;
+
         case RLG_MAP_EMISSIVE:
             rlgCtx->material.data.useEmissiveMap = active;
             SetShaderValue(rlgCtx->lightShader, rlgCtx->material.locs.useEmissiveMap, &v, SHADER_UNIFORM_INT);
@@ -1433,15 +1451,23 @@ bool RLG_IsMapEnabled(RLG_MaterialMap map)
     {
         case RLG_MAP_METALNESS:
             result = rlgCtx->material.data.useMetalnessMap;
+            break;
 
         case RLG_MAP_ROUGHNESS:
             result = rlgCtx->material.data.useRoughnessMap;
+            break;
+
+        case RLG_MAP_OCCLUSION:
+            result = rlgCtx->material.data.useOcclusionMap;
+            break;
 
         case RLG_MAP_EMISSIVE:
             result = rlgCtx->material.data.useEmissiveMap;
+            break;
 
         case RLG_MAP_NORMAL:
             result = rlgCtx->material.data.useNormalMap;
+            break;
 
         default:
             break;
