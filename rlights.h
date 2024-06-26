@@ -48,17 +48,20 @@ typedef enum {
     RLG_MAT_SHININESS       ///< Shininess property of the material.
 } RLG_MaterialProperty;
 
+/**
+ * @brief Enum representing different properties of a light.
+ */
 typedef enum {
-    RLG_LIGHT_POSITION,
-    RLG_LIGHT_DIRECTION,
-    RLG_LIGHT_DIFFUSE,
-    RLG_LIGHT_SPECULAR_TINT,
-    RLG_LIGHT_INNER_CUTOFF,
-    RLG_LIGHT_OUTER_CUTOFF,
-    RLG_LIGHT_ATTENUATION_CLQ,
-    RLG_LIGHT_ATTENUATION_CONSTANT,
-    RLG_LIGHT_ATTENUATION_LINEAR,
-    RLG_LIGHT_ATTENUATION_QUADRATIC
+    RLG_LIGHT_POSITION,                ///< Position of the light.
+    RLG_LIGHT_DIRECTION,               ///< Direction of the light.
+    RLG_LIGHT_DIFFUSE,                 ///< Diffuse color of the light.
+    RLG_LIGHT_SPECULAR_TINT,           ///< Specular tint color of the light.
+    RLG_LIGHT_INNER_CUTOFF,            ///< Inner cutoff angle of a spotlight.
+    RLG_LIGHT_OUTER_CUTOFF,            ///< Outer cutoff angle of a spotlight.
+    RLG_LIGHT_ATTENUATION_CLQ,         ///< Attenuation coefficients (constant, linear, quadratic) of the light.
+    RLG_LIGHT_ATTENUATION_CONSTANT,    ///< Constant attenuation coefficient of the light.
+    RLG_LIGHT_ATTENUATION_LINEAR,      ///< Linear attenuation coefficient of the light.
+    RLG_LIGHT_ATTENUATION_QUADRATIC    ///< Quadratic attenuation coefficient of the light.
 } RLG_LightProperty;
 
 typedef void* RLG_Context;  ///< Opaque type for a lighting context handle.
@@ -562,6 +565,7 @@ void RLG_DrawModelEx(Model model, Vector3 position, Vector3 rotationAxis, float 
 }
 #endif
 
+#define RLIGHTS_IMPLEMENTATION
 #ifdef RLIGHTS_IMPLEMENTATION
 
 #include <raymath.h>
