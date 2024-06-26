@@ -57,8 +57,9 @@ typedef enum {
     RLG_LIGHT_POSITION,                 ///< Position of the light.
     RLG_LIGHT_DIRECTION,                ///< Direction of the light.
     RLG_LIGHT_COLOR,                    ///< Diffuse color of the light.
+    RLG_LIGHT_ENERGY,                   ///< Energy factor of the light.
     RLG_LIGHT_SPECULAR,                 ///< Specular tint color of the light.
-    RLG_LIGHT_SIZE,                     ///< Radius of the light's influence (only for spotlight and omnidirectional light).
+    RLG_LIGHT_SIZE,                     ///< Light size, affects fade and shadow blur (spotlight, omnilight only).
     RLG_LIGHT_INNER_CUTOFF,             ///< Inner cutoff angle of a spotlight.
     RLG_LIGHT_OUTER_CUTOFF,             ///< Outer cutoff angle of a spotlight.
     RLG_LIGHT_ATTENUATION_CLQ,          ///< Attenuation coefficients (constant, linear, quadratic) of the light.
@@ -696,8 +697,9 @@ static const char rlgLightFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
         "vec3 position;"            ///< Position of the light in world coordinates
         "vec3 direction;"           ///< Direction vector of the light (for directional and spotlights)
         "vec3 color;"               ///< Diffuse color of the light
+        "float energy;"             ///< Energy factor of the diffuse light color
         "float specular;"           ///< Specular amount of the light
-        "float size;"
+        "float size;"               ///< Light size (spotlight, omnilight only)
         "float innerCutOff;"        ///< Inner cutoff angle for spotlights (cosine of the angle)
         "float outerCutOff;"        ///< Outer cutoff angle for spotlights (cosine of the angle)
         "float constant;"           ///< Constant attenuation factor
@@ -863,6 +865,9 @@ static const char rlgLightFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
                 "float cNdotH = clamp(size_A + dot(N, H), 0.0, 1.0);"
                 "float cLdotH = clamp(size_A + dot(L, H), 0.0, 1.0);"
 
+                // Compute light color energy
+                "vec3 lightColE = lights[i].color*lights[i].energy;"
+
                 // Compute diffuse lighting (Burley model) if the material is not fully metallic
                 "vec3 diffLight = vec3(0.0);"
                 "if (metallic < 1.0)"
@@ -872,7 +877,7 @@ static const char rlgLightFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
                     "float FdL = 1.0 + FD90_minus_1*SchlickFresnel(cNdotL);"
 
                     "float diffBRDF = (1.0/PI)*FdV*FdL*cNdotL;"
-                    "diffLight = diffBRDF*lights[i].color;"
+                    "diffLight = diffBRDF*lightColE;"
                 "}"
 
                 // Compute specular lighting using the Schlick-GGX model
@@ -890,7 +895,7 @@ static const char rlgLightFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
                     "vec3 F = F0 + (F90 - F0)*cLdotH5;"
 
                     "vec3 specBRDF = cNdotL*D*F*G;"
-                    "specLight = specBRDF*lights[i].color*lights[i].specular;"
+                    "specLight = specBRDF*lightColE*lights[i].specular;"
                 "}"
 
                 // Apply spotlight effect if the light is a spotlight
@@ -1023,6 +1028,7 @@ struct RLG_Light
         int position;
         int direction;
         int color;
+        int energy;
         int specular;
         int size;
         int innerCutOff;
@@ -1044,6 +1050,7 @@ struct RLG_Light
         Vector3 position;
         Vector3 direction;
         Vector3 color;
+        float energy;
         float specular;
         float size;
         float innerCutOff;
@@ -1208,6 +1215,7 @@ RLG_Context RLG_CreateContext(unsigned int count)
         light->data.position       = (Vector3) { 0 };
         light->data.direction      = (Vector3) { 0 };
         light->data.color          = (Vector3) { 1.0f, 1.0f, 1.0f };
+        light->data.energy         = 1.0f;
         light->data.specular       = 1.0f;
         light->data.size           = 0.0f;
         light->data.innerCutOff    = -1.0f;
@@ -1226,6 +1234,7 @@ RLG_Context RLG_CreateContext(unsigned int count)
         light->locs.position       = GetShaderLocation(rlgCtx->lightShader, TextFormat("lights[%i].position", i));
         light->locs.direction      = GetShaderLocation(rlgCtx->lightShader, TextFormat("lights[%i].direction", i));
         light->locs.color          = GetShaderLocation(rlgCtx->lightShader, TextFormat("lights[%i].color", i));
+        light->locs.energy         = GetShaderLocation(rlgCtx->lightShader, TextFormat("lights[%i].energy", i));
         light->locs.specular       = GetShaderLocation(rlgCtx->lightShader, TextFormat("lights[%i].specular", i));
         light->locs.size           = GetShaderLocation(rlgCtx->lightShader, TextFormat("lights[%i].size", i));
         light->locs.innerCutOff    = GetShaderLocation(rlgCtx->lightShader, TextFormat("lights[%i].innerCutOff", i));
@@ -1240,6 +1249,7 @@ RLG_Context RLG_CreateContext(unsigned int count)
         light->locs.enabled        = GetShaderLocation(rlgCtx->lightShader, TextFormat("lights[%i].enabled", i));
 
         SetShaderValue(rlgCtx->lightShader, light->locs.color, &light->data.color, SHADER_UNIFORM_VEC3);
+        SetShaderValue(rlgCtx->lightShader, light->locs.energy, &light->data.energy, SHADER_UNIFORM_FLOAT);
         SetShaderValue(rlgCtx->lightShader, light->locs.specular, &light->data.specular, SHADER_UNIFORM_FLOAT);
         SetShaderValue(rlgCtx->lightShader, light->locs.innerCutOff, &light->data.innerCutOff, SHADER_UNIFORM_FLOAT);
         SetShaderValue(rlgCtx->lightShader, light->locs.outerCutOff, &light->data.outerCutOff, SHADER_UNIFORM_FLOAT);
@@ -1641,6 +1651,12 @@ void RLG_SetLightValue(unsigned int light, RLG_LightProperty property, float val
                 &l->data.color, SHADER_UNIFORM_VEC3);
             break;
 
+        case RLG_LIGHT_ENERGY:
+            l->data.energy = value;
+            SetShaderValue(rlgCtx->lightShader, l->locs.energy,
+                &l->data.energy, SHADER_UNIFORM_FLOAT);
+            break;
+
         case RLG_LIGHT_SPECULAR:
             l->data.specular = value;
             SetShaderValue(rlgCtx->lightShader, l->locs.specular,
@@ -1806,6 +1822,10 @@ float RLG_GetLightValue(unsigned int light, RLG_LightProperty property)
 
     switch (property)
     {
+        case RLG_LIGHT_ENERGY:
+            result = l->data.energy;
+            break;
+
         case RLG_LIGHT_SPECULAR:
             result = l->data.specular;
             break;

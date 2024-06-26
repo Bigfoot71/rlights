@@ -32,6 +32,7 @@ int main(void)
 
     RLG_SetLight(0, true);
     RLG_SetLightType(0, RLG_SPOTLIGHT);
+    RLG_SetLightValue(0, RLG_LIGHT_ENERGY, 2.0f);
     RLG_SetLightValue(0, RLG_LIGHT_INNER_CUTOFF, 17.5f);
     RLG_SetLightValue(0, RLG_LIGHT_OUTER_CUTOFF, 27.5f);
 
