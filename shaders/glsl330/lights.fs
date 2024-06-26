@@ -22,8 +22,9 @@ struct Light {
     vec3 position;            ///< Position of the light in world coordinates
     vec3 direction;           ///< Direction vector of the light (for directional and spotlights)
     vec3 color;               ///< Diffuse color of the light
+    float energy;             ///< Energy factor of the diffuse light color
     float specular;           ///< Specular amount of the light
-    float size;
+    float size;               ///< Light size (spotlight, omnilight only)
     float innerCutOff;        ///< Inner cutoff angle for spotlights (cosine of the angle)
     float outerCutOff;        ///< Outer cutoff angle for spotlights (cosine of the angle)
     float constant;           ///< Constant attenuation factor
@@ -187,6 +188,9 @@ void main()
             float cNdotH = clamp(size_A + dot(N, H), 0.0, 1.0);
             float cLdotH = clamp(size_A + dot(L, H), 0.0, 1.0);
 
+            // Compute light color energy
+            vec3 lightColE = lights[i].color*lights[i].energy;
+
             // Compute diffuse lighting (Burley model) if the material is not fully metallic
             vec3 diffLight = vec3(0.0);
             if (metallic < 1.0)
@@ -196,7 +200,7 @@ void main()
                 float FdL = 1.0 + FD90_minus_1*SchlickFresnel(cNdotL);
 
                 float diffBRDF = (1.0/PI)*FdV*FdL*cNdotL;
-                diffLight = diffBRDF*lights[i].color;
+                diffLight = diffBRDF*lightColE;
             }
 
             // Compute specular lighting using the Schlick-GGX model
@@ -214,7 +218,7 @@ void main()
                 vec3 F = F0 + (F90 - F0)*cLdotH5;
 
                 vec3 specBRDF = cNdotL*D*F*G;
-                specLight = specBRDF*lights[i].color*lights[i].specular;
+                specLight = specBRDF*lightColE*lights[i].specular;
             }
 
             // Apply spotlight effect if the light is a spotlight
