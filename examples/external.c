@@ -9,8 +9,8 @@
 
 static void LoadShaderCode(int lightCount, char** lightVS, char** lightFS)
 {
-    char *tempVS = LoadFileText("../shaders/glsl100/lights.vs");
-    char *tempFS = LoadFileText("../shaders/glsl100/lights.fs");
+    char *tempVS = LoadFileText("../shaders/glsl330/lights.vs");
+    char *tempFS = LoadFileText("../shaders/glsl330/lights.fs");
 
     unsigned int lenVS = strlen(tempVS);
     unsigned int lenFS = strlen(tempFS);
