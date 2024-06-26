@@ -254,4 +254,4 @@ void main()
 
     // Compute the final fragment color by combining diffuse, specular, and emission contributions
     gl_FragColor = vec4(diffuse + specLighting + emission, 1.0);
-};
+}
