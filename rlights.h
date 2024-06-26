@@ -48,6 +48,19 @@ typedef enum {
     RLG_MAT_SHININESS       ///< Shininess property of the material.
 } RLG_MaterialProperty;
 
+typedef enum {
+    RLG_LIGHT_POSITION,
+    RLG_LIGHT_DIRECTION,
+    RLG_LIGHT_DIFFUSE,
+    RLG_LIGHT_SPECULAR,
+    RLG_LIGHT_INNER_CUTOFF,
+    RLG_LIGHT_OUTER_CUTOFF,
+    RLG_LIGHT_ATTENUATION_CLQ,
+    RLG_LIGHT_ATTENUATION_CONSTANT,
+    RLG_LIGHT_ATTENUATION_LINEAR,
+    RLG_LIGHT_ATTENUATION_QUADRATIC
+} RLG_LightProperty;
+
 typedef void* RLG_Context;  ///< Opaque type for a lighting context handle.
 
 #if defined(__cplusplus)
@@ -183,25 +196,12 @@ Color RLG_GetMaterialColor(RLG_MaterialProperty mat);
 unsigned int RLG_GetLightcount(void);
 
 /**
- * @brief Toggle the state of a specific light.
+ * @brief Activate or deactivate a specific light.
  * 
- * @param light The index of the light to toggle.
+ * @param light The index of the light to modify.
+ * @param active Boolean value indicating whether to activate (true) or deactivate (false) the light.
  */
-void RLG_ToggleLight(unsigned int light);
-
-/**
- * @brief Enable a specific light.
- * 
- * @param light The index of the light to enable.
- */
-void RLG_EnableLight(unsigned int light);
-
-/**
- * @brief Disable a specific light.
- * 
- * @param light The index of the light to disable.
- */
-void RLG_DisableLight(unsigned int light);
+void RLG_SetLight(unsigned int light, bool active);
 
 /**
  * @brief Check if a specific light is enabled.
@@ -210,6 +210,13 @@ void RLG_DisableLight(unsigned int light);
  * @return true if the light is enabled, false otherwise.
  */
 bool RLG_IsLightEnabled(unsigned int light);
+
+/**
+ * @brief Toggle the state of a specific light.
+ * 
+ * @param light The index of the light to toggle.
+ */
+void RLG_ToggleLight(unsigned int light);
 
 /**
  * @brief Set the type of a specific light.
@@ -226,6 +233,71 @@ void RLG_SetLightType(unsigned int light, RLG_LightType type);
  * @return The type of light as RLG_LightType enumeration.
  */
 RLG_LightType RLG_GetLightType(unsigned int light);
+
+/**
+ * @brief Set a float value for a specific light property.
+ * 
+ * @param light The index of the light to modify.
+ * @param property The light property to set the value for.
+ * @param value The float value to assign to the light property.
+ */
+void RLG_SetLightValue(unsigned int light, RLG_LightProperty property, float value);
+
+/**
+ * @brief Set XYZ coordinates for a specific light property.
+ * 
+ * @param light The index of the light to modify.
+ * @param property The light property to set the coordinates for.
+ * @param x The X coordinate value.
+ * @param y The Y coordinate value.
+ * @param z The Z coordinate value.
+ */
+void RLG_SetLightXYZ(unsigned int light, RLG_LightProperty property, float x, float y, float z);
+
+/**
+ * @brief Set a Vector3 value for a specific light property.
+ * 
+ * @param light The index of the light to modify.
+ * @param property The light property to set the Vector3 value for.
+ * @param value The Vector3 value to assign to the light property.
+ */
+void RLG_SetLightVec3(unsigned int light, RLG_LightProperty property, Vector3 value);
+
+/**
+ * @brief Set a color value for a specific light property.
+ * 
+ * @param light The index of the light to modify.
+ * @param property The light property to set the color for.
+ * @param color The color to assign to the light property.
+ */
+void RLG_SetLightColor(unsigned int light, RLG_LightProperty property, Color color);
+
+/**
+ * @brief Get the float value of a specific light property.
+ * 
+ * @param light The index of the light to retrieve the value from.
+ * @param property The light property to retrieve the value for.
+ * @return The float value of the specified light property.
+ */
+float RLG_GetLightValue(unsigned int light, RLG_LightProperty property);
+
+/**
+ * @brief Get the Vector3 value of a specific light property.
+ * 
+ * @param light The index of the light to retrieve the value from.
+ * @param property The light property to retrieve the Vector3 value for.
+ * @return The Vector3 value of the specified light property.
+ */
+Vector3 RLG_GetLightVec3(unsigned int light, RLG_LightProperty property);
+
+/**
+ * @brief Get the color value of a specific light property.
+ * 
+ * @param light The index of the light to retrieve the value from.
+ * @param property The light property to retrieve the color value for.
+ * @return The color value of the specified light property.
+ */
+Color RLG_GetLightColor(unsigned int light, RLG_LightProperty property);
 
 /**
  * @brief Translate the position of a specific light by the given offsets.
@@ -250,32 +322,6 @@ void RLG_LightTranslate(unsigned int light, float x, float y, float z);
  * @param v The vector to add to the light position.
  */
 void RLG_LightTranslateV(unsigned int light, Vector3 v);
-
-/**
- * @brief Set the position of a specific light.
- * 
- * @param light The index of the light to set the position for.
- * @param x The x-coordinate of the light position.
- * @param y The y-coordinate of the light position.
- * @param z The z-coordinate of the light position.
- */
-void RLG_SetLightPosition(unsigned int light, float x, float y, float z);
-
-/**
- * @brief Set the position of a specific light using a Vector3 structure.
- * 
- * @param light The index of the light to set the position for.
- * @param position The position of the light as a Vector3 structure.
- */
-void RLG_SetLightPositionV(unsigned int light, Vector3 position);
-
-/**
- * @brief Get the position of a specific light.
- * 
- * @param light The index of the light to get the position for.
- * @return The position of the light as a Vector3 structure.
- */
-Vector3 RLG_GetLightPosition(unsigned int light);
 
 /**
  * @brief Rotate the direction of a specific light around the X-axis.
@@ -323,32 +369,6 @@ void RLG_LightRotateZ(unsigned int light, float degrees);
 void RLG_LightRotate(unsigned int light, Vector3 axis, float degrees);
 
 /**
- * @brief Set the direction of a specific light.
- * 
- * @param light The index of the light to set the direction for.
- * @param x The x-component of the light direction.
- * @param y The y-component of the light direction.
- * @param z The z-component of the light direction.
- */
-void RLG_SetLightDirection(unsigned int light, float x, float y, float z);
-
-/**
- * @brief Set the direction of a specific light using a Vector3 structure.
- * 
- * @param light The index of the light to set the direction for.
- * @param direction The direction of the light as a Vector3 structure.
- */
-void RLG_SetLightDirectionV(unsigned int light, Vector3 direction);
-
-/**
- * @brief Get the direction of a specific light.
- * 
- * @param light The index of the light to get the direction for.
- * @return The direction of the light as a Vector3 structure.
- */
-Vector3 RLG_GetLightDirection(unsigned int light);
-
-/**
  * @brief Set the target position of a specific light.
  * 
  * @param light The index of the light to set the target position for.
@@ -373,174 +393,6 @@ void RLG_SetLightTargetV(unsigned int light, Vector3 targetPosition);
  * @return The target position of the light as a Vector3 structure.
  */
 Vector3 RLG_GetLightTarget(unsigned int light);
-
-/**
- * @brief Set the diffuse color of a specific light.
- * 
- * @param light The index of the light to set the diffuse color for.
- * @param r The red component of the diffuse color.
- * @param g The green component of the diffuse color.
- * @param b The blue component of the diffuse color.
- */
-void RLG_SetLightDiffuse(unsigned int light, float r, float g, float b);
-
-/**
- * @brief Set the diffuse color of a specific light using a Vector3 structure.
- * 
- * @param light The index of the light to set the diffuse color for.
- * @param color The diffuse color as a Vector3 structure.
- */
-void RLG_SetLightDiffuseV(unsigned int light, Vector3 color);
-
-/**
- * @brief Set the diffuse color of a specific light using a Color structure.
- * 
- * @param light The index of the light to set the diffuse color for.
- * @param color The diffuse color as a Color structure.
- */
-void RLG_SetLightDiffuseC(unsigned int light, Color color);
-
-/**
- * @brief Get the diffuse color of a specific light.
- * 
- * @param light The index of the light to get the diffuse color for.
- * @return The diffuse color as a Vector3 structure.
- */
-Vector3 RLG_GetLightDiffuse(unsigned int light);
-
-/**
- * @brief Get the diffuse color of a specific light as a Color structure.
- * 
- * @param light The index of the light to get the diffuse color for.
- * @return The diffuse color as a Color structure.
- */
-Color RLG_GetLightDiffuseC(unsigned int light);
-
-/**
- * @brief Set the specular color of a specific light.
- * 
- * @param light The index of the light to set the specular color for.
- * @param r The red component of the specular color.
- * @param g The green component of the specular color.
- * @param b The blue component of the specular color.
- */
-void RLG_SetLightSpecular(unsigned int light, float r, float g, float b);
-
-/**
- * @brief Set the specular color of a specific light using a Vector3 structure.
- * 
- * @param light The index of the light to set the specular color for.
- * @param color The specular color as a Vector3 structure.
- */
-void RLG_SetLightSpecularV(unsigned int light, Vector3 color);
-
-/**
- * @brief Set the specular color of a specific light using a Color structure.
- * 
- * @param light The index of the light to set the specular color for.
- * @param color The specular color as a Color structure.
- */
-void RLG_SetLightSpecularC(unsigned int light, Color color);
-
-/**
- * @brief Get the specular color of a specific light.
- * 
- * @param light The index of the light to get the specular color for.
- * @return The specular color as a Vector3 structure.
- */
-Vector3 RLG_GetLightSpecular(unsigned int light);
-
-/**
- * @brief Get the specular color of a specific light as a Color structure.
- * 
- * @param light The index of the light to get the specular color for.
- * @return The specular color as a Color structure.
- */
-Color RLG_GetLightSpecularC(unsigned int light);
-
-/**
- * @brief Set the inner cutoff angle of a spotlight.
- * 
- * @note These functions are only applicable to spotlight types.
- * 
- * @param light The index of the spotlight to set the inner cutoff angle for.
- * @param degrees The inner cutoff angle in degrees.
- */
-void RLG_SetLightInnerCutOff(unsigned int light, float degrees);
-
-/**
- * @brief Get the inner cutoff angle of a spotlight.
- * 
- * @note These functions are only applicable to spotlight types.
- * 
- * @param light The index of the spotlight to get the inner cutoff angle for.
- * @return The inner cutoff angle in degrees.
- */
-float RLG_GetLightInnerCutoff(unsigned int light);
-
-/**
- * @brief Set the outer cutoff angle of a spotlight.
- * 
- * @note These functions are only applicable to spotlight types.
- * 
- * @param light The index of the spotlight to set the outer cutoff angle for.
- * @param degrees The outer cutoff angle in degrees.
- */
-void RLG_SetLightOuterCutOff(unsigned int light, float degrees);
-
-/**
- * @brief Get the outer cutoff angle of a spotlight.
- * 
- * @note These functions are only applicable to spotlight types.
- * 
- * @param light The index of the spotlight to get the outer cutoff angle for.
- * @return The outer cutoff angle in degrees.
- */
-float RLG_GetLightOuterCutoff(unsigned int light);
-
-/**
- * @brief Set the attenuation factors of a light.
- * 
- * @param light The index of the light to set the attenuation for.
- * @param constant The constant attenuation factor.
- * @param linear The linear attenuation factor.
- * @param quadratic The quadratic attenuation factor.
- */
-void RLG_SetLightAttenuation(unsigned int light, float constant, float linear, float quadratic);
-
-/**
- * @brief Get the attenuation factors of a light.
- * 
- * @param light The index of the light to get the attenuation factors for.
- * @param constant Pointer to store the constant attenuation factor.
- * @param linear Pointer to store the linear attenuation factor.
- * @param quadratic Pointer to store the quadratic attenuation factor.
- */
-void RLG_GetLightAttenuation(unsigned int light, float* constant, float* linear, float* quadratic);
-
-/**
- * @brief Set the quadratic attenuation factor of a light.
- * 
- * @param light The index of the light to set the quadratic attenuation factor for.
- * @param quadratic The quadratic attenuation factor.
- */
-void RLG_SetLightAttenuationQuadratic(unsigned int light, float quadratic);
-
-/**
- * @brief Set the constant attenuation factor of a light.
- * 
- * @param light The index of the light to set the constant attenuation factor for.
- * @param constant The constant attenuation factor.
- */
-void RLG_SetLightAttenuationConstant(unsigned int light, float constant);
-
-/**
- * @brief Set the linear attenuation factor of a light.
- * 
- * @param light The index of the light to set the linear attenuation factor for.
- * @param linear The linear attenuation factor.
- */
-void RLG_SetLightAttenuationLinear(unsigned int light, float linear);
 
 /**
  * @brief Enable shadow casting for a light.
@@ -710,6 +562,7 @@ void RLG_DrawModelEx(Model model, Vector3 position, Vector3 rotationAxis, float 
 }
 #endif
 
+#define RLIGHTS_IMPLEMENTATION
 #ifdef RLIGHTS_IMPLEMENTATION
 
 #include <raymath.h>
@@ -1566,41 +1419,15 @@ unsigned int RLG_GetLightcount(void)
     return rlgCtx->lightCount;
 }
 
-void RLG_ToggleLight(unsigned int light)
+void RLG_SetLight(unsigned int light, bool active)
 {
     if (light >= rlgCtx->lightCount)
     {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_ToggleLight' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_SetLight' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
         return;
     }
 
-    rlgCtx->lights[light].enabled = !rlgCtx->lights[light].enabled;
-    SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].enabled,
-        &rlgCtx->lights[light].enabled, SHADER_UNIFORM_INT);
-}
-
-void RLG_EnableLight(unsigned int light)
-{
-    if (light >= rlgCtx->lightCount)
-    {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_EnableLight' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
-        return;
-    }
-
-    rlgCtx->lights[light].enabled = 1;
-    SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].enabled,
-        &rlgCtx->lights[light].enabled, SHADER_UNIFORM_INT);
-}
-
-void RLG_DisableLight(unsigned int light)
-{
-    if (light >= rlgCtx->lightCount)
-    {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_DisableLight' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
-        return;
-    }
-
-    rlgCtx->lights[light].enabled = 0;
+    rlgCtx->lights[light].enabled = (int)active;
     SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].enabled,
         &rlgCtx->lights[light].enabled, SHADER_UNIFORM_INT);
 }
@@ -1614,6 +1441,19 @@ bool RLG_IsLightEnabled(unsigned int light)
     }
 
     return (bool)rlgCtx->lights[light].enabled;
+}
+
+void RLG_ToggleLight(unsigned int light)
+{
+    if (light >= rlgCtx->lightCount)
+    {
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_ToggleLight' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
+        return;
+    }
+
+    rlgCtx->lights[light].enabled = !rlgCtx->lights[light].enabled;
+    SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].enabled,
+        &rlgCtx->lights[light].enabled, SHADER_UNIFORM_INT);
 }
 
 void RLG_SetLightType(unsigned int light, RLG_LightType type)
@@ -1638,6 +1478,300 @@ RLG_LightType RLG_GetLightType(unsigned int light)
     }
 
     return (RLG_LightType)rlgCtx->lights[light].type;
+}
+
+void RLG_SetLightValue(unsigned int light, RLG_LightProperty property, float value)
+{
+    if (light >= rlgCtx->lightCount)
+    {
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_SetLightValue' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
+        return;
+    }
+
+    switch (property)
+    {
+        case RLG_LIGHT_DIFFUSE:
+            rlgCtx->lights[light].diffuse = (Vector3) { value, value, value };
+            SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].diffuse,
+                &rlgCtx->lights[light].diffuse, SHADER_UNIFORM_VEC3);
+            break;
+
+        case RLG_LIGHT_SPECULAR:
+            rlgCtx->lights[light].specular = (Vector3) { value, value, value };
+            SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].specular,
+                &rlgCtx->lights[light].specular, SHADER_UNIFORM_VEC3);
+            break;
+
+        case RLG_LIGHT_INNER_CUTOFF:
+            rlgCtx->lights[light].innerCutOff = cosf(value*DEG2RAD);
+            SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].innerCutOff,
+                &rlgCtx->lights[light].innerCutOff, SHADER_UNIFORM_FLOAT);
+            break;
+
+        case RLG_LIGHT_OUTER_CUTOFF:
+            rlgCtx->lights[light].outerCutOff = cosf(value*DEG2RAD);
+            SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].outerCutOff,
+                &rlgCtx->lights[light].outerCutOff, SHADER_UNIFORM_FLOAT);
+            break;
+
+        case RLG_LIGHT_ATTENUATION_CONSTANT:
+            rlgCtx->lights[light].constant = value;
+            SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].constant, &value, SHADER_UNIFORM_FLOAT);
+
+        case RLG_LIGHT_ATTENUATION_LINEAR:
+            rlgCtx->lights[light].linear = value;
+            SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].linear, &value, SHADER_UNIFORM_FLOAT);
+
+        case RLG_LIGHT_ATTENUATION_QUADRATIC:
+            rlgCtx->lights[light].quadratic = value;
+            SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].quadratic, &value, SHADER_UNIFORM_FLOAT);
+            break;
+
+        default:
+            break;
+    }
+}
+
+void RLG_SetLightXYZ(unsigned int light, RLG_LightProperty property, float x, float y, float z)
+{
+    if (light >= rlgCtx->lightCount)
+    {
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_SetLightXYZ' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
+        return;
+    }
+
+    Vector3 value = { x, y, z };
+
+    switch (property)
+    {
+        case RLG_LIGHT_POSITION:
+            rlgCtx->lights[light].position = value;
+            SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].position,
+                &value, SHADER_UNIFORM_VEC3);
+            break;
+
+        case RLG_LIGHT_DIRECTION:
+            rlgCtx->lights[light].direction = value;
+            SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].direction,
+                &value, SHADER_UNIFORM_VEC3);
+            break;
+
+        case RLG_LIGHT_DIFFUSE:
+            rlgCtx->lights[light].diffuse = value;
+            SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].diffuse,
+                &value, SHADER_UNIFORM_VEC3);
+            break;
+
+        case RLG_LIGHT_SPECULAR:
+            rlgCtx->lights[light].specular = value;
+            SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].specular,
+                &value, SHADER_UNIFORM_VEC3);
+            break;
+
+        case RLG_LIGHT_ATTENUATION_CLQ:
+            rlgCtx->lights[light].linear = y;
+            rlgCtx->lights[light].constant = x;
+            rlgCtx->lights[light].quadratic = z;
+            SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].linear, &y, SHADER_UNIFORM_FLOAT);
+            SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].constant, &x, SHADER_UNIFORM_FLOAT);
+            SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].quadratic, &z, SHADER_UNIFORM_FLOAT);
+            break;
+
+        default:
+            break;
+    }
+}
+
+void RLG_SetLightVec3(unsigned int light, RLG_LightProperty property, Vector3 value)
+{
+    if (light >= rlgCtx->lightCount)
+    {
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_SetLightVec3' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
+        return;
+    }
+
+    switch (property)
+    {
+        case RLG_LIGHT_POSITION:
+            rlgCtx->lights[light].position = value;
+            SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].position,
+                &value, SHADER_UNIFORM_VEC3);
+            break;
+
+        case RLG_LIGHT_DIRECTION:
+            rlgCtx->lights[light].direction = value;
+            SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].direction,
+                &value, SHADER_UNIFORM_VEC3);
+            break;
+
+        case RLG_LIGHT_DIFFUSE:
+            rlgCtx->lights[light].diffuse = value;
+            SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].diffuse,
+                &value, SHADER_UNIFORM_VEC3);
+            break;
+
+        case RLG_LIGHT_SPECULAR:
+            rlgCtx->lights[light].specular = value;
+            SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].specular,
+                &value, SHADER_UNIFORM_VEC3);
+            break;
+
+        case RLG_LIGHT_ATTENUATION_CLQ:
+            rlgCtx->lights[light].linear = value.y;
+            rlgCtx->lights[light].constant = value.x;
+            rlgCtx->lights[light].quadratic = value.z;
+            SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].linear, &value.y, SHADER_UNIFORM_FLOAT);
+            SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].constant, &value.x, SHADER_UNIFORM_FLOAT);
+            SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].quadratic, &value.z, SHADER_UNIFORM_FLOAT);
+            break;
+
+        default:
+            break;
+    }
+}
+
+void RLG_SetLightColor(unsigned int light, RLG_LightProperty property, Color color)
+{
+    if (light >= rlgCtx->lightCount)
+    {
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_SetLightColor' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
+        return;
+    }
+
+    Vector3 value = {
+        color.r/255.0f,
+        color.g/255.0f,
+        color.b/255.0f
+    };
+
+    switch (property)
+    {
+        case RLG_LIGHT_DIFFUSE:
+            rlgCtx->lights[light].diffuse = value;
+            SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].diffuse,
+                &value, SHADER_UNIFORM_VEC3);
+            break;
+
+        case RLG_LIGHT_SPECULAR:
+            rlgCtx->lights[light].specular = value;
+            SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].specular,
+                &value, SHADER_UNIFORM_VEC3);
+            break;
+
+        default:
+            break;
+    }
+}
+
+float RLG_GetLightValue(unsigned int light, RLG_LightProperty property)
+{
+    float result = 0;
+
+    if (light >= rlgCtx->lightCount)
+    {
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_GetLightValue' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
+        return result;
+    }
+
+    switch (property)
+    {
+        case RLG_LIGHT_INNER_CUTOFF:
+            result = acosf(rlgCtx->lights[light].innerCutOff)*RAD2DEG;    // REVIEW: Store in degrees in RAM?
+            break;
+
+        case RLG_LIGHT_OUTER_CUTOFF:
+            result = acosf(rlgCtx->lights[light].outerCutOff)*RAD2DEG;    // REVIEW: Store in degrees in RAM?
+            break;
+
+        case RLG_LIGHT_ATTENUATION_CONSTANT:
+            result = rlgCtx->lights[light].constant;
+            break;
+
+        case RLG_LIGHT_ATTENUATION_LINEAR:
+            result = rlgCtx->lights[light].linear;
+            break;
+
+        case RLG_LIGHT_ATTENUATION_QUADRATIC:
+            result = rlgCtx->lights[light].quadratic;
+            break;
+
+        default:
+            break;
+    }
+
+    return result;
+}
+
+Vector3 RLG_GetLightVec3(unsigned int light, RLG_LightProperty property)
+{
+    Vector3 result = { 0 };
+
+    if (light >= rlgCtx->lightCount)
+    {
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_GetLightVec3' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
+        return result;
+    }
+
+    switch (property)
+    {
+        case RLG_LIGHT_POSITION:
+            result = rlgCtx->lights[light].position;
+            break;
+
+        case RLG_LIGHT_DIRECTION:
+            result = rlgCtx->lights[light].direction;
+            break;
+
+        case RLG_LIGHT_DIFFUSE:
+            result = rlgCtx->lights[light].diffuse;
+            break;
+
+        case RLG_LIGHT_SPECULAR:
+            result = rlgCtx->lights[light].specular;
+            break;
+
+        case RLG_LIGHT_ATTENUATION_CLQ:
+            result.y = rlgCtx->lights[light].linear;
+            result.x = rlgCtx->lights[light].constant;
+            result.z = rlgCtx->lights[light].quadratic;
+            break;
+
+        default:
+            break;
+    }
+
+    return result;
+}
+
+Color RLG_GetLightColor(unsigned int light, RLG_LightProperty property)
+{
+    Color result = BLACK;
+
+    if (light >= rlgCtx->lightCount)
+    {
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_GetLightColor' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
+        return result;
+    }
+
+    switch (property)
+    {
+        case RLG_LIGHT_DIFFUSE:
+            result.r = 255*rlgCtx->lights[light].diffuse.x;
+            result.g = 255*rlgCtx->lights[light].diffuse.y;
+            result.b = 255*rlgCtx->lights[light].diffuse.z;
+            break;
+
+        case RLG_LIGHT_SPECULAR:
+            result.r = 255*rlgCtx->lights[light].specular.x;
+            result.g = 255*rlgCtx->lights[light].specular.y;
+            result.b = 255*rlgCtx->lights[light].specular.z;
+            break;
+
+        default:
+            break;
+    }
+
+    return result;
 }
 
 void RLG_LightTranslate(unsigned int light, float x, float y, float z)
@@ -1672,35 +1806,6 @@ void RLG_LightTranslateV(unsigned int light, Vector3 v)
 
     SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].position,
         &l->position, SHADER_UNIFORM_VEC3);
-}
-
-void RLG_SetLightPosition(unsigned int light, float x, float y, float z)
-{
-    RLG_SetLightPositionV(light, (Vector3) { x, y, z });
-}
-
-void RLG_SetLightPositionV(unsigned int light, Vector3 position)
-{
-    if (light >= rlgCtx->lightCount)
-    {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_SetLightPosition' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
-        return;
-    }
-
-    rlgCtx->lights[light].position = position;
-    SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].position,
-        &rlgCtx->lights[light].position, SHADER_UNIFORM_VEC3);
-}
-
-Vector3 RLG_GetLightPosition(unsigned int light)
-{
-    if (light >= rlgCtx->lightCount)
-    {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_GetLightPosition' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
-        return (Vector3) { 0 };
-    }
-
-    return rlgCtx->lights[light].position;
 }
 
 void RLG_LightRotateX(unsigned int light, float degrees)
@@ -1806,35 +1911,6 @@ void RLG_LightRotate(unsigned int light, Vector3 axis, float degrees)
         &rlgCtx->lights[light].direction, SHADER_UNIFORM_VEC3);
 }
 
-void RLG_SetLightDirection(unsigned int light, float x, float y, float z)
-{
-    RLG_SetLightDirectionV(light, (Vector3) { x, y, z });
-}
-
-void RLG_SetLightDirectionV(unsigned int light, Vector3 direction)
-{
-    if (light >= rlgCtx->lightCount)
-    {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_SetLightDirection' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
-        return;
-    }
-
-    rlgCtx->lights[light].direction = direction;
-    SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].direction,
-        &rlgCtx->lights[light].direction, SHADER_UNIFORM_VEC3);
-}
-
-Vector3 RLG_GetLightDirection(unsigned int light)
-{
-    if (light >= rlgCtx->lightCount)
-    {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_GetLightDirection' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
-        return (Vector3) { 0 };
-    }
-
-    return rlgCtx->lights[light].direction;
-}
-
 void RLG_SetLightTarget(unsigned int light, float x, float y, float z)
 {
     RLG_SetLightTargetV(light, (Vector3) { x, y, z });
@@ -1866,254 +1942,6 @@ Vector3 RLG_GetLightTarget(unsigned int light)
     return Vector3Add(
         rlgCtx->lights[light].position,
         rlgCtx->lights[light].direction);
-}
-
-void RLG_SetLightDiffuse(unsigned int light, float r, float g, float b)
-{
-    RLG_SetLightDiffuseV(light, (Vector3) { r, g, b });
-}
-
-void RLG_SetLightDiffuseV(unsigned int light, Vector3 color)
-{
-    if (light >= rlgCtx->lightCount)
-    {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_SetLightDiffuse' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
-        return;
-    }
-
-    rlgCtx->lights[light].diffuse = color;
-    SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].diffuse,
-        &rlgCtx->lights[light].diffuse, SHADER_UNIFORM_VEC3);
-}
-
-void RLG_SetLightDiffuseC(unsigned int light, Color color)
-{
-    if (light >= rlgCtx->lightCount)
-    {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_SetLightDiffuseC' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
-        return;
-    }
-
-    rlgCtx->lights[light].diffuse = (Vector3) {
-        (float)color.r*(1.0f/255),
-        (float)color.g*(1.0f/255),
-        (float)color.b*(1.0f/255)
-    };
-
-    SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].diffuse,
-        &rlgCtx->lights[light].diffuse, SHADER_UNIFORM_VEC3);
-}
-
-Vector3 RLG_GetLightDiffuse(unsigned int light)
-{
-    if (light >= rlgCtx->lightCount)
-    {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_GetLightDiffuse' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
-        return (Vector3) { 0 };
-    }
-
-    return rlgCtx->lights[light].diffuse;
-}
-
-Color RLG_GetLightDiffuseC(unsigned int light)
-{
-    if (light >= rlgCtx->lightCount)
-    {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_GetLightDiffuseC' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
-        return BLANK;
-    }
-
-    return (Color) {
-        (unsigned char)(255*rlgCtx->lights[light].diffuse.x),
-        (unsigned char)(255*rlgCtx->lights[light].diffuse.y),
-        (unsigned char)(255*rlgCtx->lights[light].diffuse.z),
-        255
-    };
-}
-
-void RLG_SetLightSpecular(unsigned int light, float r, float g, float b)
-{
-    RLG_SetLightSpecularV(light, (Vector3) { r, g, b });
-}
-
-void RLG_SetLightSpecularV(unsigned int light, Vector3 color)
-{
-    if (light >= rlgCtx->lightCount)
-    {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_SetLightSpecular' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
-        return;
-    }
-
-    rlgCtx->lights[light].specular = color;
-    SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].specular,
-        &rlgCtx->lights[light].specular, SHADER_UNIFORM_VEC3);
-}
-
-void RLG_SetLightSpecularC(unsigned int light, Color color)
-{
-    if (light >= rlgCtx->lightCount)
-    {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_SetLightSpecularC' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
-        return;
-    }
-
-    rlgCtx->lights[light].specular = (Vector3) {
-        (float)color.r*(1.0f/255),
-        (float)color.g*(1.0f/255),
-        (float)color.b*(1.0f/255)
-    };
-
-    SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].specular,
-        &rlgCtx->lights[light].specular, SHADER_UNIFORM_VEC3);
-}
-
-Vector3 RLG_GetLightSpecular(unsigned int light)
-{
-    if (light >= rlgCtx->lightCount)
-    {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_GetLightSpecular' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
-        return (Vector3) { 0 };
-    }
-
-    return rlgCtx->lights[light].specular;
-}
-
-Color RLG_GetLightSpecularC(unsigned int light)
-{
-    if (light >= rlgCtx->lightCount)
-    {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_GetLightSpecularC' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
-        return BLANK;
-    }
-
-    return (Color) {
-        (unsigned char)(255*rlgCtx->lights[light].diffuse.x),
-        (unsigned char)(255*rlgCtx->lights[light].diffuse.y),
-        (unsigned char)(255*rlgCtx->lights[light].diffuse.z),
-        255
-    };
-}
-
-void RLG_SetLightInnerCutOff(unsigned int light, float degrees)
-{
-    if (light >= rlgCtx->lightCount)
-    {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_SetLightInnerCutOff' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
-        return;
-    }
-
-    rlgCtx->lights[light].innerCutOff = cosf(degrees*DEG2RAD);
-    SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].innerCutOff,
-        &rlgCtx->lights[light].innerCutOff, SHADER_UNIFORM_FLOAT);
-}
-
-float RLG_GetLightInnerCutoff(unsigned int light)
-{
-    if (light >= rlgCtx->lightCount)
-    {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_GetLightInnerCutoff' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
-        return 0;
-    }
-
-    return rlgCtx->lights[light].innerCutOff;
-}
-
-void RLG_SetLightOuterCutOff(unsigned int light, float degrees)
-{
-    if (light >= rlgCtx->lightCount)
-    {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_SetLightOuterCutOff' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
-        return;
-    }
-
-    rlgCtx->lights[light].outerCutOff = cosf(degrees*DEG2RAD);
-    SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].outerCutOff,
-        &rlgCtx->lights[light].outerCutOff, SHADER_UNIFORM_FLOAT);
-}
-
-float RLG_GetLightOuterCutoff(unsigned int light)
-{
-    if (light >= rlgCtx->lightCount)
-    {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_GetLightOuterCutoff' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
-        return 0;
-    }
-
-    return rlgCtx->lights[light].outerCutOff;
-}
-
-void RLG_SetLightAttenuation(unsigned int light, float constant, float linear, float quadratic)
-{
-    if (light >= rlgCtx->lightCount)
-    {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_SetLightAttenuation' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
-        return;
-    }
-
-    rlgCtx->lights[light].constant = constant;
-    rlgCtx->lights[light].linear = linear;
-    rlgCtx->lights[light].quadratic = quadratic;
-
-    SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].constant,
-        &rlgCtx->lights[light].constant, SHADER_UNIFORM_FLOAT);
-
-    SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].linear,
-        &rlgCtx->lights[light].linear, SHADER_UNIFORM_FLOAT);
-
-    SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].quadratic,
-        &rlgCtx->lights[light].quadratic, SHADER_UNIFORM_FLOAT);
-}
-
-void RLG_GetLightAttenuation(unsigned int light, float* constant, float* linear, float* quadratic)
-{
-    if (light >= rlgCtx->lightCount)
-    {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_GetLightAttenuation' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
-        return;
-    }
-
-    if (constant) *constant = rlgCtx->lights[light].constant;
-    if (linear) *linear = rlgCtx->lights[light].linear;
-    if (quadratic) *quadratic = rlgCtx->lights[light].linear;
-}
-
-void RLG_SetLightAttenuationQuadratic(unsigned int light, float quadratic)
-{
-    if (light >= rlgCtx->lightCount)
-    {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_SetLightAttenuationQuadratic' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
-        return;
-    }
-
-    rlgCtx->lights[light].quadratic = quadratic;
-    SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].quadratic,
-        &rlgCtx->lights[light].quadratic, SHADER_UNIFORM_FLOAT);
-}
-
-void RLG_SetLightAttenuationConstant(unsigned int light, float constant)
-{
-    if (light >= rlgCtx->lightCount)
-    {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_SetLightAttenuationConstant' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
-        return;
-    }
-
-    rlgCtx->lights[light].constant = constant;
-    SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].constant,
-        &rlgCtx->lights[light].constant, SHADER_UNIFORM_FLOAT);
-}
-
-void RLG_SetLightAttenuationLinear(unsigned int light, float linear)
-{
-    if (light >= rlgCtx->lightCount)
-    {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_SetLightAttenuationLinear' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
-        return;
-    }
-
-    rlgCtx->lights[light].linear = linear;
-    SetShaderValue(rlgCtx->lightShader, rlgCtx->locsLights[light].linear,
-        &rlgCtx->lights[light].linear, SHADER_UNIFORM_FLOAT);
 }
 
 void RLG_EnableLightShadow(unsigned int light, int shadowMapResolution)
@@ -2256,15 +2084,16 @@ void RLG_BeginShadowCast(unsigned int light)
 
     rlMatrixMode(RL_MODELVIEW);
     rlLoadIdentity();
-
+//
     Matrix matView = MatrixLookAt(l->position, Vector3Add(l->position, l->direction), (Vector3){ 0, 1, 0 });
     rlMultMatrixf(MatrixToFloat(matView));
-
+//
     rlEnableDepthTest();
     rlDisableColorBlend();
-
+//
     Matrix viewProj = MatrixMultiply(matView, rlGetMatrixProjection());
     SetShaderValueMatrix(rlgCtx->lightShader, rlgCtx->locsLights[light].vpMatrix, viewProj);
+//
 }
 
 void RLG_EndShadowCast(void)

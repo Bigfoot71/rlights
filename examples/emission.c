@@ -24,13 +24,16 @@ int main(void)
     RLG_SetMaterialValue(RLG_MAT_SPECULAR_TINT, 0.5f);
     RLG_SetViewPositionV(camera.position);
 
-    RLG_EnableLight(0);
+    RLG_SetLight(0, true);
+
     RLG_SetLightType(0, RLG_SPOTLIGHT);
     RLG_EnableLightShadow(0, 1024);
-    RLG_SetLightPosition(0, -5, 5, -5);
+
+    RLG_SetLightXYZ(0, RLG_LIGHT_POSITION, -5, 5, -5);
     RLG_SetLightTarget(0, 0, 0, 0);
-    RLG_SetLightInnerCutOff(0, 17.5f);
-    RLG_SetLightOuterCutOff(0, 22.5f); 
+
+    RLG_SetLightValue(0, RLG_LIGHT_INNER_CUTOFF, 17.5f);
+    RLG_SetLightValue(0, RLG_LIGHT_OUTER_CUTOFF, 27.5f);
 
     cube = LoadModelFromMesh(GenMeshCube(1, 1, 1));
     plane = LoadModelFromMesh(GenMeshPlane(10, 10, 1, 1));

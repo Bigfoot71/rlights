@@ -43,18 +43,18 @@ int main(void)
 
     for (int i = 0; i < RLG_GetLightcount(); i++)
     {
-        RLG_EnableLight(i);
+        RLG_SetLight(i, true);
         RLG_SetLightType(i, RLG_SPOTLIGHT);
 
         RLG_EnableLightShadow(i, 1024);
-        RLG_SetLightDiffuse(i, 1 - i, 0.0f, i);
+        RLG_SetLightXYZ(i, RLG_LIGHT_DIFFUSE, 1 - i, 0.0f, i);
 
         int s = i == 0 ? 1 : -1;
-        RLG_SetLightPosition(i, s*5, 2.5f, s*5);
+        RLG_SetLightXYZ(i, RLG_LIGHT_POSITION, s*5, 2.5f, s*5);
         RLG_SetLightTarget(i, 0, 0, 0);
 
-        RLG_SetLightInnerCutOff(i, 17.5f);
-        RLG_SetLightOuterCutOff(i, 22.5f); 
+        RLG_SetLightValue(i, RLG_LIGHT_INNER_CUTOFF, 17.5f);
+        RLG_SetLightValue(i, RLG_LIGHT_OUTER_CUTOFF, 22.5f); 
     }
 
     cube = LoadModelFromMesh(GenMeshCube(1, 1, 1));
@@ -71,7 +71,7 @@ int main(void)
             for (int i = 0; i < RLG_GetLightcount(); i++)
             {
                 int s = i == 0 ? 1 : -1;
-                RLG_SetLightPosition(i, s*5*cosf(GetTime()*(i+1)*0.5f), 2.5f, s*5*sinf(GetTime()*(i+1)*0.5f));
+                RLG_SetLightXYZ(i, RLG_LIGHT_POSITION, s*5*cosf(GetTime()*(i+1)*0.5f), 2.5f, s*5*sinf(GetTime()*(i+1)*0.5f));
                 RLG_SetLightTarget(i, 0, 0, 0);
 
                 RLG_BeginShadowCast(i);
@@ -86,7 +86,8 @@ int main(void)
             BeginMode3D(camera);
                 for (int i = 0; i < RLG_GetLightcount(); i++)
                 {
-                    DrawSphere(RLG_GetLightPosition(i), 0.1f, RLG_GetLightDiffuseC(i));
+                    DrawSphere(RLG_GetLightVec3(i, RLG_LIGHT_POSITION),
+                        0.1f, RLG_GetLightColor(i, RLG_LIGHT_DIFFUSE));
                 }
                 draw(false);
             EndMode3D();

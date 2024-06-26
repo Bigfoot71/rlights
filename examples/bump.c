@@ -31,10 +31,10 @@ int main(void)
     RLG_SetMap(RLG_MAP_NORMAL, true);
     RLG_SetMaterialValue(RLG_MAT_SPECULAR_TINT, 0.2f);
 
-    RLG_EnableLight(0);
-    RLG_SetLightInnerCutOff(0, 17.5f);
-    RLG_SetLightOuterCutOff(0, 27.5f);
+    RLG_SetLight(0, true);
     RLG_SetLightType(0, RLG_SPOTLIGHT);
+    RLG_SetLightValue(0, RLG_LIGHT_INNER_CUTOFF, 17.5f);
+    RLG_SetLightValue(0, RLG_LIGHT_OUTER_CUTOFF, 27.5f);
 
     // Load and set textures for the model
     Texture2D diffuse = LoadTexture("resources/atlas_albedo.png");
@@ -53,7 +53,7 @@ int main(void)
         UpdateCamera(&camera, CAMERA_FREE);
         RLG_SetViewPositionV(camera.position);
 
-        RLG_SetLightPositionV(0, camera.position);
+        RLG_SetLightVec3(0, RLG_LIGHT_POSITION, camera.position);
         RLG_SetLightTargetV(0, camera.target);
 
         // Draw

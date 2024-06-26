@@ -26,25 +26,25 @@ int main(void)
 
     RLG_SetMaterialValue(RLG_MAT_SPECULAR_TINT, 0.2f);
 
-    RLG_EnableLight(0);
-    RLG_SetLightDiffuseC(0, YELLOW);
+    RLG_SetLight(0, true);
     RLG_SetLightType(0, RLG_OMNILIGHT);
-    RLG_SetLightPosition(0, -2, 1, -2);
+    RLG_SetLightColor(0, RLG_LIGHT_DIFFUSE, YELLOW);
+    RLG_SetLightXYZ(0, RLG_LIGHT_POSITION, -2, 1, -2);
 
-    RLG_EnableLight(1);
-    RLG_SetLightDiffuseC(1, RED);
+    RLG_SetLight(1, true);
     RLG_SetLightType(1, RLG_OMNILIGHT);
-    RLG_SetLightPosition(1, 2, 1, 2);
+    RLG_SetLightColor(1, RLG_LIGHT_DIFFUSE, RED);
+    RLG_SetLightXYZ(1, RLG_LIGHT_POSITION, 2, 1, 2);
 
-    RLG_EnableLight(2);
-    RLG_SetLightDiffuseC(2, GREEN);
+    RLG_SetLight(2, true);
     RLG_SetLightType(2, RLG_OMNILIGHT);
-    RLG_SetLightPosition(2, -2, 1, 2);
+    RLG_SetLightColor(2, RLG_LIGHT_DIFFUSE, GREEN);
+    RLG_SetLightXYZ(2, RLG_LIGHT_POSITION, -2, 1, 2);
 
-    RLG_EnableLight(3);
-    RLG_SetLightDiffuseC(3, BLUE);
+    RLG_SetLight(3, true);
     RLG_SetLightType(3, RLG_OMNILIGHT);
-    RLG_SetLightPosition(3, 2, 1, -2);
+    RLG_SetLightColor(3, RLG_LIGHT_DIFFUSE, BLUE);
+    RLG_SetLightXYZ(3, RLG_LIGHT_POSITION, 2, 1, -2);
 
     // Generate meshes/models
     Model cube = LoadModelFromMesh(GenMeshCube(2.0f, 4.0f, 2.0f));
@@ -77,8 +77,16 @@ int main(void)
                 // Draw spheres to show where the lights are
                 for (int i = 0; i < RLG_GetLightcount(); i++)
                 {
-                    if (RLG_IsLightEnabled(i)) DrawSphereEx(RLG_GetLightPosition(i), 0.2f, 8, 8, RLG_GetLightDiffuseC(i));
-                    else DrawSphereWires(RLG_GetLightPosition(i), 0.2f, 8, 8, ColorAlpha(RLG_GetLightDiffuseC(i), 0.3f));
+                    if (RLG_IsLightEnabled(i))
+                    {
+                        DrawSphereEx(RLG_GetLightVec3(i, RLG_LIGHT_POSITION),
+                            0.2f, 8, 8, RLG_GetLightColor(i, RLG_LIGHT_DIFFUSE));
+                    }
+                    else
+                    {
+                        DrawSphereWires(RLG_GetLightVec3(i, RLG_LIGHT_POSITION),
+                            0.2f, 8, 8, ColorAlpha(RLG_GetLightColor(i, RLG_LIGHT_DIFFUSE), 0.3f));
+                    }
                 }
 
                 DrawGrid(10, 1.0f);
