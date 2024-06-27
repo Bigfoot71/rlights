@@ -15,8 +15,6 @@ in vec3 fragNormal;
 in vec4 fragColor;
 flat in mat3 TBN;
 
-GLSL_FS_OUT_DEF
-
 struct Light {
     sampler2D shadowMap;      ///< Sampler for the shadow map texture
     vec3 position;            ///< Position of the light in world coordinates
@@ -306,15 +304,16 @@ void main()
         }
     }
 
-    // Compute the final diffuse color, including ambient and diffuse lighting contributions
-    vec3 diffuse = albedo*(colAmbient + diffLighting);
-
-    // Compute ambient occlusion
+    // Compute ambient (with occlusion)
+    vec3 ambient = colAmbient;
     if (useOcclusionMap != 0)
     {
         float ao = texture(texture4, uv).r;
-        diffuse *= ao;
+        ambient *= ao;
     }
+
+    // Compute the final diffuse color, including ambient and diffuse lighting contributions
+    vec3 diffuse = albedo*(ambient + diffLighting);
 
     // Compute emission color; if an emissive map is used, sample it
     vec3 emission = colEmissive;

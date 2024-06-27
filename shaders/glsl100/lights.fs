@@ -304,15 +304,16 @@ void main()
         }
     }
 
-    // Compute the final diffuse color, including ambient and diffuse lighting contributions
-    vec3 diffuse = albedo*(colAmbient + diffLighting);
-
-    // Compute ambient occlusion
+    // Compute ambient (with occlusion)
+    vec3 ambient = colAmbient;
     if (useOcclusionMap != 0)
     {
         float ao = texture2D(texture4, uv).r;
-        diffuse *= ao;
+        ambient *= ao;
     }
+
+    // Compute the final diffuse color, including ambient and diffuse lighting contributions
+    vec3 diffuse = albedo*(ambient + diffLighting);
 
     // Compute emission color; if an emissive map is used, sample it
     vec3 emission = colEmissive;
