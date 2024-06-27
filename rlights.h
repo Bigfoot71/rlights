@@ -33,22 +33,26 @@ typedef enum {
  * @brief Enum representing different types of material maps.
  */
 typedef enum {
-    RLG_MAP_METALNESS,      ///< Metalness map used to define the metallic property of the material.
-    RLG_MAP_ROUGHNESS,      ///< Roughness map used to define the surface roughness of the material.
-    RLG_MAP_OCCLUSION,      ///< Occlusion map used to define ambient occlusion, affecting the shading of the material.
-    RLG_MAP_EMISSIVE,       ///< Emissive map used for emitting light.
-    RLG_MAP_NORMAL          ///< Normal map used for bump mapping.
+    RLG_MAP_METALNESS,                  ///< Metalness map used to define the metallic property of the material.
+    RLG_MAP_ROUGHNESS,                  ///< Roughness map used to define the surface roughness of the material.
+    RLG_MAP_OCCLUSION,                  ///< Occlusion map used to define ambient occlusion, affecting the shading of the material.
+    RLG_MAP_EMISSIVE,                   ///< Emissive map used for emitting light.
+    RLG_MAP_NORMAL,                     ///< Normal map used for bump mapping.
+    RLG_MAP_HEIGHT                      ///< Height map used for parallax mapping.
 } RLG_MaterialMap;
 
 /**
  * @brief Enum representing different material properties.
  */
 typedef enum {
-    RLG_MAT_EMISSIVE_TINT,  ///< Emissive tint property of the material.
-    RLG_MAT_AMBIENT_TINT,   ///< Ambient tint property of the material.
-    RLG_MAT_METALNESS,      ///< Metalness property defining the metallic nature of the material.
-    RLG_MAT_ROUGHNESS,      ///< Roughness property defining the surface roughness of the material.
-    RLG_MAT_SPECULAR        ///< Specular property defining the specular reflection of the material.
+    RLG_MAT_EMISSIVE_TINT,              ///< Emissive tint property of the material.
+    RLG_MAT_AMBIENT_TINT,               ///< Ambient tint property of the material.
+    RLG_MAT_METALNESS,                  ///< Metalness property defining the metallic nature of the material.
+    RLG_MAT_ROUGHNESS,                  ///< Roughness property defining the surface roughness of the material.
+    RLG_MAT_SPECULAR,                   ///< Specular property defining the specular reflection of the material.
+    RLG_MAT_HEIGHT_SCALE,               ///< Height scale property for adjusting the intensity of parallax mapping.
+    RLG_MAT_HEIGHT_MIN_LAYERS,          ///< Minimum layers property for parallax mapping (if < 1 deep parallax is disabled).
+    RLG_MAT_HEIGHT_MAX_LAYERS           ///< Maximum layers property for parallax mapping (if < 2 deep parallax is disabled).
 } RLG_MaterialProperty;
 
 /**
@@ -720,6 +724,7 @@ static const char rlgLightFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
     "uniform lowp int useOcclusionMap;"
     "uniform lowp int useEmissiveMap;"
     "uniform lowp int useNormalMap;"
+    "uniform lowp int useHeightMap;"
 
     "uniform sampler2D texture0;"   // albedo
     "uniform sampler2D texture1;"   // metalness
@@ -727,6 +732,7 @@ static const char rlgLightFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
     "uniform sampler2D texture3;"   // roughness
     "uniform sampler2D texture4;"   // occlusion
     "uniform sampler2D texture5;"   // emissive
+    "uniform sampler2D texture6;"   // height
 
     "uniform vec3 colEmissive;"     // sent by rlights
     "uniform vec4 colDiffuse;"      // sent by raylib
@@ -735,6 +741,10 @@ static const char rlgLightFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
     "uniform float metalness;"
     "uniform float roughness;"
     "uniform float specular;"
+
+    "uniform float heightScale;"
+    "uniform lowp int parallaxMinLayers;"
+    "uniform lowp int parallaxMaxLayers;"
 
     "uniform vec3 viewPos;"
 
@@ -765,6 +775,43 @@ static const char rlgLightFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
         // use albedo*metallic as colored specular reflectance at 0 angle for metallic materials
         // SEE: https://google.github.io/filament/Filament.md.html
         "return mix(vec3(dielectric), albedo, vec3(metallic));"
+    "}"
+
+    "vec2 Parallax(vec2 uv, vec3 V)"
+    "{"
+        "float height = 1.0 - TEX(texture6, uv).r;"
+        "return uv - vec2(V.xy/V.z)*height*heightScale;"
+    "}"
+
+    "vec2 DeepParallax(vec2 uv, vec3 V)"
+    "{"
+        "float numLayers = mix("
+            "float(parallaxMaxLayers),"
+            "float(parallaxMinLayers),"
+            "abs(dot(vec3(0.0, 0.0, 1.0), V)));"
+
+        "float layerDepth = 1.0/numLayers;"
+        "float currentLayerDepth = 0.0;"
+
+        "vec2 P = V.xy/V.z*heightScale;"
+        "vec2 deltaTexCoord = P/numLayers;"
+    
+        "vec2 currentUV = uv;"
+        "float currentDepthMapValue = 1.0 - TEX(texture6, currentUV).y;"
+        
+        "while(currentLayerDepth < currentDepthMapValue)"
+        "{"
+            "currentUV += deltaTexCoord;"
+            "currentLayerDepth += layerDepth;"
+            "currentDepthMapValue = 1.0 - TEX(texture6, currentUV).y;"
+        "}"
+
+        "vec2 prevTexCoord = currentUV - deltaTexCoord;"
+        "float afterDepth  = currentDepthMapValue + currentLayerDepth;"
+        "float beforeDepth = 1.0 - TEX(texture6, prevTexCoord).y - currentLayerDepth - layerDepth;"
+
+        "float weight = afterDepth/(afterDepth - beforeDepth);"
+        "return prevTexCoord*weight + currentUV*(1.0 - weight);"
     "}"
 
     "float Shadow(int i)"
@@ -802,27 +849,40 @@ static const char rlgLightFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
 
     "void main()"
     "{"
+        // Compute the view direction vector for this fragment
+        "vec3 V = normalize(viewPos - fragPosition);"
+
+        // Compute fragTexCoord (UV), apply parallax if height map is enabled
+        "vec2 uv = fragTexCoord;"
+        "if (useHeightMap != 0)"
+        "{"
+            "uv = (parallaxMinLayers > 0 && parallaxMaxLayers > 1)"
+                "? DeepParallax(uv, V) : Parallax(uv, V);"
+
+            "if (uv.x < 0.0 || uv.y < 0.0 || uv.x > 1.0 || uv.y > 1.0)"
+            "{"
+                "discard;"
+            "}"
+        "}"
+
         // Compute albedo (base color) by sampling the texture and multiplying by the diffuse color
-        "vec3 albedo = TEX(texture0, fragTexCoord).rgb;"
+        "vec3 albedo = TEX(texture0, uv).rgb;"
         "albedo *= colDiffuse.rgb*fragColor.rgb;"
 
         // Compute metallic factor; if a metalness map is used, sample it
         "float metallic = metalness;"
-        "if (useMetalnessMap != 0) metallic *= TEX(texture1, fragTexCoord).b;"
+        "if (useMetalnessMap != 0) metallic *= TEX(texture1, uv).b;"
 
         // Compute roughness factor; if a roughness map is used, sample it
         "float rough = roughness;"
-        "if (useRoughnessMap != 0) rough *= TEX(texture3, fragTexCoord).g;"
+        "if (useRoughnessMap != 0) rough *= TEX(texture3, uv).g;"
 
         // Compute F0 (reflectance at normal incidence) based on the metallic factor
         "vec3 F0 = ComputeF0(metallic, specular, albedo);"
 
         // Compute the normal vector; if a normal map is used, transform it to tangent space
         "vec3 N = (useNormalMap == 0) ? normalize(fragNormal)"
-            ": normalize(TBN*(TEX(texture2, fragTexCoord).rgb*2.0 - 1.0));"
-
-        // Compute the view direction vector for this fragment
-        "vec3 V = normalize(viewPos - fragPosition);"
+            ": normalize(TBN*(TEX(texture2, uv).rgb*2.0 - 1.0));"
 
         // Compute the dot product of the normal and view direction
         "float NdotV = dot(N, V);"
@@ -934,7 +994,7 @@ static const char rlgLightFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
         // Compute ambient occlusion
         "if (useOcclusionMap != 0)"
         "{"
-            "float ao = TEX(texture4, fragTexCoord).r;"
+            "float ao = TEX(texture4, uv).r;"
             "diffuse *= ao;"
         "}"
 
@@ -942,7 +1002,7 @@ static const char rlgLightFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
         "vec3 emission = colEmissive;"
         "if (useEmissiveMap != 0)"
         "{"
-            "emission *= TEX(texture5, fragTexCoord).rgb;"
+            "emission *= TEX(texture5, uv).rgb;"
         "}"
 
         // Compute the final fragment color by combining diffuse, specular, and emission contributions
@@ -1005,11 +1065,16 @@ struct RLG_Material
         int roughness;
         int specular;
 
+        int heightScale;
+        int parallaxMinLayers;
+        int parallaxMaxLayers;
+
         int useMetalnessMap;
         int useRoughnessMap;
         int useOcclusionMap;
         int useEmissiveMap;
         int useNormalMap;
+        int useHeightMap;
     }
     locs;
 
@@ -1022,11 +1087,16 @@ struct RLG_Material
         float roughness;
         float specular;
 
+        float heightScale;
+        int parallaxMinLayers;
+        int parallaxMaxLayers;
+
         int useMetalnessMap;
         int useRoughnessMap;
         int useOcclusionMap;
         int useEmissiveMap;
         int useNormalMap;
+        int useHeightMap;
     }
     data;
 };
@@ -1197,11 +1267,15 @@ RLG_Context RLG_CreateContext(unsigned int count)
     rlgCtx->material = (struct RLG_Material) { 0 };
 
     // Retrieving global shader locations
+    rlgCtx->material.locs.parallaxMinLayers = GetShaderLocation(rlgCtx->lightShader, "parallaxMinLayers");
+    rlgCtx->material.locs.parallaxMaxLayers = GetShaderLocation(rlgCtx->lightShader, "parallaxMaxLayers");
     rlgCtx->material.locs.useMetalnessMap = GetShaderLocation(rlgCtx->lightShader, "useMetalnessMap");
     rlgCtx->material.locs.useRoughnessMap = GetShaderLocation(rlgCtx->lightShader, "useRoughnessMap");
     rlgCtx->material.locs.useOcclusionMap = GetShaderLocation(rlgCtx->lightShader, "useOcclusionMap");
     rlgCtx->material.locs.useEmissiveMap = GetShaderLocation(rlgCtx->lightShader, "useEmissiveMap");
     rlgCtx->material.locs.useNormalMap = GetShaderLocation(rlgCtx->lightShader, "useNormalMap");
+    rlgCtx->material.locs.useHeightMap = GetShaderLocation(rlgCtx->lightShader, "useHeightMap");
+    rlgCtx->material.locs.heightScale = GetShaderLocation(rlgCtx->lightShader, "heightScale");
     rlgCtx->material.locs.colEmissive = GetShaderLocation(rlgCtx->lightShader, "colEmissive");
     rlgCtx->material.locs.colAmbient = GetShaderLocation(rlgCtx->lightShader, "colAmbient");
     rlgCtx->material.locs.metalness = GetShaderLocation(rlgCtx->lightShader, "metalness");
@@ -1210,10 +1284,12 @@ RLG_Context RLG_CreateContext(unsigned int count)
 
     // Define default global uniforms (define only no zero by default)
     rlgCtx->material.data.colAmbient = (Vector3) { 0.1f, 0.1f, 0.1f };
+    rlgCtx->material.data.heightScale = 0.05f;
     rlgCtx->material.data.roughness = 1.0f;
     rlgCtx->material.data.specular = 1.0f;
 
     // Send default globals uniforms (no need to send zero-values)
+    SetShaderValue(rlgCtx->lightShader, rlgCtx->material.locs.heightScale, &rlgCtx->material.data.heightScale, SHADER_UNIFORM_FLOAT);
     SetShaderValue(rlgCtx->lightShader, rlgCtx->material.locs.colAmbient, &rlgCtx->material.data.colAmbient, SHADER_UNIFORM_VEC3);
     SetShaderValue(rlgCtx->lightShader, rlgCtx->material.locs.roughness, &rlgCtx->material.data.roughness, SHADER_UNIFORM_FLOAT);
     SetShaderValue(rlgCtx->lightShader, rlgCtx->material.locs.specular, &rlgCtx->material.data.specular, SHADER_UNIFORM_FLOAT);
@@ -1438,6 +1514,11 @@ void RLG_SetMap(RLG_MaterialMap map, bool active)
             SetShaderValue(rlgCtx->lightShader, rlgCtx->material.locs.useNormalMap, &v, SHADER_UNIFORM_INT);
             break;
 
+        case RLG_MAP_HEIGHT:
+            rlgCtx->material.data.useHeightMap = active;
+            SetShaderValue(rlgCtx->lightShader, rlgCtx->material.locs.useHeightMap, &v, SHADER_UNIFORM_INT);
+            break;
+
         default:
             break;
     }
@@ -1467,6 +1548,10 @@ bool RLG_IsMapEnabled(RLG_MaterialMap map)
 
         case RLG_MAP_NORMAL:
             result = rlgCtx->material.data.useNormalMap;
+            break;
+
+        case RLG_MAP_HEIGHT:
+            result = rlgCtx->material.data.useHeightMap;
             break;
 
         default:
@@ -1510,6 +1595,24 @@ void RLG_SetMaterialValue(RLG_MaterialProperty property, float value)
                 &rlgCtx->material.data.specular, SHADER_UNIFORM_FLOAT);
             break;
 
+        case RLG_MAT_HEIGHT_SCALE:
+            rlgCtx->material.data.heightScale = value;
+            SetShaderValue(rlgCtx->lightShader, rlgCtx->material.locs.heightScale,
+                &rlgCtx->material.data.heightScale, SHADER_UNIFORM_FLOAT);
+            break;
+
+        case RLG_MAT_HEIGHT_MIN_LAYERS:
+            rlgCtx->material.data.parallaxMinLayers = (int)(value + 0.5f);
+            SetShaderValue(rlgCtx->lightShader, rlgCtx->material.locs.parallaxMinLayers,
+                &rlgCtx->material.data.parallaxMinLayers, SHADER_UNIFORM_INT);
+            break;
+
+        case RLG_MAT_HEIGHT_MAX_LAYERS:
+            rlgCtx->material.data.parallaxMaxLayers = (int)(value + 0.5f);
+            SetShaderValue(rlgCtx->lightShader, rlgCtx->material.locs.parallaxMaxLayers,
+                &rlgCtx->material.data.parallaxMaxLayers, SHADER_UNIFORM_INT);
+            break;
+
         default:
             break;
     }
@@ -1544,22 +1647,39 @@ void RLG_SetMaterialColor(RLG_MaterialProperty property, Color color)
 
 float RLG_GetMaterialValue(RLG_MaterialProperty property)
 {
+    float result = 0.0f;
+
     switch (property)
     {
         case RLG_MAT_METALNESS:
-            return rlgCtx->material.data.metalness;
+            result = rlgCtx->material.data.metalness;
+            break;
 
         case RLG_MAT_ROUGHNESS:
-            return rlgCtx->material.data.roughness;
+            result = rlgCtx->material.data.roughness;
+            break;
 
         case RLG_MAT_SPECULAR:
-            return rlgCtx->material.data.specular;
+            result = rlgCtx->material.data.specular;
+            break;
+
+        case RLG_MAT_HEIGHT_SCALE:
+            result = rlgCtx->material.data.heightScale;
+            break;
+
+        case RLG_MAT_HEIGHT_MIN_LAYERS:
+            result = rlgCtx->material.data.parallaxMinLayers;
+            break;
+
+        case RLG_MAT_HEIGHT_MAX_LAYERS:
+            result = rlgCtx->material.data.parallaxMaxLayers;
+            break;
 
         default:
             break;
     }
 
-    return 0;
+    return result;
 }
 
 Color RLG_GetMaterialColor(RLG_MaterialProperty property)

@@ -44,6 +44,7 @@ uniform lowp int useRoughnessMap;
 uniform lowp int useOcclusionMap;
 uniform lowp int useEmissiveMap;
 uniform lowp int useNormalMap;
+uniform lowp int useHeightMap;
 
 uniform sampler2D texture0;   // albedo
 uniform sampler2D texture1;   // metalness
@@ -51,6 +52,7 @@ uniform sampler2D texture2;   // normal
 uniform sampler2D texture3;   // roughness
 uniform sampler2D texture4;   // occlusion
 uniform sampler2D texture5;   // emissive
+uniform sampler2D texture6;   // height
 
 uniform vec3 colEmissive;     // sent by rlights
 uniform vec4 colDiffuse;      // sent by raylib
@@ -59,6 +61,10 @@ uniform vec3 colAmbient;      // sent by rlights
 uniform float metalness;
 uniform float roughness;
 uniform float specular;
+
+uniform float heightScale;
+uniform lowp int parallaxMinLayers;
+uniform lowp int parallaxMaxLayers;
 
 uniform vec3 viewPos;
 
@@ -89,6 +95,43 @@ vec3 ComputeF0(float metallic, float specular, vec3 albedo)
     // use albedo*metallic as colored specular reflectance at 0 angle for metallic materials
     // SEE: https://google.github.io/filament/Filament.md.html
     return mix(vec3(dielectric), albedo, vec3(metallic));
+}
+
+vec2 Parallax(vec2 uv, vec3 V)
+{
+    float height = 1.0 - texture2D(texture6, uv).r;
+    return uv - vec2(V.xy/V.z)*height*heightScale;
+}
+
+vec2 DeepParallax(vec2 uv, vec3 V)
+{
+    float numLayers = mix(
+        float(parallaxMaxLayers),
+        float(parallaxMinLayers),
+        abs(dot(vec3(0.0, 0.0, 1.0), V)));
+
+    float layerDepth = 1.0/numLayers;
+    float currentLayerDepth = 0.0;
+
+    vec2 P = V.xy/V.z*heightScale;
+    vec2 deltaTexCoord = P/numLayers;
+
+    vec2 currentUV = uv;
+    float currentDepthMapValue = 1.0 - texture2D(texture6, currentUV).y;
+    
+    while(currentLayerDepth < currentDepthMapValue)
+    {
+        currentUV += deltaTexCoord;
+        currentLayerDepth += layerDepth;
+        currentDepthMapValue = 1.0 - texture2D(texture6, currentUV).y;
+    }
+
+    vec2 prevTexCoord = currentUV - deltaTexCoord;
+    float afterDepth  = currentDepthMapValue + currentLayerDepth;
+    float beforeDepth = 1.0 - texture2D(texture6, prevTexCoord).y - currentLayerDepth - layerDepth;
+
+    float weight = afterDepth/(afterDepth - beforeDepth);
+    return prevTexCoord*weight + currentUV*(1.0 - weight);
 }
 
 float Shadow(int i)
@@ -122,27 +165,40 @@ float Shadow(int i)
 
 void main()
 {
+    // Compute the view direction vector for this fragment
+    vec3 V = normalize(viewPos - fragPosition);
+
+    // Compute fragTexCoord (UV), apply parallax if height map is enabled
+    vec2 uv = fragTexCoord;
+    if (useHeightMap != 0)
+    {
+        uv = (parallaxMinLayers > 0 && parallaxMaxLayers > 1)
+            ? DeepParallax(uv, V) : Parallax(uv, V);
+
+        if (uv.x < 0.0 || uv.y < 0.0 || uv.x > 1.0 || uv.y > 1.0)
+        {
+            discard;
+        }
+    }
+
     // Compute albedo (base color) by sampling the texture and multiplying by the diffuse color
-    vec3 albedo = texture2D(texture0, fragTexCoord).rgb;
+    vec3 albedo = texture2D(texture0, uv).rgb;
     albedo *= colDiffuse.rgb*fragColor.rgb;
 
     // Compute metallic factor; if a metalness map is used, sample it
     float metallic = metalness;
-    if (useMetalnessMap != 0) metallic *= texture2D(texture1, fragTexCoord).b;
+    if (useMetalnessMap != 0) metallic *= texture2D(texture1, uv).b;
 
     // Compute roughness factor; if a roughness map is used, sample it
     float rough = roughness;
-    if (useRoughnessMap != 0) rough *= texture2D(texture3, fragTexCoord).g;
+    if (useRoughnessMap != 0) rough *= texture2D(texture3, uv).g;
 
     // Compute F0 (reflectance at normal incidence) based on the metallic factor
     vec3 F0 = ComputeF0(metallic, specular, albedo);
 
     // Compute the normal vector; if a normal map is used, transform it to tangent space
     vec3 N = (useNormalMap == 0) ? normalize(fragNormal)
-        : normalize(TBN*(texture2D(texture2, fragTexCoord).rgb*2.0 - 1.0));
-
-    // Compute the view direction vector for this fragment
-    vec3 V = normalize(viewPos - fragPosition);
+        : normalize(TBN*(texture2D(texture2, uv).rgb*2.0 - 1.0));
 
     // Compute the dot product of the normal and view direction
     float NdotV = dot(N, V);
@@ -254,7 +310,7 @@ void main()
     // Compute ambient occlusion
     if (useOcclusionMap != 0)
     {
-        float ao = TEX(texture4, fragTexCoord).r;
+        float ao = texture2D(texture4, uv).r;
         diffuse *= ao;
     }
 
@@ -262,7 +318,7 @@ void main()
     vec3 emission = colEmissive;
     if (useEmissiveMap != 0)
     {
-        emission *= texture2D(texture5, fragTexCoord).rgb;
+        emission *= texture2D(texture5, uv).rgb;
     }
 
     // Compute the final fragment color by combining diffuse, specular, and emission contributions
