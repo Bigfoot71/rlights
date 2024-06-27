@@ -21,7 +21,9 @@ int main(void)
     RLG_SetMap(RLG_MAP_NORMAL, true);
     RLG_SetMap(RLG_MAP_METALNESS, true);
     RLG_SetMap(RLG_MAP_ROUGHNESS, true);
+    RLG_SetMap(RLG_MAP_OCCLUSION, true);
 
+    RLG_SetMaterialValue(RLG_MAT_AMBIENT_TINT, 0.5f);
     RLG_SetMaterialValue(RLG_MAT_METALNESS, 1.0f);
     RLG_SetMaterialValue(RLG_MAT_ROUGHNESS, 1.0f);
 
