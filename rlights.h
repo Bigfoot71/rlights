@@ -619,6 +619,34 @@ void RLG_DrawModelEx(Model model, Vector3 position, Vector3 rotationAxis, float 
 
 #endif
 
+/* Uniform names definitions*/
+
+#define RLG_SHADER_ATTRIB_POSITION         "vertexPosition"
+#define RLG_SHADER_ATTRIB_TEXCOORD         "vertexTexCoord"
+#define RLG_SHADER_ATTRIB_TEXCOORD2        "vertexTexCoord2"
+#define RLG_SHADER_ATTRIB_NORMAL           "vertexNormal"
+#define RLG_SHADER_ATTRIB_TANGENT          "vertexTangent"
+#define RLG_SHADER_ATTRIB_COLOR            "vertexColor"
+
+#define RLG_SHADER_UNIFORM_MAT_MVP              "mvp"
+#define RLG_SHADER_UNIFORM_MAT_VIEW             "matView"
+#define RLG_SHADER_UNIFORM_MAT_PROJECTION       "matProjection"
+#define RLG_SHADER_UNIFORM_MAT_MODEL            "matModel"
+#define RLG_SHADER_UNIFORM_MAT_NORMAL           "matNormal"
+
+#define RLG_SHADER_UNIFORM_COLOR_DIFFUSE   "colDiffuse"
+#define RLG_SHADER_UNIFORM_COLOR_SPECULAR  "colSpecular"
+#define RLG_SHADER_UNIFORM_COLOR_AMBIENT   "colAmbient"
+#define RLG_SHADER_UNIFORM_COLOR_EMISSION  "colEmission"
+
+#define RLG_SHADER_SAMPLER2D_ALBEDO        "texture0"          // texture0 (texture slot active 0)
+#define RLG_SHADER_SAMPLER2D_METALNESS     "texture1"          // texture1 (texture slot active 1)
+#define RLG_SHADER_SAMPLER2D_NORMAL        "texture2"          // texture2 (texture slot active 2)
+#define RLG_SHADER_SAMPLER2D_ROUGHNESS     "texture3"          // texture3 (texture slot active 3)
+#define RLG_SHADER_SAMPLER2D_OCCLUSION     "texture4"          // texture4 (texture slot active 4)
+#define RLG_SHADER_SAMPLER2D_EMISSION      "texture5"          // texture5 (texture slot active 5)
+#define RLG_SHADER_SAMPLER2D_HEIGHT        "texture6"          // texture6 (texture slot active 6)
+
 /* Shader */
 
 static const char rlgLightVS[] = GLSL_VERSION_DEF
@@ -629,16 +657,16 @@ static const char rlgLightVS[] = GLSL_VERSION_DEF
     GLSL_VS_OUT("vec4 fragPosLightSpace[NUM_LIGHTS]")
 #   endif
 
-    GLSL_VS_IN("vec3 vertexPosition")
-    GLSL_VS_IN("vec2 vertexTexCoord")
-    GLSL_VS_IN("vec4 vertexTangent")
-    GLSL_VS_IN("vec3 vertexNormal")
-    GLSL_VS_IN("vec4 vertexColor")
+    GLSL_VS_IN("vec3 " RLG_SHADER_ATTRIB_POSITION)
+    GLSL_VS_IN("vec2 " RLG_SHADER_ATTRIB_TEXCOORD)
+    GLSL_VS_IN("vec4 " RLG_SHADER_ATTRIB_TANGENT)
+    GLSL_VS_IN("vec3 " RLG_SHADER_ATTRIB_NORMAL)
+    GLSL_VS_IN("vec4 " RLG_SHADER_ATTRIB_COLOR)
 
     "uniform lowp int useNormalMap;"
-    "uniform mat4 matNormal;"
-    "uniform mat4 matModel;"
-    "uniform mat4 mvp;"
+    "uniform mat4 " RLG_SHADER_UNIFORM_MAT_NORMAL ";"
+    "uniform mat4 " RLG_SHADER_UNIFORM_MAT_MODEL ";"
+    "uniform mat4 " RLG_SHADER_UNIFORM_MAT_MVP ";"
 
     GLSL_VS_OUT("vec3 fragPosition")
     GLSL_VS_OUT("vec2 fragTexCoord")
@@ -648,16 +676,16 @@ static const char rlgLightVS[] = GLSL_VERSION_DEF
 
     "void main()"
     "{"
-        "fragPosition = vec3(matModel*vec4(vertexPosition, 1.0));"
-        "fragNormal = (matNormal*vec4(vertexNormal, 0.0)).xyz;"
+        "fragPosition = vec3(" RLG_SHADER_UNIFORM_MAT_MODEL "*vec4(" RLG_SHADER_ATTRIB_POSITION ", 1.0));"
+        "fragNormal = (" RLG_SHADER_UNIFORM_MAT_NORMAL "*vec4(" RLG_SHADER_ATTRIB_NORMAL ", 0.0)).xyz;"
 
-        "fragTexCoord = vertexTexCoord;"
-        "fragColor = vertexColor;"
+        "fragTexCoord = " RLG_SHADER_ATTRIB_TEXCOORD ";"
+        "fragColor = " RLG_SHADER_ATTRIB_COLOR ";"
 
         "if (useNormalMap != 0)"
         "{"
-            "vec3 T = normalize(vec3(matModel*vec4(vertexTangent.xyz, 0.0)));"
-            "vec3 B = cross(fragNormal, T)*vertexTangent.w;"
+            "vec3 T = normalize(vec3(" RLG_SHADER_UNIFORM_MAT_MODEL "*vec4(" RLG_SHADER_ATTRIB_TANGENT ".xyz, 0.0)));"
+            "vec3 B = cross(fragNormal, T)*" RLG_SHADER_ATTRIB_TANGENT ".w;"
             "TBN = mat3(T, B, fragNormal);"
         "}"
 
@@ -668,7 +696,7 @@ static const char rlgLightVS[] = GLSL_VERSION_DEF
         "}"
 #       endif
 
-        "gl_Position = mvp*vec4(vertexPosition, 1.0);"
+        "gl_Position = " RLG_SHADER_UNIFORM_MAT_MVP "*vec4(" RLG_SHADER_ATTRIB_POSITION ", 1.0);"
     "}";
 
 static const char rlgLightFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
@@ -726,17 +754,17 @@ static const char rlgLightFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
     "uniform lowp int useNormalMap;"
     "uniform lowp int useHeightMap;"
 
-    "uniform sampler2D texture0;"   // albedo
-    "uniform sampler2D texture1;"   // metalness
-    "uniform sampler2D texture2;"   // normal
-    "uniform sampler2D texture3;"   // roughness
-    "uniform sampler2D texture4;"   // occlusion
-    "uniform sampler2D texture5;"   // emissive
-    "uniform sampler2D texture6;"   // height
+    "uniform sampler2D " RLG_SHADER_SAMPLER2D_ALBEDO ";"   // albedo
+    "uniform sampler2D " RLG_SHADER_SAMPLER2D_METALNESS ";"   // metalness
+    "uniform sampler2D " RLG_SHADER_SAMPLER2D_NORMAL ";"   // normal
+    "uniform sampler2D " RLG_SHADER_SAMPLER2D_ROUGHNESS ";"   // roughness
+    "uniform sampler2D " RLG_SHADER_SAMPLER2D_OCCLUSION ";"   // occlusion
+    "uniform sampler2D " RLG_SHADER_SAMPLER2D_EMISSION ";"   // emissive
+    "uniform sampler2D " RLG_SHADER_SAMPLER2D_HEIGHT ";"   // height
 
-    "uniform vec3 colEmissive;"     // sent by rlights
-    "uniform vec4 colDiffuse;"      // sent by raylib
-    "uniform vec3 colAmbient;"      // sent by rlights
+    "uniform vec3 " RLG_SHADER_UNIFORM_COLOR_EMISSION ";"     // sent by rlights
+    "uniform vec4 " RLG_SHADER_UNIFORM_COLOR_DIFFUSE ";"      // sent by raylib
+    "uniform vec3 " RLG_SHADER_UNIFORM_COLOR_AMBIENT ";"      // sent by rlights
 
     "uniform float metalness;"
     "uniform float roughness;"
@@ -779,7 +807,7 @@ static const char rlgLightFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
 
     "vec2 Parallax(vec2 uv, vec3 V)"
     "{"
-        "float height = 1.0 - TEX(texture6, uv).r;"
+        "float height = 1.0 - TEX(" RLG_SHADER_SAMPLER2D_HEIGHT ", uv).r;"
         "return uv - vec2(V.xy/V.z)*height*heightScale;"
     "}"
 
@@ -797,18 +825,18 @@ static const char rlgLightFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
         "vec2 deltaTexCoord = P/numLayers;"
     
         "vec2 currentUV = uv;"
-        "float currentDepthMapValue = 1.0 - TEX(texture6, currentUV).y;"
+        "float currentDepthMapValue = 1.0 - TEX(" RLG_SHADER_SAMPLER2D_HEIGHT ", currentUV).y;"
         
         "while(currentLayerDepth < currentDepthMapValue)"
         "{"
             "currentUV += deltaTexCoord;"
             "currentLayerDepth += layerDepth;"
-            "currentDepthMapValue = 1.0 - TEX(texture6, currentUV).y;"
+            "currentDepthMapValue = 1.0 - TEX(" RLG_SHADER_SAMPLER2D_HEIGHT ", currentUV).y;"
         "}"
 
         "vec2 prevTexCoord = currentUV - deltaTexCoord;"
         "float afterDepth  = currentDepthMapValue + currentLayerDepth;"
-        "float beforeDepth = 1.0 - TEX(texture6, prevTexCoord).y - currentLayerDepth - layerDepth;"
+        "float beforeDepth = 1.0 - TEX(" RLG_SHADER_SAMPLER2D_HEIGHT ", prevTexCoord).y - currentLayerDepth - layerDepth;"
 
         "float weight = afterDepth/(afterDepth - beforeDepth);"
         "return prevTexCoord*weight + currentUV*(1.0 - weight);"
@@ -866,23 +894,23 @@ static const char rlgLightFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
         "}"
 
         // Compute albedo (base color) by sampling the texture and multiplying by the diffuse color
-        "vec3 albedo = TEX(texture0, uv).rgb;"
-        "albedo *= colDiffuse.rgb*fragColor.rgb;"
+        "vec3 albedo = TEX(" RLG_SHADER_SAMPLER2D_ALBEDO ", uv).rgb;"
+        "albedo *= " RLG_SHADER_UNIFORM_COLOR_DIFFUSE ".rgb*fragColor.rgb;"
 
         // Compute metallic factor; if a metalness map is used, sample it
         "float metallic = metalness;"
-        "if (useMetalnessMap != 0) metallic *= TEX(texture1, uv).b;"
+        "if (useMetalnessMap != 0) metallic *= TEX(" RLG_SHADER_SAMPLER2D_METALNESS ", uv).b;"
 
         // Compute roughness factor; if a roughness map is used, sample it
         "float rough = roughness;"
-        "if (useRoughnessMap != 0) rough *= TEX(texture3, uv).g;"
+        "if (useRoughnessMap != 0) rough *= TEX(" RLG_SHADER_SAMPLER2D_ROUGHNESS ", uv).g;"
 
         // Compute F0 (reflectance at normal incidence) based on the metallic factor
         "vec3 F0 = ComputeF0(metallic, specular, albedo);"
 
         // Compute the normal vector; if a normal map is used, transform it to tangent space
         "vec3 N = (useNormalMap == 0) ? normalize(fragNormal)"
-            ": normalize(TBN*(TEX(texture2, uv).rgb*2.0 - 1.0));"
+            ": normalize(TBN*(TEX(" RLG_SHADER_SAMPLER2D_NORMAL ", uv).rgb*2.0 - 1.0));"
 
         // Compute the dot product of the normal and view direction
         "float NdotV = dot(N, V);"
@@ -989,10 +1017,10 @@ static const char rlgLightFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
         "}"
 
         // Compute ambient (with occlusion)
-        "vec3 ambient = colAmbient;"
+        "vec3 ambient = " RLG_SHADER_UNIFORM_COLOR_AMBIENT ";"
         "if (useOcclusionMap != 0)"
         "{"
-            "float ao = TEX(texture4, uv).r;"
+            "float ao = TEX(" RLG_SHADER_SAMPLER2D_OCCLUSION ", uv).r;"
             "ambient *= ao;"
         "}"
 
@@ -1000,10 +1028,10 @@ static const char rlgLightFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
         "vec3 diffuse = albedo*(ambient + diffLighting);"
 
         // Compute emission color; if an emissive map is used, sample it
-        "vec3 emission = colEmissive;"
+        "vec3 emission = " RLG_SHADER_UNIFORM_COLOR_EMISSION ";"
         "if (useEmissiveMap != 0)"
         "{"
-            "emission *= TEX(texture5, uv).rgb;"
+            "emission *= TEX(" RLG_SHADER_SAMPLER2D_EMISSION ", uv).rgb;"
         "}"
 
         // Compute the final fragment color by combining diffuse, specular, and emission contributions
@@ -1251,7 +1279,46 @@ RLG_Context RLG_CreateContext(unsigned int count)
 #   endif //NO_EMBEDDED_SHADERS
 
     // Load shader and get locations
-    rlgCtx->lightShader = LoadShaderFromMemory(lightVS, lightFS);
+    Shader lightShader = { 0 };
+    lightShader.id = rlLoadShaderCode(lightVS, lightFS);
+
+    // After shader loading, we TRY to set default location names
+    if (lightShader.id > 0)
+    {
+        // NOTE: If any location is not found, loc point becomes -1
+
+        lightShader.locs = (int*)malloc(RL_MAX_SHADER_LOCATIONS*sizeof(int));
+        for (int i = 0; i < RL_MAX_SHADER_LOCATIONS; i++) lightShader.locs[i] = -1;
+
+        // Get handles to GLSL input attribute locations
+        lightShader.locs[SHADER_LOC_VERTEX_POSITION]    = rlGetLocationAttrib(lightShader.id, RLG_SHADER_ATTRIB_POSITION);
+        lightShader.locs[SHADER_LOC_VERTEX_TEXCOORD01]  = rlGetLocationAttrib(lightShader.id, RLG_SHADER_ATTRIB_TEXCOORD);
+        lightShader.locs[SHADER_LOC_VERTEX_TEXCOORD02]  = rlGetLocationAttrib(lightShader.id, RLG_SHADER_ATTRIB_TEXCOORD2);
+        lightShader.locs[SHADER_LOC_VERTEX_NORMAL]      = rlGetLocationAttrib(lightShader.id, RLG_SHADER_ATTRIB_NORMAL);
+        lightShader.locs[SHADER_LOC_VERTEX_TANGENT]     = rlGetLocationAttrib(lightShader.id, RLG_SHADER_ATTRIB_TANGENT);
+        lightShader.locs[SHADER_LOC_VERTEX_COLOR]       = rlGetLocationAttrib(lightShader.id, RLG_SHADER_ATTRIB_COLOR);
+
+        // Get handles to GLSL uniform locations (vertex shader)
+        lightShader.locs[SHADER_LOC_MATRIX_MVP]         = rlGetLocationUniform(lightShader.id, RLG_SHADER_UNIFORM_MAT_MVP);
+        lightShader.locs[SHADER_LOC_MATRIX_VIEW]        = rlGetLocationUniform(lightShader.id, RLG_SHADER_UNIFORM_MAT_VIEW);
+        lightShader.locs[SHADER_LOC_MATRIX_PROJECTION]  = rlGetLocationUniform(lightShader.id, RLG_SHADER_UNIFORM_MAT_PROJECTION);
+        lightShader.locs[SHADER_LOC_MATRIX_MODEL]       = rlGetLocationUniform(lightShader.id, RLG_SHADER_UNIFORM_MAT_MODEL);
+        lightShader.locs[SHADER_LOC_MATRIX_NORMAL]      = rlGetLocationUniform(lightShader.id, RLG_SHADER_UNIFORM_MAT_NORMAL);
+
+        // Get handles to GLSL uniform locations (fragment shader)
+        lightShader.locs[SHADER_LOC_COLOR_DIFFUSE]      = rlGetLocationUniform(lightShader.id, RLG_SHADER_UNIFORM_COLOR_DIFFUSE);
+        lightShader.locs[SHADER_LOC_COLOR_SPECULAR]     = rlGetLocationUniform(lightShader.id, RLG_SHADER_UNIFORM_COLOR_SPECULAR);
+        lightShader.locs[SHADER_LOC_COLOR_AMBIENT]      = rlGetLocationUniform(lightShader.id, RLG_SHADER_UNIFORM_COLOR_AMBIENT);
+        lightShader.locs[SHADER_LOC_MAP_ALBEDO]         = rlGetLocationUniform(lightShader.id, RLG_SHADER_SAMPLER2D_ALBEDO);
+        lightShader.locs[SHADER_LOC_MAP_METALNESS]      = rlGetLocationUniform(lightShader.id, RLG_SHADER_SAMPLER2D_METALNESS);
+        lightShader.locs[SHADER_LOC_MAP_NORMAL]         = rlGetLocationUniform(lightShader.id, RLG_SHADER_SAMPLER2D_NORMAL);
+        lightShader.locs[SHADER_LOC_MAP_ROUGHNESS]      = rlGetLocationUniform(lightShader.id, RLG_SHADER_SAMPLER2D_ROUGHNESS);
+        lightShader.locs[SHADER_LOC_MAP_OCCLUSION]      = rlGetLocationUniform(lightShader.id, RLG_SHADER_SAMPLER2D_OCCLUSION);
+        lightShader.locs[SHADER_LOC_MAP_EMISSION]       = rlGetLocationUniform(lightShader.id, RLG_SHADER_SAMPLER2D_EMISSION);
+        lightShader.locs[SHADER_LOC_MAP_HEIGHT]         = rlGetLocationUniform(lightShader.id, RLG_SHADER_SAMPLER2D_HEIGHT);
+    }
+
+    rlgCtx->lightShader = lightShader;
 
 #   ifndef NO_EMBEDDED_SHADERS
 #   if GLSL_VERSION > 100
