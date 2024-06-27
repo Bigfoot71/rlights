@@ -23,7 +23,6 @@ int main(void)
     RLG_SetMap(RLG_MAP_ROUGHNESS, true);
     RLG_SetMap(RLG_MAP_OCCLUSION, true);
 
-    RLG_SetMaterialValue(RLG_MAT_AMBIENT_TINT, 0.5f);
     RLG_SetMaterialValue(RLG_MAT_METALNESS, 1.0f);
     RLG_SetMaterialValue(RLG_MAT_ROUGHNESS, 1.0f);
 
@@ -35,18 +34,23 @@ int main(void)
     GenMeshTangents(&sphere.meshes[0]);
 
     sphere.materials[0].maps[MATERIAL_MAP_ALBEDO].texture = LoadTexture("resources/pbr/albedo.png");
+    SetTextureFilter(sphere.materials[0].maps[MATERIAL_MAP_ALBEDO].texture, TEXTURE_FILTER_BILINEAR);
     GenTextureMipmaps(&sphere.materials[0].maps[MATERIAL_MAP_ALBEDO].texture);
 
     sphere.materials[0].maps[MATERIAL_MAP_NORMAL].texture = LoadTexture("resources/pbr/normal.png");
+    SetTextureFilter(sphere.materials[0].maps[MATERIAL_MAP_NORMAL].texture, TEXTURE_FILTER_BILINEAR);
     GenTextureMipmaps(&sphere.materials[0].maps[MATERIAL_MAP_NORMAL].texture);
 
     sphere.materials[0].maps[MATERIAL_MAP_METALNESS].texture = LoadTexture("resources/pbr/metallic.png");
+    SetTextureFilter(sphere.materials[0].maps[MATERIAL_MAP_METALNESS].texture, TEXTURE_FILTER_BILINEAR);
     GenTextureMipmaps(&sphere.materials[0].maps[MATERIAL_MAP_METALNESS].texture);
 
     sphere.materials[0].maps[MATERIAL_MAP_ROUGHNESS].texture = LoadTexture("resources/pbr/roughness.png");
+    SetTextureFilter(sphere.materials[0].maps[MATERIAL_MAP_ROUGHNESS].texture, TEXTURE_FILTER_BILINEAR);
     GenTextureMipmaps(&sphere.materials[0].maps[MATERIAL_MAP_ROUGHNESS].texture);
 
     sphere.materials[0].maps[MATERIAL_MAP_OCCLUSION].texture = LoadTexture("resources/pbr/ao.png");
+    SetTextureFilter(sphere.materials[0].maps[MATERIAL_MAP_OCCLUSION].texture, TEXTURE_FILTER_BILINEAR);
     GenTextureMipmaps(&sphere.materials[0].maps[MATERIAL_MAP_OCCLUSION].texture);
 
     Texture2D preview = LoadTexture("resources/pbr/preview.png");
@@ -60,7 +64,6 @@ int main(void)
         RLG_SetViewPositionV(camera.position);
         RLG_SetLightVec3(0, RLG_LIGHT_POSITION, camera.position);
         RLG_SetLightTargetV(0, camera.target);
-
 
         modelScale = Clamp(modelScale + GetMouseWheelMove() * 0.1, 0.25f, 2.5f);
 
