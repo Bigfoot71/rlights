@@ -2719,7 +2719,7 @@ void RLG_DrawMesh(Mesh mesh, Material material, Matrix transform)
     {
         const struct RLG_Light *l = &rlgCtx->lights[i];
 
-        if (l->data.shadow)
+        if (l->data.enabled && l->data.shadow)
         {
             int j = 11 + i;
             rlActiveTextureSlot(j);
@@ -2816,7 +2816,7 @@ void RLG_DrawMesh(Mesh mesh, Material material, Matrix transform)
     // Unbind all bound texture maps
     for (int i = 0; i < 11; i++)
     {
-        if (material.maps[i].texture.id > 0)
+        if (rlgCtx->material.data.useMaps[i])
         {
             // Select current shader texture slot
             rlActiveTextureSlot(i);
@@ -2832,7 +2832,9 @@ void RLG_DrawMesh(Mesh mesh, Material material, Matrix transform)
     // Unbind depth textures
     for (int i = 0; i < rlgCtx->lightCount; i++)
     {
-        if (rlgCtx->lights[i].data.shadow)
+        const struct RLG_Light *l = &rlgCtx->lights[i];
+
+        if (l->data.enabled && l->data.shadow)
         {
             rlActiveTextureSlot(11 + i);
             rlDisableTexture();
