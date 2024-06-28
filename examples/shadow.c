@@ -42,7 +42,7 @@ int main(void)
 
     for (int i = 0; i < RLG_GetLightcount(); i++)
     {
-        RLG_SetLight(i, true);
+        RLG_UseLight(i, true);
         RLG_SetLightType(i, RLG_SPOTLIGHT);
 
         RLG_EnableShadow(i, 1024);

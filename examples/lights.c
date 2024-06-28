@@ -6,7 +6,7 @@
 
 void Init_OmniLight(unsigned int light, Vector3 position, Color color)
 {
-    RLG_SetLight(light, true);
+    RLG_UseLight(light, true);
     RLG_SetLightColor(light, color);
     RLG_SetLightType(light, RLG_OMNILIGHT);
     RLG_SetLightVec3(light, RLG_LIGHT_POSITION, position);
@@ -29,6 +29,9 @@ int main(void)
     RLG_Context rlgCtx = RLG_CreateContext(4);
     RLG_SetContext(rlgCtx);
 
+    RLG_UseDefaultMap(MATERIAL_MAP_METALNESS, true);
+    RLG_UseDefaultMap(MATERIAL_MAP_ROUGHNESS, true);
+
     Init_OmniLight(0, (Vector3) { -2, 1, -2 }, YELLOW);
     Init_OmniLight(1, (Vector3) { 2, 1, 2 }, RED);
     Init_OmniLight(2, (Vector3) { -2, 1, 2 }, GREEN);
@@ -50,22 +53,17 @@ int main(void)
         int metalness = IsKeyPressed(KEY_RIGHT) - IsKeyPressed(KEY_LEFT);
         if (metalness)
         {
-            float newVal = RLG_GetMaterialValue(RLG_MAT_METALNESS)+metalness*0.05f;
-            RLG_SetMaterialValue(RLG_MAT_METALNESS, Clamp(newVal, 0.0f, 1.0f));
+            MaterialMap map = RLG_GetDefaultMap(MATERIAL_MAP_METALNESS);
+            float newVal = Clamp(map.value + metalness*0.05f, 0.0f, 1.0f);
+            RLG_SetDefaultMap(MATERIAL_MAP_METALNESS, map);
         }
 
         float roughness = IsKeyPressed(KEY_UP) - IsKeyPressed(KEY_DOWN);
         if (roughness)
         {
-            float newVal = RLG_GetMaterialValue(RLG_MAT_ROUGHNESS)+roughness*0.05f;
-            RLG_SetMaterialValue(RLG_MAT_ROUGHNESS, Clamp(newVal, 0.0f, 1.0f));
-        }
-
-        float specular = IsKeyPressed(KEY_P) - IsKeyPressed(KEY_M);
-        if (specular)
-        {
-            float newVal = RLG_GetMaterialValue(RLG_MAT_SPECULAR)+specular*0.05f;
-            RLG_SetMaterialValue(RLG_MAT_SPECULAR, Clamp(newVal, 0.0f, 1.0f));
+            MaterialMap map = RLG_GetDefaultMap(MATERIAL_MAP_ROUGHNESS);
+            float newVal = Clamp(map.value + metalness*0.05f, 0.0f, 1.0f);
+            RLG_SetDefaultMap(MATERIAL_MAP_ROUGHNESS, map);
         }
 
         // Check key inputs to enable/disable lights
@@ -87,7 +85,7 @@ int main(void)
                 // Draw spheres to show where the lights are
                 for (int i = 0; i < RLG_GetLightcount(); i++)
                 {
-                    if (RLG_IsLightEnabled(i))
+                    if (RLG_IsLightUsed(i))
                     {
                         DrawSphereEx(RLG_GetLightVec3(i, RLG_LIGHT_POSITION),
                             0.2f, 8, 8, RLG_GetLightColor(i));
@@ -103,9 +101,8 @@ int main(void)
 
             EndMode3D();
 
-            DrawText(TextFormat("[AL/AR] Metalness: %.2f", RLG_GetMaterialValue(RLG_MAT_METALNESS)), 10, 10, 20, WHITE);
-            DrawText(TextFormat("[AU/AD] Roughness: %.2f", RLG_GetMaterialValue(RLG_MAT_ROUGHNESS)), 10, 40, 20, WHITE);
-            DrawText(TextFormat("[M/P]: Specular: %.2f", RLG_GetMaterialValue(RLG_MAT_SPECULAR)), 10, 70, 20, WHITE);
+            DrawText(TextFormat("[AL/AR] Metalness: %.2f", RLG_GetDefaultMap(MATERIAL_MAP_METALNESS).value), 10, 10, 20, WHITE);
+            DrawText(TextFormat("[AU/AD] Roughness: %.2f", RLG_GetDefaultMap(MATERIAL_MAP_ROUGHNESS).value), 10, 40, 20, WHITE);
             DrawText("Use keys [Y][R][G][B] to toggle lights", 420, 10, 20, WHITE);
             DrawFPS(10, 570);
 

@@ -18,20 +18,20 @@ int main(void)
     RLG_Context rlgCtx = RLG_CreateContext(1);
     RLG_SetContext(rlgCtx);
 
-    RLG_SetMap(RLG_MAP_NORMAL, true);
-    RLG_SetMap(RLG_MAP_METALNESS, true);
-    RLG_SetMap(RLG_MAP_ROUGHNESS, true);
-    RLG_SetMap(RLG_MAP_OCCLUSION, true);
+    RLG_UseMap(MATERIAL_MAP_NORMAL, true);
+    RLG_UseMap(MATERIAL_MAP_METALNESS, true);
+    RLG_UseMap(MATERIAL_MAP_ROUGHNESS, true);
+    RLG_UseMap(MATERIAL_MAP_OCCLUSION, true);
 
-    RLG_SetMaterialValue(RLG_MAT_METALNESS, 1.0f);
-    RLG_SetMaterialValue(RLG_MAT_ROUGHNESS, 1.0f);
-
-    RLG_SetLight(0, true);
+    RLG_UseLight(0, true);
     RLG_SetLightType(0, RLG_OMNILIGHT);
     RLG_SetLightXYZ(0, RLG_LIGHT_POSITION, 0, 0, 4);
 
     Model sphere = LoadModelFromMesh(GenMeshSphere(1.0f, 32, 64));
     GenMeshTangents(&sphere.meshes[0]);
+
+    sphere.materials[0].maps[MATERIAL_MAP_METALNESS].value = 1.0f;
+    sphere.materials[0].maps[MATERIAL_MAP_ROUGHNESS].value = 1.0f;
 
     sphere.materials[0].maps[MATERIAL_MAP_ALBEDO].texture = LoadTexture("resources/pbr/albedo.png");
     SetTextureFilter(sphere.materials[0].maps[MATERIAL_MAP_ALBEDO].texture, TEXTURE_FILTER_BILINEAR);
@@ -77,6 +77,11 @@ int main(void)
             sphere.transform = MatrixMultiply(sphere.transform, rotationX);
             sphere.transform = MatrixMultiply(sphere.transform, rotationY);
         }
+
+        if (IsKeyPressed(KEY_N)) RLG_UseMap(MATERIAL_MAP_NORMAL, !RLG_IsMapUsed(MATERIAL_MAP_NORMAL));
+        if (IsKeyPressed(KEY_M)) RLG_UseMap(MATERIAL_MAP_METALNESS, !RLG_IsMapUsed(MATERIAL_MAP_METALNESS));
+        if (IsKeyPressed(KEY_R)) RLG_UseMap(MATERIAL_MAP_ROUGHNESS, !RLG_IsMapUsed(MATERIAL_MAP_ROUGHNESS));
+        if (IsKeyPressed(KEY_O)) RLG_UseMap(MATERIAL_MAP_OCCLUSION, !RLG_IsMapUsed(MATERIAL_MAP_OCCLUSION));
 
         BeginDrawing();
 

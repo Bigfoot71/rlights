@@ -23,7 +23,7 @@ int main(void)
 
     RLG_SetViewPositionV(camera.position);
 
-    RLG_SetLight(0, true);
+    RLG_UseLight(0, true);
 
     RLG_SetLightType(0, RLG_SPOTLIGHT);
     RLG_EnableShadow(0, 1024);
@@ -46,6 +46,7 @@ int main(void)
         if (IsKeyPressed(KEY_SPACE))
         {
             isEmissive = !isEmissive;
+            cube.materials[0].maps[MATERIAL_MAP_EMISSION].color = (isEmissive) ? RED : BLACK;
         }
 
         BeginDrawing();
@@ -57,21 +58,8 @@ int main(void)
             RLG_EndShadowCast();
 
             BeginMode3D(camera);
-
                 RLG_DrawModel(plane, (Vector3) { 0, -0.5, 0 }, 1, WHITE);
-    
-                if (isEmissive)
-                {
-                    RLG_SetMaterialColor(RLG_MAT_EMISSIVE_TINT, RED);
-                }
-
                 RLG_DrawModel(cube, Vector3Zero(), 1, RED);
-
-                if (isEmissive)
-                {
-                    RLG_SetMaterialColor(RLG_MAT_EMISSIVE_TINT, BLANK);
-                }
-
             EndMode3D();
 
             DrawText("Press SPACE to toggle emission", 10, 10, 24, LIME);

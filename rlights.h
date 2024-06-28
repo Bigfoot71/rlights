@@ -15,63 +15,85 @@
  * @brief Enum representing different types of lights.
  */
 typedef enum {
-    RLG_DIRECTIONAL,        ///< Enum representing a directional light type.
-    RLG_OMNILIGHT,          ///< Enum representing an omnilight type.
-    RLG_SPOTLIGHT           ///< Enum representing a spotlight type.
+    RLG_DIRECTIONAL = 0,                    ///< Enum representing a directional light type.
+    RLG_OMNILIGHT,                          ///< Enum representing an omnilight type.
+    RLG_SPOTLIGHT                           ///< Enum representing a spotlight type.
 } RLG_LightType;
 
 /**
  * @brief Enum representing different types of shaders.
  */
 typedef enum {
-    RLG_SHADER_LIGHT,       ///< Enum representing the lighting shader.
-    RLG_SHADER_DEPTH,       ///< Enum representing the depth shader.
-    RLG_SHADER_SHADOW_MAP   ///< Enum representing the shadow map shader.
+    RLG_SHADER_LIGHT = 0,                   ///< Enum representing the lighting shader.
+    RLG_SHADER_DEPTH,                       ///< Enum representing the depth shader.
+    RLG_SHADER_SHADOW_MAP,                  ///< Enum representing the shadow map shader.
 } RLG_Shader;
-
-/**
- * @brief Enum representing different types of material maps.
- */
-typedef enum {
-    RLG_MAP_METALNESS,                  ///< Metalness map used to define the metallic property of the material.
-    RLG_MAP_ROUGHNESS,                  ///< Roughness map used to define the surface roughness of the material.
-    RLG_MAP_OCCLUSION,                  ///< Occlusion map used to define ambient occlusion, affecting the shading of the material.
-    RLG_MAP_EMISSIVE,                   ///< Emissive map used for emitting light.
-    RLG_MAP_NORMAL,                     ///< Normal map used for bump mapping.
-    RLG_MAP_HEIGHT                      ///< Height map used for parallax mapping.
-} RLG_MaterialMap;
-
-/**
- * @brief Enum representing different material properties.
- */
-typedef enum {
-    RLG_MAT_EMISSIVE_TINT,              ///< Emissive tint property of the material.
-    RLG_MAT_AMBIENT_TINT,               ///< Ambient tint property of the material.
-    RLG_MAT_METALNESS,                  ///< Metalness property defining the metallic nature of the material.
-    RLG_MAT_ROUGHNESS,                  ///< Roughness property defining the surface roughness of the material.
-    RLG_MAT_SPECULAR,                   ///< Specular property defining the specular reflection of the material.
-    RLG_MAT_HEIGHT_SCALE,               ///< Height scale property for adjusting the intensity of parallax mapping.
-    RLG_MAT_HEIGHT_MIN_LAYERS,          ///< Minimum layers property for parallax mapping (if < 1 deep parallax is disabled).
-    RLG_MAT_HEIGHT_MAX_LAYERS           ///< Maximum layers property for parallax mapping (if < 2 deep parallax is disabled).
-} RLG_MaterialProperty;
 
 /**
  * @brief Enum representing different properties of a light.
  */
 typedef enum {
-    RLG_LIGHT_POSITION,                 ///< Position of the light.
-    RLG_LIGHT_DIRECTION,                ///< Direction of the light.
-    RLG_LIGHT_COLOR,                    ///< Diffuse color of the light.
-    RLG_LIGHT_ENERGY,                   ///< Energy factor of the light.
-    RLG_LIGHT_SPECULAR,                 ///< Specular tint color of the light.
-    RLG_LIGHT_SIZE,                     ///< Light size, affects fade and shadow blur (spotlight, omnilight only).
-    RLG_LIGHT_INNER_CUTOFF,             ///< Inner cutoff angle of a spotlight.
-    RLG_LIGHT_OUTER_CUTOFF,             ///< Outer cutoff angle of a spotlight.
-    RLG_LIGHT_ATTENUATION_CLQ,          ///< Attenuation coefficients (constant, linear, quadratic) of the light.
-    RLG_LIGHT_ATTENUATION_CONSTANT,     ///< Constant attenuation coefficient of the light.
-    RLG_LIGHT_ATTENUATION_LINEAR,       ///< Linear attenuation coefficient of the light.
-    RLG_LIGHT_ATTENUATION_QUADRATIC     ///< Quadratic attenuation coefficient of the light.
+    RLG_LIGHT_POSITION = 0,                 ///< Position of the light.
+    RLG_LIGHT_DIRECTION,                    ///< Direction of the light.
+    RLG_LIGHT_COLOR,                        ///< Diffuse color of the light.
+    RLG_LIGHT_ENERGY,                       ///< Energy factor of the light.
+    RLG_LIGHT_SPECULAR,                     ///< Specular tint color of the light.
+    RLG_LIGHT_SIZE,                         ///< Light size, affects fade and shadow blur (spotlight, omnilight only).
+    RLG_LIGHT_INNER_CUTOFF,                 ///< Inner cutoff angle of a spotlight.
+    RLG_LIGHT_OUTER_CUTOFF,                 ///< Outer cutoff angle of a spotlight.
+    RLG_LIGHT_ATTENUATION_CLQ,              ///< Attenuation coefficients (constant, linear, quadratic) of the light.
+    RLG_LIGHT_ATTENUATION_CONSTANT,         ///< Constant attenuation coefficient of the light.
+    RLG_LIGHT_ATTENUATION_LINEAR,           ///< Linear attenuation coefficient of the light.
+    RLG_LIGHT_ATTENUATION_QUADRATIC         ///< Quadratic attenuation coefficient of the light.
 } RLG_LightProperty;
+
+/**
+ * @brief Enum representing all shader locations used by rlights.
+ */
+typedef enum {
+
+    /* Same as raylib */
+
+    RLG_LOC_VERTEX_POSITION = 0,
+    RLG_LOC_VERTEX_TEXCOORD01,
+    RLG_LOC_VERTEX_TEXCOORD02,
+    RLG_LOC_VERTEX_NORMAL,
+    RLG_LOC_VERTEX_TANGENT,
+    RLG_LOC_VERTEX_COLOR,
+    RLG_LOC_MATRIX_MVP,
+    RLG_LOC_MATRIX_VIEW,
+    RLG_LOC_MATRIX_PROJECTION,
+    RLG_LOC_MATRIX_MODEL,
+    RLG_LOC_MATRIX_NORMAL,
+    RLG_LOC_VECTOR_VIEW,
+    RLG_LOC_COLOR_DIFFUSE,
+    RLG_LOC_COLOR_SPECULAR,
+    RLG_LOC_COLOR_AMBIENT,
+    RLG_LOC_MAP_ALBEDO,
+    RLG_LOC_MAP_METALNESS,
+    RLG_LOC_MAP_NORMAL,
+    RLG_LOC_MAP_ROUGHNESS,
+    RLG_LOC_MAP_OCCLUSION,
+    RLG_LOC_MAP_EMISSION,
+    RLG_LOC_MAP_HEIGHT,
+    RLG_LOC_MAP_CUBEMAP,
+    RLG_LOC_MAP_IRRADIANCE,
+    RLG_LOC_MAP_PREFILTER,
+    RLG_LOC_MAP_BRDF,
+
+    /* Specific to rlights.h */
+
+    RLG_LOC_COLOR_EMISSION,
+    RLG_LOC_METALNESS_SCALE,
+    RLG_LOC_ROUGHNESS_SCALE,
+    RLG_LOC_AO_LIGHT_AFFECT,
+    RLG_LOC_HEIGHT_SCALE,
+
+    /* Internal use */
+
+    RLG_COUNT_LOCS
+
+} RLG_ShaderLocationIndex;
 
 typedef void* RLG_Context;  ///< Opaque type for a lighting context handle.
 
@@ -113,21 +135,21 @@ RLG_Context RLG_GetContext(void);
  * 
  * @note This function should be called before RLG_Init to define your own shaders.
  * 
- * @param shaderType The type of shader to set the custom code for.
+ * @param shader The type of shader to set the custom code for.
  * @param vsCode Vertex shader code for the specified shader type.
  * @param fsCode Fragment shader code for the specified shader type.
  */
-void RLG_SetCustomShaderCode(RLG_Shader shaderType, const char *vsCode, const char *fsCode);
+void RLG_SetCustomShaderCode(RLG_Shader shader, const char *vsCode, const char *fsCode);
 
 /**
  * @brief Get the current shader of the specified type.
  * 
- * @param shaderType The type of shader to retrieve.
+ * @param shader The type of shader to retrieve.
  * 
  * @return A pointer to the current Shader object used for the specified shader type.
  *         Returns NULL if the shader type is not loaded.
  */
-const Shader* RLG_GetShader(RLG_Shader shaderType);
+const Shader* RLG_GetShader(RLG_Shader shader);
 
 /**
  * @brief Set the view position, corresponds to the position of your camera.
@@ -153,52 +175,82 @@ void RLG_SetViewPositionV(Vector3 position);
 Vector3 RLG_GetViewPosition(void);
 
 /**
+ * @brief Set the ambient color.
+ * 
+ * @param color The ambient color as a Color structure.
+ */
+void SetAmbientColor(Color color);
+
+/**
+ * @brief Get the current ambient color.
+ * 
+ * @return The current ambient color as a Color structure.
+ */
+Color GetAmbientColor(void);
+
+/**
+ * @brief Set the minimum and maximum layers for parallax mapping.
+ * 
+ * @param min The minimum layer index.
+ * @param max The maximum layer index.
+ */
+void SetParallaxLayers(int min, int max);
+
+/**
+ * @brief Get the current minimum and maximum layers for parallax mapping.
+ * 
+ * @param min Pointer to store the minimum layer index.
+ * @param max Pointer to store the maximum layer index.
+ */
+void GetParallaxLayers(int* min, int* max);
+
+/**
  * @brief Activate or deactivate texture sampling in the materials of models.
  * 
- * @param map The material map to modify.
+ * @param mapIndex The material map to modify.
  * @param active Boolean value indicating whether to activate (true) or deactivate (false) texture sampling.
  */
-void RLG_SetMap(RLG_MaterialMap map, bool active);
+void RLG_UseMap(MaterialMapIndex mapIndex, bool active);
 
 /**
  * @brief Check if texture sampling is enabled for a given material map.
  * 
- * @param map The material map to check.
+ * @param mapIndex The material map to check.
  * @return True if texture sampling is enabled, false otherwise.
  */
-bool RLG_IsMapEnabled(RLG_MaterialMap map);
+bool RLG_IsMapUsed(MaterialMapIndex mapIndex);
 
 /**
- * @brief Set a float value for a specific material property.
+ * @brief Use the default material map if true, otherwise use the material maps defined in the models.
  * 
- * @param property The material property to set the value for.
- * @param value The float value to assign to the material property.
+ * @param mapIndex The material map to modify.
+ * @param active Boolean value indicating whether to use the default material map (true) or the material maps defined in the models (false).
  */
-void RLG_SetMaterialValue(RLG_MaterialProperty property, float value);
+void RLG_UseDefaultMap(MaterialMapIndex mapIndex, bool active);
 
 /**
- * @brief Set a color value for a specific material property.
+ * @brief Set the default material map for a given material map index.
  * 
- * @param property The material property to set the color for.
- * @param color The color to assign to the material property.
+ * @param mapIndex The material map index to set.
+ * @param map The material map to set as default.
  */
-void RLG_SetMaterialColor(RLG_MaterialProperty property, Color color);
+void RLG_SetDefaultMap(MaterialMapIndex mapIndex, MaterialMap map);
 
 /**
- * @brief Get the float value of a specific material property.
+ * @brief Get the default material map for a given material map index.
  * 
- * @param property The material property to retrieve the value from.
- * @return The float value of the specified material property.
+ * @param mapIndex The material map index to retrieve.
+ * @return The default material map.
  */
-float RLG_GetMaterialValue(RLG_MaterialProperty property);
+MaterialMap RLG_GetDefaultMap(MaterialMapIndex mapIndex);
 
 /**
- * @brief Get the color value of a specific material property.
+ * @brief Check if the default material map is used for a given material map index.
  * 
- * @param property The material property to retrieve the color from.
- * @return The color value of the specified material property.
+ * @param mapIndex The material map index to check.
+ * @return True if the default material map is used, false otherwise.
  */
-Color RLG_GetMaterialColor(RLG_MaterialProperty property);
+bool RLG_IsDefaultMapUsed(MaterialMapIndex mapIndex);
 
 /**
  * @brief Get the number of lights initialized sets in the shader.
@@ -213,7 +265,7 @@ unsigned int RLG_GetLightcount(void);
  * @param light The index of the light to modify.
  * @param active Boolean value indicating whether to activate (true) or deactivate (false) the light.
  */
-void RLG_SetLight(unsigned int light, bool active);
+void RLG_UseLight(unsigned int light, bool active);
 
 /**
  * @brief Check if a specific light is enabled.
@@ -221,7 +273,7 @@ void RLG_SetLight(unsigned int light, bool active);
  * @param light The index of the light to check.
  * @return true if the light is enabled, false otherwise.
  */
-bool RLG_IsLightEnabled(unsigned int light);
+bool RLG_IsLightUsed(unsigned int light);
 
 /**
  * @brief Toggle the state of a specific light.
@@ -572,6 +624,7 @@ void RLG_DrawModelEx(Model model, Vector3 position, Vector3 rotationAxis, float 
 }
 #endif
 
+#define RLIGHTS_IMPLEMENTATION
 #ifdef RLIGHTS_IMPLEMENTATION
 
 #include <raymath.h>
@@ -579,10 +632,37 @@ void RLG_DrawModelEx(Model model, Vector3 position, Vector3 rotationAxis, float 
 #include <stdio.h>
 #include <rlgl.h>
 
-#ifndef NO_EMBEDDED_SHADERS
+/* Helper macros */
 
-#define STRINGIFY(x) #x             ///< Undef after shader definitions
-#define TOSTRING(x) STRINGIFY(x)    ///< Undef after shader definitions
+#define STRINGIFY(x) #x             ///< Undefined at the end of the header
+#define TOSTRING(x) STRINGIFY(x)    ///< Undefined at the end of the header
+
+/* Helper defintions */
+
+#define RLG_COUNT_MATERIAL_MAPS 12  ///< Same as MAX_MATERIAL_MAPS defined in raylib/config.h
+#define RLG_COUNT_SHADERS 3         ///< Total shader used by rlights.h internally
+
+/* Uniform names definitions */
+
+#define RLG_SHADER_ATTRIB_POSITION              "vertexPosition"
+#define RLG_SHADER_ATTRIB_TEXCOORD              "vertexTexCoord"
+#define RLG_SHADER_ATTRIB_TEXCOORD2             "vertexTexCoord2"
+#define RLG_SHADER_ATTRIB_NORMAL                "vertexNormal"
+#define RLG_SHADER_ATTRIB_TANGENT               "vertexTangent"
+#define RLG_SHADER_ATTRIB_COLOR                 "vertexColor"
+
+#define RLG_SHADER_UNIFORM_MATRIX_MVP           "mvp"
+#define RLG_SHADER_UNIFORM_MATRIX_VIEW          "matView"
+#define RLG_SHADER_UNIFORM_MATRIX_PROJECTION    "matProjection"
+#define RLG_SHADER_UNIFORM_MATRIX_MODEL         "matModel"
+#define RLG_SHADER_UNIFORM_MATRIX_NORMAL        "matNormal"
+
+#define RLG_SHADER_UNIFORM_COLOR_AMBIENT        "colAmbient"
+#define RLG_SHADER_UNIFORM_VIEW_POSITION        "viewPos"
+
+/* Embedded shaders definition */
+
+#ifndef NO_EMBEDDED_SHADERS
 
 #define GLSL_VERSION_DEF \
     "#version " TOSTRING(GLSL_VERSION) "\n"
@@ -619,34 +699,6 @@ void RLG_DrawModelEx(Model model, Vector3 position, Vector3 rotationAxis, float 
 
 #endif
 
-/* Uniform names definitions*/
-
-#define RLG_SHADER_ATTRIB_POSITION         "vertexPosition"
-#define RLG_SHADER_ATTRIB_TEXCOORD         "vertexTexCoord"
-#define RLG_SHADER_ATTRIB_TEXCOORD2        "vertexTexCoord2"
-#define RLG_SHADER_ATTRIB_NORMAL           "vertexNormal"
-#define RLG_SHADER_ATTRIB_TANGENT          "vertexTangent"
-#define RLG_SHADER_ATTRIB_COLOR            "vertexColor"
-
-#define RLG_SHADER_UNIFORM_MAT_MVP              "mvp"
-#define RLG_SHADER_UNIFORM_MAT_VIEW             "matView"
-#define RLG_SHADER_UNIFORM_MAT_PROJECTION       "matProjection"
-#define RLG_SHADER_UNIFORM_MAT_MODEL            "matModel"
-#define RLG_SHADER_UNIFORM_MAT_NORMAL           "matNormal"
-
-#define RLG_SHADER_UNIFORM_COLOR_DIFFUSE   "colDiffuse"
-#define RLG_SHADER_UNIFORM_COLOR_SPECULAR  "colSpecular"
-#define RLG_SHADER_UNIFORM_COLOR_AMBIENT   "colAmbient"
-#define RLG_SHADER_UNIFORM_COLOR_EMISSION  "colEmission"
-
-#define RLG_SHADER_SAMPLER2D_ALBEDO        "texture0"          // texture0 (texture slot active 0)
-#define RLG_SHADER_SAMPLER2D_METALNESS     "texture1"          // texture1 (texture slot active 1)
-#define RLG_SHADER_SAMPLER2D_NORMAL        "texture2"          // texture2 (texture slot active 2)
-#define RLG_SHADER_SAMPLER2D_ROUGHNESS     "texture3"          // texture3 (texture slot active 3)
-#define RLG_SHADER_SAMPLER2D_OCCLUSION     "texture4"          // texture4 (texture slot active 4)
-#define RLG_SHADER_SAMPLER2D_EMISSION      "texture5"          // texture5 (texture slot active 5)
-#define RLG_SHADER_SAMPLER2D_HEIGHT        "texture6"          // texture6 (texture slot active 6)
-
 /* Shader */
 
 static const char rlgLightVS[] = GLSL_VERSION_DEF
@@ -664,9 +716,9 @@ static const char rlgLightVS[] = GLSL_VERSION_DEF
     GLSL_VS_IN("vec4 " RLG_SHADER_ATTRIB_COLOR)
 
     "uniform lowp int useNormalMap;"
-    "uniform mat4 " RLG_SHADER_UNIFORM_MAT_NORMAL ";"
-    "uniform mat4 " RLG_SHADER_UNIFORM_MAT_MODEL ";"
-    "uniform mat4 " RLG_SHADER_UNIFORM_MAT_MVP ";"
+    "uniform mat4 " RLG_SHADER_UNIFORM_MATRIX_NORMAL ";"
+    "uniform mat4 " RLG_SHADER_UNIFORM_MATRIX_MODEL ";"
+    "uniform mat4 " RLG_SHADER_UNIFORM_MATRIX_MVP ";"
 
     GLSL_VS_OUT("vec3 fragPosition")
     GLSL_VS_OUT("vec2 fragTexCoord")
@@ -676,18 +728,17 @@ static const char rlgLightVS[] = GLSL_VERSION_DEF
 
     "void main()"
     "{"
-        "fragPosition = vec3(" RLG_SHADER_UNIFORM_MAT_MODEL "*vec4(" RLG_SHADER_ATTRIB_POSITION ", 1.0));"
-        "fragNormal = (" RLG_SHADER_UNIFORM_MAT_NORMAL "*vec4(" RLG_SHADER_ATTRIB_NORMAL ", 0.0)).xyz;"
+        "fragPosition = vec3(" RLG_SHADER_UNIFORM_MATRIX_MODEL "*vec4(" RLG_SHADER_ATTRIB_POSITION ", 1.0));"
+        "fragNormal = (" RLG_SHADER_UNIFORM_MATRIX_NORMAL "*vec4(" RLG_SHADER_ATTRIB_NORMAL ", 0.0)).xyz;"
 
         "fragTexCoord = " RLG_SHADER_ATTRIB_TEXCOORD ";"
         "fragColor = " RLG_SHADER_ATTRIB_COLOR ";"
 
-        "if (useNormalMap != 0)"
-        "{"
-            "vec3 T = normalize(vec3(" RLG_SHADER_UNIFORM_MAT_MODEL "*vec4(" RLG_SHADER_ATTRIB_TANGENT ".xyz, 0.0)));"
-            "vec3 B = cross(fragNormal, T)*" RLG_SHADER_ATTRIB_TANGENT ".w;"
-            "TBN = mat3(T, B, fragNormal);"
-        "}"
+        // The TBN matrix is used to transform vectors from tangent space to world space
+        // It is currently used to transform normals from a normal map to world space normals
+        "vec3 T = normalize(vec3(" RLG_SHADER_UNIFORM_MATRIX_MODEL "*vec4(" RLG_SHADER_ATTRIB_TANGENT ".xyz, 0.0)));"
+        "vec3 B = cross(fragNormal, T)*" RLG_SHADER_ATTRIB_TANGENT ".w;"
+        "TBN = mat3(T, B, fragNormal);"
 
 #       if GLSL_VERSION > 100
         "for (int i = 0; i < NUM_LIGHTS; i++)"
@@ -696,16 +747,25 @@ static const char rlgLightVS[] = GLSL_VERSION_DEF
         "}"
 #       endif
 
-        "gl_Position = " RLG_SHADER_UNIFORM_MAT_MVP "*vec4(" RLG_SHADER_ATTRIB_POSITION ", 1.0);"
+        "gl_Position = " RLG_SHADER_UNIFORM_MATRIX_MVP "*vec4(" RLG_SHADER_ATTRIB_POSITION ", 1.0);"
     "}";
 
 static const char rlgLightFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
 
-    "#define NUM_LIGHTS %i\n"
+    "#define NUM_LIGHTS"    " %i\n"
+    "#define NUM_MATERIALS" " 7\n"
 
-    "#define DIRLIGHT 0\n"
-    "#define OMNILIGHT 1\n"
-    "#define SPOTLIGHT 2\n"
+    "#define DIRLIGHT"      " 0\n"
+    "#define OMNILIGHT"     " 1\n"
+    "#define SPOTLIGHT"     " 2\n"
+
+    "#define ALBEDO"        " 0\n"
+    "#define METALNESS"     " 1\n"
+    "#define NORMAL"        " 2\n"
+    "#define ROUGHNESS"     " 3\n"
+    "#define OCCLUSION"     " 4\n"
+    "#define EMISSION"      " 5\n"
+    "#define HEIGHT"        " 6\n"
 
     "#define PI 3.1415926535897932384626433832795028\n"
 
@@ -724,6 +784,13 @@ static const char rlgLightFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
     GLSL_FS_FLAT_IN("mat3 TBN")
 
     GLSL_FS_OUT_DEF
+
+    "struct Material {"
+        "sampler2D texture;"
+        "mediump vec4 color;"
+        "mediump float value;"
+        "lowp int active;"
+    "};"
 
     "struct Light {"
         "sampler2D shadowMap;"      ///< Sampler for the shadow map texture
@@ -745,36 +812,14 @@ static const char rlgLightFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
         "lowp int enabled;"         ///< Indicates if the light is active (1 for true, 0 for false)
     "};"
 
+    "uniform Material materials[NUM_MATERIALS];"
     "uniform Light lights[NUM_LIGHTS];"
 
-    "uniform lowp int useMetalnessMap;"
-    "uniform lowp int useRoughnessMap;"
-    "uniform lowp int useOcclusionMap;"
-    "uniform lowp int useEmissiveMap;"
-    "uniform lowp int useNormalMap;"
-    "uniform lowp int useHeightMap;"
-
-    "uniform sampler2D " RLG_SHADER_SAMPLER2D_ALBEDO ";"   // albedo
-    "uniform sampler2D " RLG_SHADER_SAMPLER2D_METALNESS ";"   // metalness
-    "uniform sampler2D " RLG_SHADER_SAMPLER2D_NORMAL ";"   // normal
-    "uniform sampler2D " RLG_SHADER_SAMPLER2D_ROUGHNESS ";"   // roughness
-    "uniform sampler2D " RLG_SHADER_SAMPLER2D_OCCLUSION ";"   // occlusion
-    "uniform sampler2D " RLG_SHADER_SAMPLER2D_EMISSION ";"   // emissive
-    "uniform sampler2D " RLG_SHADER_SAMPLER2D_HEIGHT ";"   // height
-
-    "uniform vec3 " RLG_SHADER_UNIFORM_COLOR_EMISSION ";"     // sent by rlights
-    "uniform vec4 " RLG_SHADER_UNIFORM_COLOR_DIFFUSE ";"      // sent by raylib
-    "uniform vec3 " RLG_SHADER_UNIFORM_COLOR_AMBIENT ";"      // sent by rlights
-
-    "uniform float metalness;"
-    "uniform float roughness;"
-    "uniform float specular;"
-
-    "uniform float heightScale;"
     "uniform lowp int parallaxMinLayers;"
     "uniform lowp int parallaxMaxLayers;"
 
-    "uniform vec3 viewPos;"
+    "uniform vec3 " RLG_SHADER_UNIFORM_COLOR_AMBIENT ";"
+    "uniform vec3 " RLG_SHADER_UNIFORM_VIEW_POSITION ";"
 
     "float DistributionGGX(float cosTheta, float alpha)"
     "{"
@@ -807,8 +852,8 @@ static const char rlgLightFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
 
     "vec2 Parallax(vec2 uv, vec3 V)"
     "{"
-        "float height = 1.0 - TEX(" RLG_SHADER_SAMPLER2D_HEIGHT ", uv).r;"
-        "return uv - vec2(V.xy/V.z)*height*heightScale;"
+        "float height = 1.0 - TEX(materials[HEIGHT].texture, uv).r;"
+        "return uv - vec2(V.xy/V.z)*height*materials[HEIGHT].value;"
     "}"
 
     "vec2 DeepParallax(vec2 uv, vec3 V)"
@@ -821,22 +866,23 @@ static const char rlgLightFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
         "float layerDepth = 1.0/numLayers;"
         "float currentLayerDepth = 0.0;"
 
-        "vec2 P = V.xy/V.z*heightScale;"
+        "vec2 P = V.xy/V.z*materials[HEIGHT].value;"
         "vec2 deltaTexCoord = P/numLayers;"
     
         "vec2 currentUV = uv;"
-        "float currentDepthMapValue = 1.0 - TEX(" RLG_SHADER_SAMPLER2D_HEIGHT ", currentUV).y;"
+        "float currentDepthMapValue = 1.0 - TEX(materials[HEIGHT].texture, currentUV).y;"
         
         "while(currentLayerDepth < currentDepthMapValue)"
         "{"
             "currentUV += deltaTexCoord;"
             "currentLayerDepth += layerDepth;"
-            "currentDepthMapValue = 1.0 - TEX(" RLG_SHADER_SAMPLER2D_HEIGHT ", currentUV).y;"
+            "currentDepthMapValue = 1.0 - TEX(materials[HEIGHT].texture, currentUV).y;"
         "}"
 
         "vec2 prevTexCoord = currentUV - deltaTexCoord;"
         "float afterDepth  = currentDepthMapValue + currentLayerDepth;"
-        "float beforeDepth = 1.0 - TEX(" RLG_SHADER_SAMPLER2D_HEIGHT ", prevTexCoord).y - currentLayerDepth - layerDepth;"
+        "float beforeDepth = 1.0 - TEX(materials[HEIGHT].texture,"
+            "prevTexCoord).y - currentLayerDepth - layerDepth;"
 
         "float weight = afterDepth/(afterDepth - beforeDepth);"
         "return prevTexCoord*weight + currentUV*(1.0 - weight);"
@@ -878,11 +924,11 @@ static const char rlgLightFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
     "void main()"
     "{"
         // Compute the view direction vector for this fragment
-        "vec3 V = normalize(viewPos - fragPosition);"
+        "vec3 V = normalize(" RLG_SHADER_UNIFORM_VIEW_POSITION " - fragPosition);"
 
         // Compute fragTexCoord (UV), apply parallax if height map is enabled
         "vec2 uv = fragTexCoord;"
-        "if (useHeightMap != 0)"
+        "if (materials[HEIGHT].active != 0)"
         "{"
             "uv = (parallaxMinLayers > 0 && parallaxMaxLayers > 1)"
                 "? DeepParallax(uv, V) : Parallax(uv, V);"
@@ -894,23 +940,25 @@ static const char rlgLightFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
         "}"
 
         // Compute albedo (base color) by sampling the texture and multiplying by the diffuse color
-        "vec3 albedo = TEX(" RLG_SHADER_SAMPLER2D_ALBEDO ", uv).rgb;"
-        "albedo *= " RLG_SHADER_UNIFORM_COLOR_DIFFUSE ".rgb*fragColor.rgb;"
+        "vec3 albedo = materials[ALBEDO].color.rgb*fragColor.rgb;"
+        "albedo *= TEX(materials[ALBEDO].texture, uv).rgb*float(materials[ALBEDO].active);"
 
         // Compute metallic factor; if a metalness map is used, sample it
-        "float metallic = metalness;"
-        "if (useMetalnessMap != 0) metallic *= TEX(" RLG_SHADER_SAMPLER2D_METALNESS ", uv).b;"
+        "float metalness = materials[METALNESS].value;"
+        "if (materials[METALNESS].active != 0)"
+            "metalness *= TEX(materials[METALNESS].texture, uv).b;"
 
         // Compute roughness factor; if a roughness map is used, sample it
-        "float rough = roughness;"
-        "if (useRoughnessMap != 0) rough *= TEX(" RLG_SHADER_SAMPLER2D_ROUGHNESS ", uv).g;"
+        "float roughness = materials[ROUGHNESS].value;"
+        "if (materials[ROUGHNESS].active != 0)"
+            "roughness *= TEX(materials[ROUGHNESS].texture, uv).g;"
 
         // Compute F0 (reflectance at normal incidence) based on the metallic factor
-        "vec3 F0 = ComputeF0(metallic, specular, albedo);"
+        "vec3 F0 = ComputeF0(metalness, 0.5, albedo);"
 
         // Compute the normal vector; if a normal map is used, transform it to tangent space
-        "vec3 N = (useNormalMap == 0) ? normalize(fragNormal)"
-            ": normalize(TBN*(TEX(" RLG_SHADER_SAMPLER2D_NORMAL ", uv).rgb*2.0 - 1.0));"
+        "vec3 N = (materials[NORMAL].active == 0) ? normalize(fragNormal)"
+            ": normalize(TBN*(TEX(materials[NORMAL].texture, uv).rgb*2.0 - 1.0));"
 
         // Compute the dot product of the normal and view direction
         "float NdotV = dot(N, V);"
@@ -961,9 +1009,9 @@ static const char rlgLightFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
 
                 // Compute diffuse lighting (Burley model) if the material is not fully metallic
                 "vec3 diffLight = vec3(0.0);"
-                "if (metallic < 1.0)"
+                "if (metalness < 1.0)"
                 "{"
-                    "float FD90_minus_1 = 2.0*cLdotH*cLdotH*rough - 0.5;"
+                    "float FD90_minus_1 = 2.0*cLdotH*cLdotH*roughness - 0.5;"
                     "float FdV = 1.0 + FD90_minus_1*SchlickFresnel(cNdotV);"
                     "float FdL = 1.0 + FD90_minus_1*SchlickFresnel(cNdotL);"
 
@@ -975,9 +1023,9 @@ static const char rlgLightFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
                 // NOTE: When roughness is 0, specular light should not be entirely disabled.
                 // TODO: Handle perfect mirror reflection when roughness is 0.
                 "vec3 specLight = vec3(0.0);"
-                "if (rough > 0.0)"
+                "if (roughness > 0.0)"
                 "{"
-                    "float alphaGGX = rough*rough;"
+                    "float alphaGGX = roughness*roughness;"
                     "float D = DistributionGGX(cNdotH, alphaGGX);"
                     "float G = GeometrySmith(cNdotL, cNdotV, alphaGGX);"
 
@@ -1018,20 +1066,24 @@ static const char rlgLightFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
 
         // Compute ambient (with occlusion)
         "vec3 ambient = " RLG_SHADER_UNIFORM_COLOR_AMBIENT ";"
-        "if (useOcclusionMap != 0)"
+        "if (materials[OCCLUSION].active != 0)"
         "{"
-            "float ao = TEX(" RLG_SHADER_SAMPLER2D_OCCLUSION ", uv).r;"
+            "float ao = TEX(materials[OCCLUSION].texture, uv).r;"
             "ambient *= ao;"
+
+            "float lightAffect = mix(1.0, ao, materials[OCCLUSION].value);"
+            "diffLighting *= lightAffect;"
+            "specLighting *= lightAffect;"
         "}"
 
         // Compute the final diffuse color, including ambient and diffuse lighting contributions
         "vec3 diffuse = albedo*(ambient + diffLighting);"
 
         // Compute emission color; if an emissive map is used, sample it
-        "vec3 emission = " RLG_SHADER_UNIFORM_COLOR_EMISSION ";"
-        "if (useEmissiveMap != 0)"
+        "vec3 emission = materials[EMISSION].color.rgb;"
+        "if (materials[EMISSION].active != 0)"
         "{"
-            "emission *= TEX(" RLG_SHADER_SAMPLER2D_EMISSION ", uv).rgb;"
+            "emission *= TEX(materials[EMISSION].texture, uv).rgb;"
         "}"
 
         // Compute the final fragment color by combining diffuse, specular, and emission contributions
@@ -1069,9 +1121,6 @@ static const char rlgShadowMapFS[] = GLSL_VERSION_DEF GLSL_TEXTURE_DEF
         GLSL_FINAL_COLOR("vec4(vec3(depth/far), 1.0)")
     "}";
 
-#undef TOSTRING
-#undef STRINGIFY
-
 #endif //NO_EMBEDDED_SHADERS
 
 /* Types definitions */
@@ -1083,49 +1132,21 @@ struct RLG_ShadowMap
     int width, height;
 };
 
-struct RLG_Material
+struct RLG_Material ///< NOTE: This struct is used to handle data that cannot be stored in the MaterialMap struct of raylib.
 {
     struct RLG_MaterialLocs
     {
-        int colEmissive;
-        int colAmbient;
-
-        int metalness;
-        int roughness;
-        int specular;
-
-        int heightScale;
+        int useMaps[RLG_COUNT_MATERIAL_MAPS];
         int parallaxMinLayers;
         int parallaxMaxLayers;
-
-        int useMetalnessMap;
-        int useRoughnessMap;
-        int useOcclusionMap;
-        int useEmissiveMap;
-        int useNormalMap;
-        int useHeightMap;
     }
     locs;
 
     struct RLG_MaterialData
     {
-        Vector3 colEmissive;
-        Vector3 colAmbient;
-
-        float metalness;
-        float roughness;
-        float specular;
-
-        float heightScale;
+        int useMaps[RLG_COUNT_MATERIAL_MAPS];
         int parallaxMinLayers;
         int parallaxMaxLayers;
-
-        int useMetalnessMap;
-        int useRoughnessMap;
-        int useOcclusionMap;
-        int useEmissiveMap;
-        int useNormalMap;
-        int useHeightMap;
     }
     data;
 };
@@ -1180,14 +1201,23 @@ struct RLG_Light
 
 static struct RLG_Core
 {
+    /* Default material maps */
+
+    MaterialMap defaultMaps[RLG_COUNT_MATERIAL_MAPS];
+    bool usedDefaultMaps[RLG_COUNT_MATERIAL_MAPS];
+
+    /* Shaders */
+
+    Shader shaders[RLG_COUNT_SHADERS];
+
     /* Lighting shader data*/
 
     struct RLG_Material material;
     struct RLG_Light *lights;
     int lightCount;
 
+    Vector3 colAmbient;
     Vector3 viewPos;
-    int locViewPos;
 
     /* Shadow map rendeering shader data */
 
@@ -1196,12 +1226,6 @@ static struct RLG_Core
 
     int locDepthNear;
     int locDepthFar;
-
-    /* Shaders */
-
-    Shader lightShader;
-    Shader depthShader;
-    Shader shadowMapShader;
 }
 *rlgCtx = NULL;
 
@@ -1229,7 +1253,8 @@ static struct RLG_Core
 
 RLG_Context RLG_CreateContext(unsigned int count)
 {
-    struct RLG_Core *rlgCtx = (struct RLG_Core*)malloc(sizeof(struct RLG_Core));
+    // On-heap allocation for the context's core structure, initializing it with zeros
+    struct RLG_Core *rlgCtx = (struct RLG_Core*)calloc(1, sizeof(struct RLG_Core));
 
     if (!rlgCtx)
     {
@@ -1287,39 +1312,50 @@ RLG_Context RLG_CreateContext(unsigned int count)
     {
         // NOTE: If any location is not found, loc point becomes -1
 
-        lightShader.locs = (int*)malloc(RL_MAX_SHADER_LOCATIONS*sizeof(int));
-        for (int i = 0; i < RL_MAX_SHADER_LOCATIONS; i++) lightShader.locs[i] = -1;
+        lightShader.locs = (int*)malloc(RLG_COUNT_LOCS*sizeof(int));
+        for (int i = 0; i < RLG_COUNT_LOCS; i++) lightShader.locs[i] = -1;
 
         // Get handles to GLSL input attribute locations
-        lightShader.locs[SHADER_LOC_VERTEX_POSITION]    = rlGetLocationAttrib(lightShader.id, RLG_SHADER_ATTRIB_POSITION);
-        lightShader.locs[SHADER_LOC_VERTEX_TEXCOORD01]  = rlGetLocationAttrib(lightShader.id, RLG_SHADER_ATTRIB_TEXCOORD);
-        lightShader.locs[SHADER_LOC_VERTEX_TEXCOORD02]  = rlGetLocationAttrib(lightShader.id, RLG_SHADER_ATTRIB_TEXCOORD2);
-        lightShader.locs[SHADER_LOC_VERTEX_NORMAL]      = rlGetLocationAttrib(lightShader.id, RLG_SHADER_ATTRIB_NORMAL);
-        lightShader.locs[SHADER_LOC_VERTEX_TANGENT]     = rlGetLocationAttrib(lightShader.id, RLG_SHADER_ATTRIB_TANGENT);
-        lightShader.locs[SHADER_LOC_VERTEX_COLOR]       = rlGetLocationAttrib(lightShader.id, RLG_SHADER_ATTRIB_COLOR);
+        lightShader.locs[RLG_LOC_VERTEX_POSITION]    = rlGetLocationAttrib(lightShader.id, RLG_SHADER_ATTRIB_POSITION);
+        lightShader.locs[RLG_LOC_VERTEX_TEXCOORD01]  = rlGetLocationAttrib(lightShader.id, RLG_SHADER_ATTRIB_TEXCOORD);
+        lightShader.locs[RLG_LOC_VERTEX_TEXCOORD02]  = rlGetLocationAttrib(lightShader.id, RLG_SHADER_ATTRIB_TEXCOORD2);
+        lightShader.locs[RLG_LOC_VERTEX_NORMAL]      = rlGetLocationAttrib(lightShader.id, RLG_SHADER_ATTRIB_NORMAL);
+        lightShader.locs[RLG_LOC_VERTEX_TANGENT]     = rlGetLocationAttrib(lightShader.id, RLG_SHADER_ATTRIB_TANGENT);
+        lightShader.locs[RLG_LOC_VERTEX_COLOR]       = rlGetLocationAttrib(lightShader.id, RLG_SHADER_ATTRIB_COLOR);
 
         // Get handles to GLSL uniform locations (vertex shader)
-        lightShader.locs[SHADER_LOC_MATRIX_MVP]         = rlGetLocationUniform(lightShader.id, RLG_SHADER_UNIFORM_MAT_MVP);
-        lightShader.locs[SHADER_LOC_MATRIX_VIEW]        = rlGetLocationUniform(lightShader.id, RLG_SHADER_UNIFORM_MAT_VIEW);
-        lightShader.locs[SHADER_LOC_MATRIX_PROJECTION]  = rlGetLocationUniform(lightShader.id, RLG_SHADER_UNIFORM_MAT_PROJECTION);
-        lightShader.locs[SHADER_LOC_MATRIX_MODEL]       = rlGetLocationUniform(lightShader.id, RLG_SHADER_UNIFORM_MAT_MODEL);
-        lightShader.locs[SHADER_LOC_MATRIX_NORMAL]      = rlGetLocationUniform(lightShader.id, RLG_SHADER_UNIFORM_MAT_NORMAL);
+        lightShader.locs[RLG_LOC_MATRIX_MVP]         = rlGetLocationUniform(lightShader.id, RLG_SHADER_UNIFORM_MATRIX_MVP);
+        lightShader.locs[RLG_LOC_MATRIX_VIEW]        = rlGetLocationUniform(lightShader.id, RLG_SHADER_UNIFORM_MATRIX_VIEW);
+        lightShader.locs[RLG_LOC_MATRIX_PROJECTION]  = rlGetLocationUniform(lightShader.id, RLG_SHADER_UNIFORM_MATRIX_PROJECTION);
+        lightShader.locs[RLG_LOC_MATRIX_MODEL]       = rlGetLocationUniform(lightShader.id, RLG_SHADER_UNIFORM_MATRIX_MODEL);
+        lightShader.locs[RLG_LOC_MATRIX_NORMAL]      = rlGetLocationUniform(lightShader.id, RLG_SHADER_UNIFORM_MATRIX_NORMAL);
 
         // Get handles to GLSL uniform locations (fragment shader)
-        lightShader.locs[SHADER_LOC_COLOR_DIFFUSE]      = rlGetLocationUniform(lightShader.id, RLG_SHADER_UNIFORM_COLOR_DIFFUSE);
-        lightShader.locs[SHADER_LOC_COLOR_SPECULAR]     = rlGetLocationUniform(lightShader.id, RLG_SHADER_UNIFORM_COLOR_SPECULAR);
-        lightShader.locs[SHADER_LOC_COLOR_AMBIENT]      = rlGetLocationUniform(lightShader.id, RLG_SHADER_UNIFORM_COLOR_AMBIENT);
-        lightShader.locs[SHADER_LOC_MAP_ALBEDO]         = rlGetLocationUniform(lightShader.id, RLG_SHADER_SAMPLER2D_ALBEDO);
-        lightShader.locs[SHADER_LOC_MAP_METALNESS]      = rlGetLocationUniform(lightShader.id, RLG_SHADER_SAMPLER2D_METALNESS);
-        lightShader.locs[SHADER_LOC_MAP_NORMAL]         = rlGetLocationUniform(lightShader.id, RLG_SHADER_SAMPLER2D_NORMAL);
-        lightShader.locs[SHADER_LOC_MAP_ROUGHNESS]      = rlGetLocationUniform(lightShader.id, RLG_SHADER_SAMPLER2D_ROUGHNESS);
-        lightShader.locs[SHADER_LOC_MAP_OCCLUSION]      = rlGetLocationUniform(lightShader.id, RLG_SHADER_SAMPLER2D_OCCLUSION);
-        lightShader.locs[SHADER_LOC_MAP_EMISSION]       = rlGetLocationUniform(lightShader.id, RLG_SHADER_SAMPLER2D_EMISSION);
-        lightShader.locs[SHADER_LOC_MAP_HEIGHT]         = rlGetLocationUniform(lightShader.id, RLG_SHADER_SAMPLER2D_HEIGHT);
+        lightShader.locs[RLG_LOC_COLOR_AMBIENT]      = rlGetLocationUniform(lightShader.id, RLG_SHADER_UNIFORM_COLOR_AMBIENT);
+        lightShader.locs[RLG_LOC_VECTOR_VIEW]        = rlGetLocationUniform(lightShader.id, RLG_SHADER_UNIFORM_VIEW_POSITION);
+
+        lightShader.locs[RLG_LOC_COLOR_DIFFUSE]      = rlGetLocationUniform(lightShader.id, TextFormat("materials[%i].color", MATERIAL_MAP_ALBEDO));
+        lightShader.locs[RLG_LOC_COLOR_SPECULAR]     = rlGetLocationUniform(lightShader.id, TextFormat("materials[%i].color", MATERIAL_MAP_METALNESS));
+        lightShader.locs[RLG_LOC_COLOR_EMISSION]     = rlGetLocationUniform(lightShader.id, TextFormat("materials[%i].color", RLG_LOC_COLOR_EMISSION));
+
+        lightShader.locs[RLG_LOC_MAP_ALBEDO]         = rlGetLocationUniform(lightShader.id, TextFormat("materials[%i].texture", MATERIAL_MAP_ALBEDO));
+        lightShader.locs[RLG_LOC_MAP_METALNESS]      = rlGetLocationUniform(lightShader.id, TextFormat("materials[%i].texture", MATERIAL_MAP_METALNESS));
+        lightShader.locs[RLG_LOC_MAP_NORMAL]         = rlGetLocationUniform(lightShader.id, TextFormat("materials[%i].texture", MATERIAL_MAP_NORMAL));
+        lightShader.locs[RLG_LOC_MAP_ROUGHNESS]      = rlGetLocationUniform(lightShader.id, TextFormat("materials[%i].texture", MATERIAL_MAP_ROUGHNESS));
+        lightShader.locs[RLG_LOC_MAP_OCCLUSION]      = rlGetLocationUniform(lightShader.id, TextFormat("materials[%i].texture", MATERIAL_MAP_OCCLUSION));
+        lightShader.locs[RLG_LOC_MAP_EMISSION]       = rlGetLocationUniform(lightShader.id, TextFormat("materials[%i].texture", MATERIAL_MAP_EMISSION));
+        lightShader.locs[RLG_LOC_MAP_HEIGHT]         = rlGetLocationUniform(lightShader.id, TextFormat("materials[%i].texture", MATERIAL_MAP_HEIGHT));
+
+        lightShader.locs[RLG_LOC_METALNESS_SCALE]    = rlGetLocationUniform(lightShader.id, TextFormat("materials[%i].value", MATERIAL_MAP_METALNESS));
+        lightShader.locs[RLG_LOC_ROUGHNESS_SCALE]    = rlGetLocationUniform(lightShader.id, TextFormat("materials[%i].value", MATERIAL_MAP_ROUGHNESS));
+        lightShader.locs[RLG_LOC_AO_LIGHT_AFFECT]    = rlGetLocationUniform(lightShader.id, TextFormat("materials[%i].value", MATERIAL_MAP_OCCLUSION));
+        lightShader.locs[RLG_LOC_HEIGHT_SCALE]       = rlGetLocationUniform(lightShader.id, TextFormat("materials[%i].value", MATERIAL_MAP_HEIGHT));
+
+        // Definition of the lighting shader once initialization is successful
+        rlgCtx->shaders[RLG_SHADER_LIGHT] = lightShader;
     }
 
-    rlgCtx->lightShader = lightShader;
-
+    // Frees up space allocated for string formatting
 #   ifndef NO_EMBEDDED_SHADERS
 #   if GLSL_VERSION > 100
     if (vsFormated) free((void*)lightVS);
@@ -1327,40 +1363,26 @@ RLG_Context RLG_CreateContext(unsigned int count)
     if (fsFormated) free((void*)lightFS);
 #   endif //NO_EMBEDDED_SHADERS
 
-    // Get global lighting shader locations (and init viewPos vector)
-    rlgCtx->locViewPos = GetShaderLocation(rlgCtx->lightShader, "viewPos");
+    // Init default view position and ambient color
+    rlgCtx->colAmbient = (Vector3) { 0.1f, 0.1f, 0.1f };
     rlgCtx->viewPos = (Vector3) { 0 };
 
-    // Initialize material struct with zeroes
-    rlgCtx->material = (struct RLG_Material) { 0 };
+    SetShaderValue(lightShader,
+        lightShader.locs[RLG_LOC_COLOR_AMBIENT],
+        &rlgCtx->colAmbient, RL_SHADER_UNIFORM_VEC3);
 
-    // Retrieving global shader locations
-    rlgCtx->material.locs.parallaxMinLayers = GetShaderLocation(rlgCtx->lightShader, "parallaxMinLayers");
-    rlgCtx->material.locs.parallaxMaxLayers = GetShaderLocation(rlgCtx->lightShader, "parallaxMaxLayers");
-    rlgCtx->material.locs.useMetalnessMap = GetShaderLocation(rlgCtx->lightShader, "useMetalnessMap");
-    rlgCtx->material.locs.useRoughnessMap = GetShaderLocation(rlgCtx->lightShader, "useRoughnessMap");
-    rlgCtx->material.locs.useOcclusionMap = GetShaderLocation(rlgCtx->lightShader, "useOcclusionMap");
-    rlgCtx->material.locs.useEmissiveMap = GetShaderLocation(rlgCtx->lightShader, "useEmissiveMap");
-    rlgCtx->material.locs.useNormalMap = GetShaderLocation(rlgCtx->lightShader, "useNormalMap");
-    rlgCtx->material.locs.useHeightMap = GetShaderLocation(rlgCtx->lightShader, "useHeightMap");
-    rlgCtx->material.locs.heightScale = GetShaderLocation(rlgCtx->lightShader, "heightScale");
-    rlgCtx->material.locs.colEmissive = GetShaderLocation(rlgCtx->lightShader, "colEmissive");
-    rlgCtx->material.locs.colAmbient = GetShaderLocation(rlgCtx->lightShader, "colAmbient");
-    rlgCtx->material.locs.metalness = GetShaderLocation(rlgCtx->lightShader, "metalness");
-    rlgCtx->material.locs.roughness = GetShaderLocation(rlgCtx->lightShader, "roughness");
-    rlgCtx->material.locs.specular = GetShaderLocation(rlgCtx->lightShader, "specular");
+    // Retrieving and set special material uniforms locations
+    for (int i = 0; i < RLG_COUNT_MATERIAL_MAPS; i++)
+    {
+        rlgCtx->material.locs.useMaps[i] = GetShaderLocation(lightShader, TextFormat("materials[%i].active", i));
+    }
 
-    // Define default global uniforms (define only no zero by default)
-    rlgCtx->material.data.colAmbient = (Vector3) { 0.1f, 0.1f, 0.1f };
-    rlgCtx->material.data.heightScale = 0.05f;
-    rlgCtx->material.data.roughness = 1.0f;
-    rlgCtx->material.data.specular = 1.0f;
+    rlgCtx->material.locs.parallaxMinLayers = GetShaderLocation(lightShader, "parallaxMinLayers");
+    rlgCtx->material.locs.parallaxMaxLayers = GetShaderLocation(lightShader, "parallaxMaxLayers");
 
-    // Send default globals uniforms (no need to send zero-values)
-    SetShaderValue(rlgCtx->lightShader, rlgCtx->material.locs.heightScale, &rlgCtx->material.data.heightScale, SHADER_UNIFORM_FLOAT);
-    SetShaderValue(rlgCtx->lightShader, rlgCtx->material.locs.colAmbient, &rlgCtx->material.data.colAmbient, SHADER_UNIFORM_VEC3);
-    SetShaderValue(rlgCtx->lightShader, rlgCtx->material.locs.roughness, &rlgCtx->material.data.roughness, SHADER_UNIFORM_FLOAT);
-    SetShaderValue(rlgCtx->lightShader, rlgCtx->material.locs.specular, &rlgCtx->material.data.specular, SHADER_UNIFORM_FLOAT);
+    rlgCtx->material.data.useMaps[MATERIAL_MAP_ALBEDO] = true;
+    SetShaderValue(lightShader, rlgCtx->material.locs.useMaps[MATERIAL_MAP_ALBEDO],
+        &rlgCtx->material.data.useMaps[MATERIAL_MAP_ALBEDO], SHADER_UNIFORM_INT);
 
     // Allocation and initialization of the desired number of lights
     rlgCtx->lights = (struct RLG_Light*)calloc(count, sizeof(struct RLG_Light));
@@ -1386,53 +1408,74 @@ RLG_Context RLG_CreateContext(unsigned int count)
         light->data.shadow         = 0;
         light->data.enabled        = 0;
 
-        light->locs.vpMatrix       = GetShaderLocation(rlgCtx->lightShader, TextFormat("matLights[%i]", i));
-        light->locs.shadowMap      = GetShaderLocation(rlgCtx->lightShader, TextFormat("lights[%i].shadowMap", i));
-        light->locs.position       = GetShaderLocation(rlgCtx->lightShader, TextFormat("lights[%i].position", i));
-        light->locs.direction      = GetShaderLocation(rlgCtx->lightShader, TextFormat("lights[%i].direction", i));
-        light->locs.color          = GetShaderLocation(rlgCtx->lightShader, TextFormat("lights[%i].color", i));
-        light->locs.energy         = GetShaderLocation(rlgCtx->lightShader, TextFormat("lights[%i].energy", i));
-        light->locs.specular       = GetShaderLocation(rlgCtx->lightShader, TextFormat("lights[%i].specular", i));
-        light->locs.size           = GetShaderLocation(rlgCtx->lightShader, TextFormat("lights[%i].size", i));
-        light->locs.innerCutOff    = GetShaderLocation(rlgCtx->lightShader, TextFormat("lights[%i].innerCutOff", i));
-        light->locs.outerCutOff    = GetShaderLocation(rlgCtx->lightShader, TextFormat("lights[%i].outerCutOff", i));
-        light->locs.constant       = GetShaderLocation(rlgCtx->lightShader, TextFormat("lights[%i].constant", i));
-        light->locs.linear         = GetShaderLocation(rlgCtx->lightShader, TextFormat("lights[%i].linear", i));
-        light->locs.quadratic      = GetShaderLocation(rlgCtx->lightShader, TextFormat("lights[%i].quadratic", i));
-        light->locs.shadowMapTxlSz = GetShaderLocation(rlgCtx->lightShader, TextFormat("lights[%i].shadowMapTxlSz", i));
-        light->locs.depthBias      = GetShaderLocation(rlgCtx->lightShader, TextFormat("lights[%i].depthBias", i));
-        light->locs.type           = GetShaderLocation(rlgCtx->lightShader, TextFormat("lights[%i].type", i));
-        light->locs.shadow         = GetShaderLocation(rlgCtx->lightShader, TextFormat("lights[%i].shadow", i));
-        light->locs.enabled        = GetShaderLocation(rlgCtx->lightShader, TextFormat("lights[%i].enabled", i));
+        light->locs.vpMatrix       = GetShaderLocation(lightShader, TextFormat("matLights[%i]", i));
+        light->locs.shadowMap      = GetShaderLocation(lightShader, TextFormat("lights[%i].shadowMap", i));
+        light->locs.position       = GetShaderLocation(lightShader, TextFormat("lights[%i].position", i));
+        light->locs.direction      = GetShaderLocation(lightShader, TextFormat("lights[%i].direction", i));
+        light->locs.color          = GetShaderLocation(lightShader, TextFormat("lights[%i].color", i));
+        light->locs.energy         = GetShaderLocation(lightShader, TextFormat("lights[%i].energy", i));
+        light->locs.specular       = GetShaderLocation(lightShader, TextFormat("lights[%i].specular", i));
+        light->locs.size           = GetShaderLocation(lightShader, TextFormat("lights[%i].size", i));
+        light->locs.innerCutOff    = GetShaderLocation(lightShader, TextFormat("lights[%i].innerCutOff", i));
+        light->locs.outerCutOff    = GetShaderLocation(lightShader, TextFormat("lights[%i].outerCutOff", i));
+        light->locs.constant       = GetShaderLocation(lightShader, TextFormat("lights[%i].constant", i));
+        light->locs.linear         = GetShaderLocation(lightShader, TextFormat("lights[%i].linear", i));
+        light->locs.quadratic      = GetShaderLocation(lightShader, TextFormat("lights[%i].quadratic", i));
+        light->locs.shadowMapTxlSz = GetShaderLocation(lightShader, TextFormat("lights[%i].shadowMapTxlSz", i));
+        light->locs.depthBias      = GetShaderLocation(lightShader, TextFormat("lights[%i].depthBias", i));
+        light->locs.type           = GetShaderLocation(lightShader, TextFormat("lights[%i].type", i));
+        light->locs.shadow         = GetShaderLocation(lightShader, TextFormat("lights[%i].shadow", i));
+        light->locs.enabled        = GetShaderLocation(lightShader, TextFormat("lights[%i].enabled", i));
 
-        SetShaderValue(rlgCtx->lightShader, light->locs.color, &light->data.color, SHADER_UNIFORM_VEC3);
-        SetShaderValue(rlgCtx->lightShader, light->locs.energy, &light->data.energy, SHADER_UNIFORM_FLOAT);
-        SetShaderValue(rlgCtx->lightShader, light->locs.specular, &light->data.specular, SHADER_UNIFORM_FLOAT);
-        SetShaderValue(rlgCtx->lightShader, light->locs.innerCutOff, &light->data.innerCutOff, SHADER_UNIFORM_FLOAT);
-        SetShaderValue(rlgCtx->lightShader, light->locs.outerCutOff, &light->data.outerCutOff, SHADER_UNIFORM_FLOAT);
-        SetShaderValue(rlgCtx->lightShader, light->locs.constant, &light->data.constant, SHADER_UNIFORM_FLOAT);
+        SetShaderValue(lightShader, light->locs.color, &light->data.color, SHADER_UNIFORM_VEC3);
+        SetShaderValue(lightShader, light->locs.energy, &light->data.energy, SHADER_UNIFORM_FLOAT);
+        SetShaderValue(lightShader, light->locs.specular, &light->data.specular, SHADER_UNIFORM_FLOAT);
+        SetShaderValue(lightShader, light->locs.innerCutOff, &light->data.innerCutOff, SHADER_UNIFORM_FLOAT);
+        SetShaderValue(lightShader, light->locs.outerCutOff, &light->data.outerCutOff, SHADER_UNIFORM_FLOAT);
+        SetShaderValue(lightShader, light->locs.constant, &light->data.constant, SHADER_UNIFORM_FLOAT);
     }
 
     // Set light count
     rlgCtx->lightCount = count;
 
     // Load depth shader (used for shadow casting)
-    rlgCtx->depthShader = LoadShaderFromMemory(rlgCachedDepthVS, rlgCachedDepthFS);
+    rlgCtx->shaders[RLG_SHADER_DEPTH] = LoadShaderFromMemory(rlgCachedDepthVS, rlgCachedDepthFS);
 
     // Load shadow map shader (used to render shadow maps)
-    rlgCtx->shadowMapShader = LoadShaderFromMemory(rlgCachedShadowMapVS, rlgCachedShadowMapFS);
+    rlgCtx->shaders[RLG_SHADER_SHADOW_MAP] = LoadShaderFromMemory(rlgCachedShadowMapVS, rlgCachedShadowMapFS);
 
     rlgCtx->depthNear = 0.1f;
     rlgCtx->depthFar = 100.0f;
 
-    rlgCtx->locDepthNear = GetShaderLocation(rlgCtx->shadowMapShader, "near");
-    rlgCtx->locDepthFar = GetShaderLocation(rlgCtx->shadowMapShader, "far");
+    rlgCtx->locDepthNear = GetShaderLocation(rlgCtx->shaders[RLG_SHADER_SHADOW_MAP], "near");
+    rlgCtx->locDepthFar = GetShaderLocation(rlgCtx->shaders[RLG_SHADER_SHADOW_MAP], "far");
 
-    SetShaderValue(rlgCtx->shadowMapShader, rlgCtx->locDepthNear,
-        &rlgCtx->depthNear, SHADER_UNIFORM_FLOAT);
+    SetShaderValue(rlgCtx->shaders[RLG_SHADER_SHADOW_MAP],
+        rlgCtx->locDepthNear, &rlgCtx->depthNear, SHADER_UNIFORM_FLOAT);
 
-    SetShaderValue(rlgCtx->shadowMapShader, rlgCtx->locDepthFar,
-        &rlgCtx->depthFar, SHADER_UNIFORM_FLOAT);
+    SetShaderValue(rlgCtx->shaders[RLG_SHADER_SHADOW_MAP],
+        rlgCtx->locDepthFar, &rlgCtx->depthFar, SHADER_UNIFORM_FLOAT);
+
+    // Init default material maps
+
+    Texture defaultTexture = {
+        .id = rlGetTextureIdDefault(),
+        .width = 1, .height = 1, .mipmaps = 0,
+        .format = RL_PIXELFORMAT_UNCOMPRESSED_R8G8B8A8
+    };
+
+    rlgCtx->defaultMaps[MATERIAL_MAP_ALBEDO].texture = defaultTexture;
+    rlgCtx->defaultMaps[MATERIAL_MAP_ALBEDO].color = WHITE;
+    rlgCtx->defaultMaps[MATERIAL_MAP_METALNESS].texture = defaultTexture;
+    rlgCtx->defaultMaps[MATERIAL_MAP_METALNESS].value = 0.5f;
+    rlgCtx->defaultMaps[MATERIAL_MAP_ROUGHNESS].texture = defaultTexture;
+    rlgCtx->defaultMaps[MATERIAL_MAP_ROUGHNESS].value = 0.5f;
+    rlgCtx->defaultMaps[MATERIAL_MAP_OCCLUSION].texture = defaultTexture;
+    rlgCtx->defaultMaps[MATERIAL_MAP_OCCLUSION].value = 0.0f;
+    rlgCtx->defaultMaps[MATERIAL_MAP_EMISSION].texture = defaultTexture;
+    rlgCtx->defaultMaps[MATERIAL_MAP_EMISSION].color = BLACK;
+    rlgCtx->defaultMaps[MATERIAL_MAP_HEIGHT].texture = defaultTexture;
+    rlgCtx->defaultMaps[MATERIAL_MAP_HEIGHT].value = 0.05f;
 
     return (RLG_Context)rlgCtx;
 }
@@ -1441,22 +1484,22 @@ void RLG_DestroyContext(RLG_Context ctx)
 {
     struct RLG_Core *pCtx = (struct RLG_Core*)ctx;
 
-    if (IsShaderReady(pCtx->lightShader))
+    if (IsShaderReady(pCtx->shaders[RLG_SHADER_LIGHT]))
     {
-        UnloadShader(pCtx->lightShader);
-        pCtx->lightShader = (Shader) { 0 };
+        UnloadShader(pCtx->shaders[RLG_SHADER_LIGHT]);
+        pCtx->shaders[RLG_SHADER_LIGHT] = (Shader) { 0 };
     }
 
-    if (IsShaderReady(pCtx->depthShader))
+    if (IsShaderReady(pCtx->shaders[RLG_SHADER_DEPTH]))
     {
-        UnloadShader(pCtx->depthShader);
-        pCtx->depthShader = (Shader) { 0 };
+        UnloadShader(pCtx->shaders[RLG_SHADER_DEPTH]);
+        pCtx->shaders[RLG_SHADER_DEPTH] = (Shader) { 0 };
     }
 
-    if (IsShaderReady(pCtx->shadowMapShader))
+    if (IsShaderReady(pCtx->shaders[RLG_SHADER_SHADOW_MAP]))
     {
-        UnloadShader(pCtx->shadowMapShader);
-        pCtx->shadowMapShader = (Shader) { 0 };
+        UnloadShader(pCtx->shaders[RLG_SHADER_SHADOW_MAP]);
+        pCtx->shaders[RLG_SHADER_SHADOW_MAP] = (Shader) { 0 };
     }
 
     if (pCtx->lights != NULL)
@@ -1489,9 +1532,9 @@ RLG_Context RLG_GetContext(void)
     return (RLG_Context)rlgCtx;
 }
 
-void RLG_SetCustomShaderCode(RLG_Shader shaderType, const char *vsCode, const char *fsCode)
+void RLG_SetCustomShaderCode(RLG_Shader shader, const char *vsCode, const char *fsCode)
 {
-    switch (shaderType)
+    switch (shader)
     {
         case RLG_SHADER_LIGHT:
             rlgCachedLightVS = vsCode;
@@ -1509,29 +1552,19 @@ void RLG_SetCustomShaderCode(RLG_Shader shaderType, const char *vsCode, const ch
             break;
 
         default:
-            TraceLog(LOG_WARNING, "Unsupported 'shaderType' passed to 'RLG_SetCustomShader'");
+            TraceLog(LOG_WARNING, "Unsupported 'shader' passed to 'RLG_SetCustomShader'");
             break;
     }
 }
 
-const Shader* RLG_GetShader(RLG_Shader shaderType)
+const Shader* RLG_GetShader(RLG_Shader shader)
 {
-    switch (shaderType)
+    if (shader < 0 || shader >= RLG_COUNT_SHADERS)
     {
-        case RLG_SHADER_LIGHT:
-            return IsShaderReady(rlgCtx->lightShader) ? &rlgCtx->lightShader: NULL;
-
-        case RLG_SHADER_DEPTH:
-            return IsShaderReady(rlgCtx->depthShader) ? &rlgCtx->depthShader: NULL;
-
-        case RLG_SHADER_SHADOW_MAP:
-            return IsShaderReady(rlgCtx->shadowMapShader) ? &rlgCtx->shadowMapShader: NULL;
-
-        default:
-            break;
+        return NULL;
     }
 
-    return NULL;
+    return &rlgCtx->shaders[shader];
 }
 
 void RLG_SetViewPosition(float x, float y, float z)
@@ -1542,7 +1575,8 @@ void RLG_SetViewPosition(float x, float y, float z)
 void RLG_SetViewPositionV(Vector3 position)
 {
     rlgCtx->viewPos = position;
-    SetShaderValue(rlgCtx->lightShader, rlgCtx->locViewPos,
+    SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHT],
+        rlgCtx->shaders[RLG_SHADER_LIGHT].locs[RLG_LOC_VECTOR_VIEW],
         &rlgCtx->viewPos, SHADER_UNIFORM_VEC3);
 }
 
@@ -1551,228 +1585,96 @@ Vector3 RLG_GetViewPosition(void)
     return rlgCtx->viewPos;
 }
 
-void RLG_SetMap(RLG_MaterialMap map, bool active)
+void SetAmbientColor(Color color)
 {
-    int v = (int)active;
+    rlgCtx->colAmbient.x = (float)color.r/255.0f;
+    rlgCtx->colAmbient.y = (float)color.g/255.0f;
+    rlgCtx->colAmbient.z = (float)color.b/255.0f;
 
-    switch (map)
+    SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHT],
+        rlgCtx->shaders[RLG_SHADER_LIGHT].locs[RLG_LOC_COLOR_AMBIENT],
+        &rlgCtx->colAmbient, SHADER_UNIFORM_VEC3);
+}
+Color GetAmbientColor(void)
+{
+    Color color = { 0 };
+
+    color.r = rlgCtx->colAmbient.x*255.0f;
+    color.g = rlgCtx->colAmbient.y*255.0f;
+    color.b = rlgCtx->colAmbient.z*255.0f;
+    color.a = 255;
+
+    return color;
+}
+
+void SetParallaxLayers(int min, int max)
+{
+    rlgCtx->material.data.parallaxMinLayers = min;
+    rlgCtx->material.data.parallaxMaxLayers = max;
+
+    SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHT], rlgCtx->material.locs.parallaxMinLayers, &min, RL_SHADER_UNIFORM_INT);
+    SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHT], rlgCtx->material.locs.parallaxMaxLayers, &max, RL_SHADER_UNIFORM_INT);
+}
+
+void GetParallaxLayers(int* min, int* max)
+{
+    if (min != NULL) *min = rlgCtx->material.data.parallaxMinLayers;
+    if (max != NULL) *max = rlgCtx->material.data.parallaxMaxLayers;
+}
+
+void RLG_UseMap(MaterialMapIndex mapIndex, bool active)
+{
+    if (mapIndex >= 0 && mapIndex < RLG_COUNT_MATERIAL_MAPS)
     {
-        case RLG_MAP_METALNESS:
-            rlgCtx->material.data.useMetalnessMap = active;
-            SetShaderValue(rlgCtx->lightShader, rlgCtx->material.locs.useMetalnessMap, &v, SHADER_UNIFORM_INT);
-            break;
-
-        case RLG_MAP_ROUGHNESS:
-            rlgCtx->material.data.useRoughnessMap = active;
-            SetShaderValue(rlgCtx->lightShader, rlgCtx->material.locs.useRoughnessMap, &v, SHADER_UNIFORM_INT);
-            break;
-
-        case RLG_MAP_OCCLUSION:
-            rlgCtx->material.data.useOcclusionMap = active;
-            SetShaderValue(rlgCtx->lightShader, rlgCtx->material.locs.useOcclusionMap, &v, SHADER_UNIFORM_INT);
-            break;
-
-        case RLG_MAP_EMISSIVE:
-            rlgCtx->material.data.useEmissiveMap = active;
-            SetShaderValue(rlgCtx->lightShader, rlgCtx->material.locs.useEmissiveMap, &v, SHADER_UNIFORM_INT);
-            break;
-
-        case RLG_MAP_NORMAL:
-            rlgCtx->material.data.useNormalMap = active;
-            SetShaderValue(rlgCtx->lightShader, rlgCtx->material.locs.useNormalMap, &v, SHADER_UNIFORM_INT);
-            break;
-
-        case RLG_MAP_HEIGHT:
-            rlgCtx->material.data.useHeightMap = active;
-            SetShaderValue(rlgCtx->lightShader, rlgCtx->material.locs.useHeightMap, &v, SHADER_UNIFORM_INT);
-            break;
-
-        default:
-            break;
+        int v = (int)active;
+        rlgCtx->material.data.useMaps[mapIndex] = active;
+        SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHT], rlgCtx->material.locs.useMaps[mapIndex], &v, SHADER_UNIFORM_INT);
     }
 }
 
-bool RLG_IsMapEnabled(RLG_MaterialMap map)
+bool RLG_IsMapUsed(MaterialMapIndex mapIndex)
 {
     bool result = false;
 
-    switch (map)
+    if (mapIndex >= 0 && mapIndex < RLG_COUNT_MATERIAL_MAPS)
     {
-        case RLG_MAP_METALNESS:
-            result = rlgCtx->material.data.useMetalnessMap;
-            break;
-
-        case RLG_MAP_ROUGHNESS:
-            result = rlgCtx->material.data.useRoughnessMap;
-            break;
-
-        case RLG_MAP_OCCLUSION:
-            result = rlgCtx->material.data.useOcclusionMap;
-            break;
-
-        case RLG_MAP_EMISSIVE:
-            result = rlgCtx->material.data.useEmissiveMap;
-            break;
-
-        case RLG_MAP_NORMAL:
-            result = rlgCtx->material.data.useNormalMap;
-            break;
-
-        case RLG_MAP_HEIGHT:
-            result = rlgCtx->material.data.useHeightMap;
-            break;
-
-        default:
-            break;
+        result = rlgCtx->material.data.useMaps[mapIndex];
     }
 
     return result;
 }
 
-void RLG_SetMaterialValue(RLG_MaterialProperty property, float value)
+void RLG_UseDefaultMap(MaterialMapIndex mapIndex, bool active)
 {
-    switch (property)
+    if (mapIndex >= 0 || mapIndex < RLG_COUNT_MATERIAL_MAPS)
     {
-        case RLG_MAT_EMISSIVE_TINT:
-            rlgCtx->material.data.colEmissive = (Vector3) { value, value, value };
-            SetShaderValue(rlgCtx->lightShader, rlgCtx->material.locs.colEmissive,
-                &rlgCtx->material.data.colEmissive, SHADER_UNIFORM_VEC3);
-            break;
-
-        case RLG_MAT_AMBIENT_TINT:
-            rlgCtx->material.data.colAmbient = (Vector3) { value, value, value };
-            SetShaderValue(rlgCtx->lightShader, rlgCtx->material.locs.colAmbient,
-                &rlgCtx->material.data.colAmbient, SHADER_UNIFORM_VEC3);
-            break;
-
-        case RLG_MAT_METALNESS:
-            rlgCtx->material.data.metalness = value;
-            SetShaderValue(rlgCtx->lightShader, rlgCtx->material.locs.metalness,
-                &value, SHADER_UNIFORM_FLOAT);
-            break;
-
-        case RLG_MAT_ROUGHNESS:
-            rlgCtx->material.data.roughness = value;
-            SetShaderValue(rlgCtx->lightShader, rlgCtx->material.locs.roughness,
-                &value, SHADER_UNIFORM_FLOAT);
-            break;
-
-        case RLG_MAT_SPECULAR:
-            rlgCtx->material.data.specular = value;
-            SetShaderValue(rlgCtx->lightShader, rlgCtx->material.locs.specular,
-                &rlgCtx->material.data.specular, SHADER_UNIFORM_FLOAT);
-            break;
-
-        case RLG_MAT_HEIGHT_SCALE:
-            rlgCtx->material.data.heightScale = value;
-            SetShaderValue(rlgCtx->lightShader, rlgCtx->material.locs.heightScale,
-                &rlgCtx->material.data.heightScale, SHADER_UNIFORM_FLOAT);
-            break;
-
-        case RLG_MAT_HEIGHT_MIN_LAYERS:
-            rlgCtx->material.data.parallaxMinLayers = (int)(value + 0.5f);
-            SetShaderValue(rlgCtx->lightShader, rlgCtx->material.locs.parallaxMinLayers,
-                &rlgCtx->material.data.parallaxMinLayers, SHADER_UNIFORM_INT);
-            break;
-
-        case RLG_MAT_HEIGHT_MAX_LAYERS:
-            rlgCtx->material.data.parallaxMaxLayers = (int)(value + 0.5f);
-            SetShaderValue(rlgCtx->lightShader, rlgCtx->material.locs.parallaxMaxLayers,
-                &rlgCtx->material.data.parallaxMaxLayers, SHADER_UNIFORM_INT);
-            break;
-
-        default:
-            break;
+        rlgCtx->usedDefaultMaps[mapIndex] = active;
     }
 }
 
-void RLG_SetMaterialColor(RLG_MaterialProperty property, Color color)
+void RLG_SetDefaultMap(MaterialMapIndex mapIndex, MaterialMap map)
 {
-    Vector3 nCol = (Vector3) {
-        (float)color.r/255,
-        (float)color.g/255,
-        (float)color.b/255
-    };
-
-    switch (property)
+    if (mapIndex >= 0 || mapIndex < RLG_COUNT_MATERIAL_MAPS)
     {
-        case RLG_MAT_EMISSIVE_TINT:
-            rlgCtx->material.data.colEmissive = nCol;
-            SetShaderValue(rlgCtx->lightShader, rlgCtx->material.locs.colEmissive,
-                &nCol, SHADER_UNIFORM_VEC3);
-            break;
-
-        case RLG_MAT_AMBIENT_TINT:
-            rlgCtx->material.data.colAmbient = nCol;
-            SetShaderValue(rlgCtx->lightShader, rlgCtx->material.locs.colAmbient,
-                &nCol, SHADER_UNIFORM_VEC3);
-            break;
-
-        default:
-            break;
+        rlgCtx->defaultMaps[mapIndex] = map;
     }
 }
 
-float RLG_GetMaterialValue(RLG_MaterialProperty property)
+MaterialMap RLG_GetDefaultMap(MaterialMapIndex mapIndex)
 {
-    float result = 0.0f;
+    MaterialMap map = { 0 };
 
-    switch (property)
+    if (mapIndex >= 0 || mapIndex < RLG_COUNT_MATERIAL_MAPS)
     {
-        case RLG_MAT_METALNESS:
-            result = rlgCtx->material.data.metalness;
-            break;
-
-        case RLG_MAT_ROUGHNESS:
-            result = rlgCtx->material.data.roughness;
-            break;
-
-        case RLG_MAT_SPECULAR:
-            result = rlgCtx->material.data.specular;
-            break;
-
-        case RLG_MAT_HEIGHT_SCALE:
-            result = rlgCtx->material.data.heightScale;
-            break;
-
-        case RLG_MAT_HEIGHT_MIN_LAYERS:
-            result = rlgCtx->material.data.parallaxMinLayers;
-            break;
-
-        case RLG_MAT_HEIGHT_MAX_LAYERS:
-            result = rlgCtx->material.data.parallaxMaxLayers;
-            break;
-
-        default:
-            break;
+        map = rlgCtx->defaultMaps[mapIndex];
     }
 
-    return result;
+    return map;
 }
 
-Color RLG_GetMaterialColor(RLG_MaterialProperty property)
+bool RLG_IsDefaultMapUsed(MaterialMapIndex mapIndex)
 {
-    Color result = BLACK;
-
-    switch (property)
-    {
-        case RLG_MAT_EMISSIVE_TINT:
-            result.r = (unsigned char)(255*rlgCtx->material.data.colEmissive.x);
-            result.g = (unsigned char)(255*rlgCtx->material.data.colEmissive.y);
-            result.b = (unsigned char)(255*rlgCtx->material.data.colEmissive.z);
-            break;
-
-        case RLG_MAT_AMBIENT_TINT:
-            result.r = (unsigned char)(255*rlgCtx->material.data.colAmbient.x);
-            result.g = (unsigned char)(255*rlgCtx->material.data.colAmbient.y);
-            result.b = (unsigned char)(255*rlgCtx->material.data.colAmbient.z);
-            break;
-
-        default:
-            break;
-    }
-
-    return result;
+    return rlgCtx->usedDefaultMaps[mapIndex];
 }
 
 unsigned int RLG_GetLightcount(void)
@@ -1780,26 +1682,26 @@ unsigned int RLG_GetLightcount(void)
     return rlgCtx->lightCount;
 }
 
-void RLG_SetLight(unsigned int light, bool active)
+void RLG_UseLight(unsigned int light, bool active)
 {
     if (light >= rlgCtx->lightCount)
     {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_SetLight' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_UseLight' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
         return;
     }
 
     struct RLG_Light *l = &rlgCtx->lights[light];
 
     l->data.enabled = (int)active;
-    SetShaderValue(rlgCtx->lightShader, l->locs.enabled,
+    SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHT], l->locs.enabled,
         &l->data.enabled, SHADER_UNIFORM_INT);
 }
 
-bool RLG_IsLightEnabled(unsigned int light)
+bool RLG_IsLightUsed(unsigned int light)
 {
     if (light >= rlgCtx->lightCount)
     {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_IsLightEnabled' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_IsLightUsed' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
         return false;
     }
 
@@ -1817,7 +1719,7 @@ void RLG_ToggleLight(unsigned int light)
     struct RLG_Light *l = &rlgCtx->lights[light];
 
     l->data.enabled = !l->data.enabled;
-    SetShaderValue(rlgCtx->lightShader, l->locs.enabled,
+    SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHT], l->locs.enabled,
         &l->data.enabled, SHADER_UNIFORM_INT);
 }
 
@@ -1832,7 +1734,7 @@ void RLG_SetLightType(unsigned int light, RLG_LightType type)
     struct RLG_Light *l = &rlgCtx->lights[light];
 
     l->data.type = (int)type;
-    SetShaderValue(rlgCtx->lightShader, l->locs.type,
+    SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHT], l->locs.type,
         &l->data.type, SHADER_UNIFORM_INT);
 }
 
@@ -1861,51 +1763,51 @@ void RLG_SetLightValue(unsigned int light, RLG_LightProperty property, float val
     {
         case RLG_LIGHT_COLOR:
             l->data.color = (Vector3) { value, value, value };
-            SetShaderValue(rlgCtx->lightShader, l->locs.color,
+            SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHT], l->locs.color,
                 &l->data.color, SHADER_UNIFORM_VEC3);
             break;
 
         case RLG_LIGHT_ENERGY:
             l->data.energy = value;
-            SetShaderValue(rlgCtx->lightShader, l->locs.energy,
+            SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHT], l->locs.energy,
                 &l->data.energy, SHADER_UNIFORM_FLOAT);
             break;
 
         case RLG_LIGHT_SPECULAR:
             l->data.specular = value;
-            SetShaderValue(rlgCtx->lightShader, l->locs.specular,
+            SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHT], l->locs.specular,
                 &l->data.specular, SHADER_UNIFORM_FLOAT);
             break;
 
         case RLG_LIGHT_SIZE:
             l->data.size = value;
-            SetShaderValue(rlgCtx->lightShader, l->locs.size,
+            SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHT], l->locs.size,
                 &l->data.size, SHADER_UNIFORM_FLOAT);
             break;
 
         case RLG_LIGHT_INNER_CUTOFF:
             l->data.innerCutOff = cosf(value*DEG2RAD);
-            SetShaderValue(rlgCtx->lightShader, l->locs.innerCutOff,
+            SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHT], l->locs.innerCutOff,
                 &l->data.innerCutOff, SHADER_UNIFORM_FLOAT);
             break;
 
         case RLG_LIGHT_OUTER_CUTOFF:
             l->data.outerCutOff = cosf(value*DEG2RAD);
-            SetShaderValue(rlgCtx->lightShader, l->locs.outerCutOff,
+            SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHT], l->locs.outerCutOff,
                 &l->data.outerCutOff, SHADER_UNIFORM_FLOAT);
             break;
 
         case RLG_LIGHT_ATTENUATION_CONSTANT:
             l->data.constant = value;
-            SetShaderValue(rlgCtx->lightShader, l->locs.constant, &value, SHADER_UNIFORM_FLOAT);
+            SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHT], l->locs.constant, &value, SHADER_UNIFORM_FLOAT);
 
         case RLG_LIGHT_ATTENUATION_LINEAR:
             l->data.linear = value;
-            SetShaderValue(rlgCtx->lightShader, l->locs.linear, &value, SHADER_UNIFORM_FLOAT);
+            SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHT], l->locs.linear, &value, SHADER_UNIFORM_FLOAT);
 
         case RLG_LIGHT_ATTENUATION_QUADRATIC:
             l->data.quadratic = value;
-            SetShaderValue(rlgCtx->lightShader, l->locs.quadratic, &value, SHADER_UNIFORM_FLOAT);
+            SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHT], l->locs.quadratic, &value, SHADER_UNIFORM_FLOAT);
             break;
 
         default:
@@ -1928,19 +1830,19 @@ void RLG_SetLightXYZ(unsigned int light, RLG_LightProperty property, float x, fl
     {
         case RLG_LIGHT_POSITION:
             l->data.position = value;
-            SetShaderValue(rlgCtx->lightShader, l->locs.position,
+            SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHT], l->locs.position,
                 &value, SHADER_UNIFORM_VEC3);
             break;
 
         case RLG_LIGHT_DIRECTION:
             l->data.direction = value;
-            SetShaderValue(rlgCtx->lightShader, l->locs.direction,
+            SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHT], l->locs.direction,
                 &value, SHADER_UNIFORM_VEC3);
             break;
 
         case RLG_LIGHT_COLOR:
             l->data.color = value;
-            SetShaderValue(rlgCtx->lightShader, l->locs.color,
+            SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHT], l->locs.color,
                 &value, SHADER_UNIFORM_VEC3);
             break;
 
@@ -1948,9 +1850,9 @@ void RLG_SetLightXYZ(unsigned int light, RLG_LightProperty property, float x, fl
             l->data.linear = y;
             l->data.constant = x;
             l->data.quadratic = z;
-            SetShaderValue(rlgCtx->lightShader, l->locs.linear, &y, SHADER_UNIFORM_FLOAT);
-            SetShaderValue(rlgCtx->lightShader, l->locs.constant, &x, SHADER_UNIFORM_FLOAT);
-            SetShaderValue(rlgCtx->lightShader, l->locs.quadratic, &z, SHADER_UNIFORM_FLOAT);
+            SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHT], l->locs.linear, &y, SHADER_UNIFORM_FLOAT);
+            SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHT], l->locs.constant, &x, SHADER_UNIFORM_FLOAT);
+            SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHT], l->locs.quadratic, &z, SHADER_UNIFORM_FLOAT);
             break;
 
         default:
@@ -1972,19 +1874,19 @@ void RLG_SetLightVec3(unsigned int light, RLG_LightProperty property, Vector3 va
     {
         case RLG_LIGHT_POSITION:
             l->data.position = value;
-            SetShaderValue(rlgCtx->lightShader, l->locs.position,
+            SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHT], l->locs.position,
                 &value, SHADER_UNIFORM_VEC3);
             break;
 
         case RLG_LIGHT_DIRECTION:
             l->data.direction = value;
-            SetShaderValue(rlgCtx->lightShader, l->locs.direction,
+            SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHT], l->locs.direction,
                 &value, SHADER_UNIFORM_VEC3);
             break;
 
         case RLG_LIGHT_COLOR:
             l->data.color = value;
-            SetShaderValue(rlgCtx->lightShader, l->locs.color,
+            SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHT], l->locs.color,
                 &value, SHADER_UNIFORM_VEC3);
             break;
 
@@ -1992,9 +1894,9 @@ void RLG_SetLightVec3(unsigned int light, RLG_LightProperty property, Vector3 va
             l->data.linear = value.y;
             l->data.constant = value.x;
             l->data.quadratic = value.z;
-            SetShaderValue(rlgCtx->lightShader, l->locs.linear, &value.y, SHADER_UNIFORM_FLOAT);
-            SetShaderValue(rlgCtx->lightShader, l->locs.constant, &value.x, SHADER_UNIFORM_FLOAT);
-            SetShaderValue(rlgCtx->lightShader, l->locs.quadratic, &value.z, SHADER_UNIFORM_FLOAT);
+            SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHT], l->locs.linear, &value.y, SHADER_UNIFORM_FLOAT);
+            SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHT], l->locs.constant, &value.x, SHADER_UNIFORM_FLOAT);
+            SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHT], l->locs.quadratic, &value.z, SHADER_UNIFORM_FLOAT);
             break;
 
         default:
@@ -2018,7 +1920,7 @@ void RLG_SetLightColor(unsigned int light, Color color)
     struct RLG_Light *l = &rlgCtx->lights[light];
 
     l->data.color = nCol;
-    SetShaderValue(rlgCtx->lightShader, l->locs.color,
+    SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHT], l->locs.color,
         &nCol, SHADER_UNIFORM_VEC3);
 }
 
@@ -2147,7 +2049,7 @@ void RLG_LightTranslate(unsigned int light, float x, float y, float z)
     l->data.position.y += y;
     l->data.position.z += z;
 
-    SetShaderValue(rlgCtx->lightShader, l->locs.position,
+    SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHT], l->locs.position,
         &l->data.position, SHADER_UNIFORM_VEC3);
 }
 
@@ -2164,7 +2066,7 @@ void RLG_LightTranslateV(unsigned int light, Vector3 v)
     l->data.position.y += v.y;
     l->data.position.z += v.z;
 
-    SetShaderValue(rlgCtx->lightShader, l->locs.position,
+    SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHT], l->locs.position,
         &l->data.position, SHADER_UNIFORM_VEC3);
 }
 
@@ -2184,7 +2086,7 @@ void RLG_LightRotateX(unsigned int light, float degrees)
     l->data.direction.y = l->data.direction.y*c + l->data.direction.z*s;
     l->data.direction.z = -l->data.direction.y*s + l->data.direction.z*c;
 
-    SetShaderValue(rlgCtx->lightShader, l->locs.direction,
+    SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHT], l->locs.direction,
         &l->data.direction, SHADER_UNIFORM_VEC3);
 }
 
@@ -2204,7 +2106,7 @@ void RLG_LightRotateY(unsigned int light, float degrees)
     l->data.direction.x = l->data.direction.x*c - l->data.direction.z*s;
     l->data.direction.z = l->data.direction.x*s + l->data.direction.z*c;
 
-    SetShaderValue(rlgCtx->lightShader, l->locs.direction,
+    SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHT], l->locs.direction,
         &l->data.direction, SHADER_UNIFORM_VEC3);
 }
 
@@ -2224,7 +2126,7 @@ void RLG_LightRotateZ(unsigned int light, float degrees)
     l->data.direction.x = l->data.direction.x*c + l->data.direction.y*s;
     l->data.direction.y = -l->data.direction.x*s + l->data.direction.y*c;
 
-    SetShaderValue(rlgCtx->lightShader, l->locs.direction,
+    SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHT], l->locs.direction,
         &l->data.direction, SHADER_UNIFORM_VEC3);
 }
 
@@ -2267,7 +2169,7 @@ void RLG_LightRotate(unsigned int light, Vector3 axis, float degrees)
         rotatedQuat.x, rotatedQuat.y, rotatedQuat.z
     });
 
-    SetShaderValue(rlgCtx->lightShader, l->locs.direction,
+    SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHT], l->locs.direction,
         &l->data.direction, SHADER_UNIFORM_VEC3);
 }
 
@@ -2289,7 +2191,7 @@ void RLG_SetLightTargetV(unsigned int light, Vector3 targetPosition)
     l->data.direction = Vector3Normalize(Vector3Subtract(
         targetPosition, l->data.position));
 
-    SetShaderValue(rlgCtx->lightShader, l->locs.direction,
+    SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHT], l->locs.direction,
         &l->data.direction, SHADER_UNIFORM_VEC3);
 }
 
@@ -2347,7 +2249,7 @@ void RLG_EnableShadow(unsigned int light, int shadowMapResolution)
 
         // REVIEW: Should this value be modifiable by the user?
         float texelSize = 1.0f/shadowMapResolution;
-        SetShaderValue(rlgCtx->lightShader, l->locs.shadowMapTxlSz,
+        SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHT], l->locs.shadowMapTxlSz,
             &texelSize, SHADER_UNIFORM_FLOAT);
 
         // NOTE: This is a rough approximation, other factors may affect this variable.
@@ -2355,12 +2257,12 @@ void RLG_EnableShadow(unsigned int light, int shadowMapResolution)
         //       taking into account factors such as the distance between the
         //       light and the fragment position.
         l->data.depthBias = 0.1f*shadowMapResolution*tan(acosf(l->data.outerCutOff));
-        SetShaderValue(rlgCtx->lightShader, l->locs.depthBias,
+        SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHT], l->locs.depthBias,
             &l->data.depthBias, SHADER_UNIFORM_FLOAT);
     }
 
     l->data.shadow = 1;
-    SetShaderValue(rlgCtx->lightShader, l->locs.shadow,
+    SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHT], l->locs.shadow,
         &l->data.shadow, SHADER_UNIFORM_INT);
 }
 
@@ -2375,7 +2277,7 @@ void RLG_DisableShadow(unsigned int light)
     struct RLG_Light *l = &rlgCtx->lights[light];
 
     l->data.shadow = 0;
-    SetShaderValue(rlgCtx->lightShader, l->locs.shadow,
+    SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHT], l->locs.shadow,
         &l->data.shadow, SHADER_UNIFORM_INT);
 }
 
@@ -2401,7 +2303,7 @@ void RLG_SetShadowBias(unsigned int light, float value)
     struct RLG_Light *l = &rlgCtx->lights[light];
 
     l->data.depthBias = value;
-    SetShaderValue(rlgCtx->lightShader, l->locs.depthBias,
+    SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHT], l->locs.depthBias,
         &value, SHADER_UNIFORM_FLOAT);
 }
 
@@ -2460,7 +2362,7 @@ void RLG_BeginShadowCast(unsigned int light)
     rlDisableColorBlend();
 //
     Matrix viewProj = MatrixMultiply(matView, rlGetMatrixProjection());
-    SetShaderValueMatrix(rlgCtx->lightShader, l->locs.vpMatrix, viewProj);
+    SetShaderValueMatrix(rlgCtx->shaders[RLG_SHADER_LIGHT], l->locs.vpMatrix, viewProj);
 //
 }
 
@@ -2502,18 +2404,18 @@ void RLG_DrawShadowMapEx(unsigned int light, int x, int y, int w, int h, float n
     if (near != rlgCtx->depthNear)
     {
         rlgCtx->depthNear = near;
-        SetShaderValue(rlgCtx->shadowMapShader, rlgCtx->locDepthNear,
+        SetShaderValue(rlgCtx->shaders[RLG_SHADER_SHADOW_MAP], rlgCtx->locDepthNear,
             &rlgCtx->depthNear, SHADER_UNIFORM_FLOAT);
     }
 
     if (far != rlgCtx->depthFar)
     {
         rlgCtx->depthFar = far;
-        SetShaderValue(rlgCtx->shadowMapShader, rlgCtx->locDepthFar,
+        SetShaderValue(rlgCtx->shaders[RLG_SHADER_SHADOW_MAP], rlgCtx->locDepthFar,
             &rlgCtx->depthFar, SHADER_UNIFORM_FLOAT);
     }
 
-    BeginShaderMode(rlgCtx->shadowMapShader);
+    BeginShaderMode(rlgCtx->shaders[RLG_SHADER_SHADOW_MAP]);
     rlBegin(RL_QUADS);
 
         rlSetTexture(rlgCtx->lights[light].data.shadowMap.depth.id);
@@ -2532,7 +2434,7 @@ void RLG_DrawShadowMapEx(unsigned int light, int x, int y, int w, int h, float n
 void RLG_CastMesh(Mesh mesh, Matrix transform)
 {
     // Bind shader program
-    rlEnableShader(rlgCtx->depthShader.id);
+    rlEnableShader(rlgCtx->shaders[RLG_SHADER_DEPTH].id);
 
     // Get a copy of current matrices to work with,
     // just in case stereo render is required, and we need to modify them
@@ -2557,8 +2459,8 @@ void RLG_CastMesh(Mesh mesh, Matrix transform)
     {
         // Bind mesh VBO data: vertex position (shader-location = 0)
         rlEnableVertexBuffer(mesh.vboId[0]);
-        rlSetVertexAttribute(rlgCtx->depthShader.locs[SHADER_LOC_VERTEX_POSITION], 3, RL_FLOAT, 0, 0, 0);
-        rlEnableVertexAttribute(rlgCtx->depthShader.locs[SHADER_LOC_VERTEX_POSITION]);
+        rlSetVertexAttribute(rlgCtx->shaders[RLG_SHADER_DEPTH].locs[RLG_LOC_VERTEX_POSITION], 3, RL_FLOAT, 0, 0, 0);
+        rlEnableVertexAttribute(rlgCtx->shaders[RLG_SHADER_DEPTH].locs[RLG_LOC_VERTEX_POSITION]);
 
         // If vertex indices exist, bine the VBO containing the indices
         if (mesh.indices != NULL) rlEnableVertexBufferElement(mesh.vboId[6]);
@@ -2579,7 +2481,7 @@ void RLG_CastMesh(Mesh mesh, Matrix transform)
         }
 
         // Send combined model-view-projection matrix to shader
-        rlSetUniformMatrix(rlgCtx->depthShader.locs[SHADER_LOC_MATRIX_MVP], matModelViewProjection);
+        rlSetUniformMatrix(rlgCtx->shaders[RLG_SHADER_DEPTH].locs[RLG_LOC_MATRIX_MVP], matModelViewProjection);
 
         // Draw mesh
         if (mesh.indices != NULL) rlDrawVertexArrayElements(0, mesh.triangleCount*3, 0);
@@ -2625,12 +2527,12 @@ void RLG_CastModelEx(Model model, Vector3 position, Vector3 rotationAxis, float 
 void RLG_DrawMesh(Mesh mesh, Material material, Matrix transform)
 {
     // Bind shader program
-    rlEnableShader(rlgCtx->lightShader.id);
+    rlEnableShader(rlgCtx->shaders[RLG_SHADER_LIGHT].id);
 
     // Send required data to shader (matrices, values)
     //-----------------------------------------------------
     // Upload to shader material.data.colDiffuse
-    if (rlgCtx->lightShader.locs[SHADER_LOC_COLOR_DIFFUSE] != -1)
+    if (rlgCtx->shaders[RLG_SHADER_LIGHT].locs[RLG_LOC_COLOR_DIFFUSE] != -1)
     {
         float values[4] = {
             (float)material.maps[MATERIAL_MAP_DIFFUSE].color.r/255.0f,
@@ -2639,20 +2541,113 @@ void RLG_DrawMesh(Mesh mesh, Material material, Matrix transform)
             (float)material.maps[MATERIAL_MAP_DIFFUSE].color.a/255.0f
         };
 
-        rlSetUniform(rlgCtx->lightShader.locs[SHADER_LOC_COLOR_DIFFUSE], values, SHADER_UNIFORM_VEC4, 1);
+        rlSetUniform(rlgCtx->shaders[RLG_SHADER_LIGHT].locs[RLG_LOC_COLOR_DIFFUSE], values, SHADER_UNIFORM_VEC4, 1);
     }
 
     // Upload to shader material.data.colSpecular (if location available)
-    if (rlgCtx->lightShader.locs[SHADER_LOC_COLOR_SPECULAR] != -1)
+    if (rlgCtx->shaders[RLG_SHADER_LIGHT].locs[RLG_LOC_COLOR_SPECULAR] != -1)
     {
-        float values[4] = {
-            (float)material.maps[MATERIAL_MAP_SPECULAR].color.r/255.0f,
-            (float)material.maps[MATERIAL_MAP_SPECULAR].color.g/255.0f,
-            (float)material.maps[MATERIAL_MAP_SPECULAR].color.b/255.0f,
-            (float)material.maps[MATERIAL_MAP_SPECULAR].color.a/255.0f
-        };
+        float values[4] = { };
 
-        rlSetUniform(rlgCtx->lightShader.locs[SHADER_LOC_COLOR_SPECULAR], values, SHADER_UNIFORM_VEC4, 1);
+        if (rlgCtx->usedDefaultMaps[MATERIAL_MAP_METALNESS])
+        {
+            values[0] = (float)rlgCtx->defaultMaps[MATERIAL_MAP_METALNESS].color.r/255.0f;
+            values[1] = (float)rlgCtx->defaultMaps[MATERIAL_MAP_METALNESS].color.g/255.0f;
+            values[2] = (float)rlgCtx->defaultMaps[MATERIAL_MAP_METALNESS].color.b/255.0f;
+            values[3] = (float)rlgCtx->defaultMaps[MATERIAL_MAP_METALNESS].color.a/255.0f;
+        }
+        else
+        {
+            values[0] = (float)material.maps[MATERIAL_MAP_SPECULAR].color.r/255.0f;
+            values[1] = (float)material.maps[MATERIAL_MAP_SPECULAR].color.g/255.0f;
+            values[2] = (float)material.maps[MATERIAL_MAP_SPECULAR].color.b/255.0f;
+            values[3] = (float)material.maps[MATERIAL_MAP_SPECULAR].color.a/255.0f;
+        }
+
+        rlSetUniform(rlgCtx->shaders[RLG_SHADER_LIGHT].locs[RLG_LOC_COLOR_SPECULAR], values, SHADER_UNIFORM_VEC4, 1);
+    }
+
+    // Upload to shader material.data.colEmission (if location available)
+    if (rlgCtx->shaders[RLG_SHADER_LIGHT].locs[RLG_LOC_COLOR_EMISSION] != -1)
+    {
+        float values[4] = { };
+
+        if (rlgCtx->usedDefaultMaps[MATERIAL_MAP_EMISSION])
+        {
+            values[0] = (float)rlgCtx->defaultMaps[MATERIAL_MAP_EMISSION].color.r/255.0f;
+            values[1] = (float)rlgCtx->defaultMaps[MATERIAL_MAP_EMISSION].color.g/255.0f;
+            values[2] = (float)rlgCtx->defaultMaps[MATERIAL_MAP_EMISSION].color.b/255.0f;
+            values[3] = (float)rlgCtx->defaultMaps[MATERIAL_MAP_EMISSION].color.a/255.0f;
+        }
+        else
+        {
+            values[0] = (float)material.maps[MATERIAL_MAP_EMISSION].color.r/255.0f;
+            values[1] = (float)material.maps[MATERIAL_MAP_EMISSION].color.g/255.0f;
+            values[2] = (float)material.maps[MATERIAL_MAP_EMISSION].color.b/255.0f;
+            values[3] = (float)material.maps[MATERIAL_MAP_EMISSION].color.a/255.0f;
+        }
+
+        rlSetUniform(rlgCtx->shaders[RLG_SHADER_LIGHT].locs[RLG_LOC_COLOR_EMISSION], values, SHADER_UNIFORM_VEC4, 1);
+    }
+
+    // Upload to shader material.data.metalness (if location available)
+    if (rlgCtx->shaders[RLG_SHADER_LIGHT].locs[RLG_LOC_METALNESS_SCALE] != -1)
+    {
+        if (rlgCtx->usedDefaultMaps[MATERIAL_MAP_METALNESS])
+        {
+            rlSetUniform(rlgCtx->shaders[RLG_SHADER_LIGHT].locs[RLG_LOC_METALNESS_SCALE],
+                &rlgCtx->defaultMaps[MATERIAL_MAP_METALNESS].value, SHADER_UNIFORM_FLOAT, 1);
+        }
+        else
+        {
+            rlSetUniform(rlgCtx->shaders[RLG_SHADER_LIGHT].locs[RLG_LOC_METALNESS_SCALE],
+                &material.maps[MATERIAL_MAP_METALNESS].value, SHADER_UNIFORM_FLOAT, 1);
+        }
+    }
+
+    // Upload to shader material.data.roughness (if location available)
+    if (rlgCtx->shaders[RLG_SHADER_LIGHT].locs[RLG_LOC_ROUGHNESS_SCALE] != -1)
+    {
+        if (rlgCtx->usedDefaultMaps[MATERIAL_MAP_ROUGHNESS])
+        {
+            rlSetUniform(rlgCtx->shaders[RLG_SHADER_LIGHT].locs[RLG_LOC_ROUGHNESS_SCALE],
+                &rlgCtx->defaultMaps[MATERIAL_MAP_ROUGHNESS].value, SHADER_UNIFORM_FLOAT, 1);
+        }
+        else
+        {
+            rlSetUniform(rlgCtx->shaders[RLG_SHADER_LIGHT].locs[RLG_LOC_ROUGHNESS_SCALE],
+                &material.maps[MATERIAL_MAP_ROUGHNESS].value, SHADER_UNIFORM_FLOAT, 1);
+        }
+    }
+
+    // Upload to shader material.data.aoLightAffect (if location available)
+    if (rlgCtx->shaders[RLG_SHADER_LIGHT].locs[RLG_LOC_AO_LIGHT_AFFECT] != -1)
+    {
+        if (rlgCtx->usedDefaultMaps[MATERIAL_MAP_OCCLUSION])
+        {
+            rlSetUniform(rlgCtx->shaders[RLG_SHADER_LIGHT].locs[RLG_LOC_AO_LIGHT_AFFECT],
+                &rlgCtx->defaultMaps[MATERIAL_MAP_OCCLUSION].value, SHADER_UNIFORM_FLOAT, 1);
+        }
+        else
+        {
+            rlSetUniform(rlgCtx->shaders[RLG_SHADER_LIGHT].locs[RLG_LOC_AO_LIGHT_AFFECT],
+                &material.maps[MATERIAL_MAP_OCCLUSION].value, SHADER_UNIFORM_FLOAT, 1);
+        }
+    }
+
+    // Upload to shader material.data.heightScale (if location available)
+    if (rlgCtx->shaders[RLG_SHADER_LIGHT].locs[RLG_LOC_HEIGHT_SCALE] != -1)
+    {
+        if (rlgCtx->usedDefaultMaps[MATERIAL_MAP_HEIGHT])
+        {
+            rlSetUniform(rlgCtx->shaders[RLG_SHADER_LIGHT].locs[RLG_LOC_HEIGHT_SCALE],
+                &rlgCtx->defaultMaps[MATERIAL_MAP_HEIGHT].value, SHADER_UNIFORM_FLOAT, 1);
+        }
+        else
+        {
+            rlSetUniform(rlgCtx->shaders[RLG_SHADER_LIGHT].locs[RLG_LOC_HEIGHT_SCALE],
+                &material.maps[MATERIAL_MAP_HEIGHT].value, SHADER_UNIFORM_FLOAT, 1);
+        }
     }
 
     // Get a copy of current matrices to work with,
@@ -2665,12 +2660,17 @@ void RLG_DrawMesh(Mesh mesh, Material material, Matrix transform)
     Matrix matModelView = MatrixIdentity();
     Matrix matProjection = rlGetMatrixProjection();
 
-    // Upload view and projection matrices (if locations available)
-    if (rlgCtx->lightShader.locs[SHADER_LOC_MATRIX_VIEW] != -1) rlSetUniformMatrix(rlgCtx->lightShader.locs[SHADER_LOC_MATRIX_VIEW], matView);
-    if (rlgCtx->lightShader.locs[SHADER_LOC_MATRIX_PROJECTION] != -1) rlSetUniformMatrix(rlgCtx->lightShader.locs[SHADER_LOC_MATRIX_PROJECTION], matProjection);
+    // Upload view matrix (if location available)
+    if (rlgCtx->shaders[RLG_SHADER_LIGHT].locs[RLG_LOC_MATRIX_VIEW] != -1)
+        rlSetUniformMatrix(rlgCtx->shaders[RLG_SHADER_LIGHT].locs[RLG_LOC_MATRIX_VIEW], matView);
 
-    // Model transformation matrix is sent to shader uniform location: SHADER_LOC_MATRIX_MODEL
-    if (rlgCtx->lightShader.locs[SHADER_LOC_MATRIX_MODEL] != -1) rlSetUniformMatrix(rlgCtx->lightShader.locs[SHADER_LOC_MATRIX_MODEL], transform);
+    // Upload projection matrix (if location available)
+    if (rlgCtx->shaders[RLG_SHADER_LIGHT].locs[RLG_LOC_MATRIX_PROJECTION] != -1)
+        rlSetUniformMatrix(rlgCtx->shaders[RLG_SHADER_LIGHT].locs[RLG_LOC_MATRIX_PROJECTION], matProjection);
+
+    // Model transformation matrix is sent to shader uniform location: RLG_LOC_MATRIX_MODEL
+    if (rlgCtx->shaders[RLG_SHADER_LIGHT].locs[RLG_LOC_MATRIX_MODEL] != -1)
+        rlSetUniformMatrix(rlgCtx->shaders[RLG_SHADER_LIGHT].locs[RLG_LOC_MATRIX_MODEL], transform);
 
     // Accumulate several model transformations:
     //    transform: model transformation provided (includes DrawModel() params combined with model.transform)
@@ -2681,7 +2681,8 @@ void RLG_DrawMesh(Mesh mesh, Material material, Matrix transform)
     matModelView = MatrixMultiply(matModel, matView);
 
     // Upload model normal matrix (if locations available)
-    if (rlgCtx->lightShader.locs[SHADER_LOC_MATRIX_NORMAL] != -1) rlSetUniformMatrix(rlgCtx->lightShader.locs[SHADER_LOC_MATRIX_NORMAL], MatrixTranspose(MatrixInvert(matModel)));
+    if (rlgCtx->shaders[RLG_SHADER_LIGHT].locs[RLG_LOC_MATRIX_NORMAL] != -1)
+        rlSetUniformMatrix(rlgCtx->shaders[RLG_SHADER_LIGHT].locs[RLG_LOC_MATRIX_NORMAL], MatrixTranspose(MatrixInvert(matModel)));
     //-----------------------------------------------------
 
     // Bind active texture maps (if available)
@@ -2694,10 +2695,19 @@ void RLG_DrawMesh(Mesh mesh, Material material, Matrix transform)
 
             // Enable texture for active slot
             if ((i == MATERIAL_MAP_IRRADIANCE) || (i == MATERIAL_MAP_PREFILTER) || (i == MATERIAL_MAP_CUBEMAP))
-                rlEnableTextureCubemap(material.maps[i].texture.id);
-            else rlEnableTexture(material.maps[i].texture.id);
+            {
+                rlEnableTextureCubemap((rlgCtx->usedDefaultMaps[i])
+                    ? rlgCtx->defaultMaps[i].texture.id
+                    : material.maps[i].texture.id);
+            }
+            else
+            {
+                rlEnableTexture((rlgCtx->usedDefaultMaps[i])
+                    ? rlgCtx->defaultMaps[i].texture.id
+                    : material.maps[i].texture.id);
+            }
 
-            rlSetUniform(rlgCtx->lightShader.locs[SHADER_LOC_MAP_DIFFUSE + i], &i, SHADER_UNIFORM_INT, 1);
+            rlSetUniform(rlgCtx->shaders[RLG_SHADER_LIGHT].locs[RLG_LOC_MAP_ALBEDO + i], &i, SHADER_UNIFORM_INT, 1);
         }
     }
 
@@ -2723,55 +2733,55 @@ void RLG_DrawMesh(Mesh mesh, Material material, Matrix transform)
     {
         // Bind mesh VBO data: vertex position (shader-location = 0)
         rlEnableVertexBuffer(mesh.vboId[0]);
-        rlSetVertexAttribute(rlgCtx->lightShader.locs[SHADER_LOC_VERTEX_POSITION], 3, RL_FLOAT, 0, 0, 0);
-        rlEnableVertexAttribute(rlgCtx->lightShader.locs[SHADER_LOC_VERTEX_POSITION]);
+        rlSetVertexAttribute(rlgCtx->shaders[RLG_SHADER_LIGHT].locs[RLG_LOC_VERTEX_POSITION], 3, RL_FLOAT, 0, 0, 0);
+        rlEnableVertexAttribute(rlgCtx->shaders[RLG_SHADER_LIGHT].locs[RLG_LOC_VERTEX_POSITION]);
 
         // Bind mesh VBO data: vertex texcoords (shader-location = 1)
         rlEnableVertexBuffer(mesh.vboId[1]);
-        rlSetVertexAttribute(rlgCtx->lightShader.locs[SHADER_LOC_VERTEX_TEXCOORD01], 2, RL_FLOAT, 0, 0, 0);
-        rlEnableVertexAttribute(rlgCtx->lightShader.locs[SHADER_LOC_VERTEX_TEXCOORD01]);
+        rlSetVertexAttribute(rlgCtx->shaders[RLG_SHADER_LIGHT].locs[RLG_LOC_VERTEX_TEXCOORD01], 2, RL_FLOAT, 0, 0, 0);
+        rlEnableVertexAttribute(rlgCtx->shaders[RLG_SHADER_LIGHT].locs[RLG_LOC_VERTEX_TEXCOORD01]);
 
-        if (rlgCtx->lightShader.locs[SHADER_LOC_VERTEX_NORMAL] != -1)
+        if (rlgCtx->shaders[RLG_SHADER_LIGHT].locs[RLG_LOC_VERTEX_NORMAL] != -1)
         {
             // Bind mesh VBO data: vertex normals (shader-location = 2)
             rlEnableVertexBuffer(mesh.vboId[2]);
-            rlSetVertexAttribute(rlgCtx->lightShader.locs[SHADER_LOC_VERTEX_NORMAL], 3, RL_FLOAT, 0, 0, 0);
-            rlEnableVertexAttribute(rlgCtx->lightShader.locs[SHADER_LOC_VERTEX_NORMAL]);
+            rlSetVertexAttribute(rlgCtx->shaders[RLG_SHADER_LIGHT].locs[RLG_LOC_VERTEX_NORMAL], 3, RL_FLOAT, 0, 0, 0);
+            rlEnableVertexAttribute(rlgCtx->shaders[RLG_SHADER_LIGHT].locs[RLG_LOC_VERTEX_NORMAL]);
         }
 
         // Bind mesh VBO data: vertex colors (shader-location = 3, if available)
-        if (rlgCtx->lightShader.locs[SHADER_LOC_VERTEX_COLOR] != -1)
+        if (rlgCtx->shaders[RLG_SHADER_LIGHT].locs[RLG_LOC_VERTEX_COLOR] != -1)
         {
             if (mesh.vboId[3] != 0)
             {
                 rlEnableVertexBuffer(mesh.vboId[3]);
-                rlSetVertexAttribute(rlgCtx->lightShader.locs[SHADER_LOC_VERTEX_COLOR], 4, RL_UNSIGNED_BYTE, 1, 0, 0);
-                rlEnableVertexAttribute(rlgCtx->lightShader.locs[SHADER_LOC_VERTEX_COLOR]);
+                rlSetVertexAttribute(rlgCtx->shaders[RLG_SHADER_LIGHT].locs[RLG_LOC_VERTEX_COLOR], 4, RL_UNSIGNED_BYTE, 1, 0, 0);
+                rlEnableVertexAttribute(rlgCtx->shaders[RLG_SHADER_LIGHT].locs[RLG_LOC_VERTEX_COLOR]);
             }
             else
             {
                 // Set default value for defined vertex attribute in shader but not provided by mesh
                 // WARNING: It could result in GPU undefined behaviour
                 float value[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-                rlSetVertexAttributeDefault(rlgCtx->lightShader.locs[SHADER_LOC_VERTEX_COLOR], value, SHADER_ATTRIB_VEC4, 4);
-                rlDisableVertexAttribute(rlgCtx->lightShader.locs[SHADER_LOC_VERTEX_COLOR]);
+                rlSetVertexAttributeDefault(rlgCtx->shaders[RLG_SHADER_LIGHT].locs[RLG_LOC_VERTEX_COLOR], value, SHADER_ATTRIB_VEC4, 4);
+                rlDisableVertexAttribute(rlgCtx->shaders[RLG_SHADER_LIGHT].locs[RLG_LOC_VERTEX_COLOR]);
             }
         }
 
         // Bind mesh VBO data: vertex tangents (shader-location = 4, if available)
-        if (rlgCtx->lightShader.locs[SHADER_LOC_VERTEX_TANGENT] != -1)
+        if (rlgCtx->shaders[RLG_SHADER_LIGHT].locs[RLG_LOC_VERTEX_TANGENT] != -1)
         {
             rlEnableVertexBuffer(mesh.vboId[4]);
-            rlSetVertexAttribute(rlgCtx->lightShader.locs[SHADER_LOC_VERTEX_TANGENT], 4, RL_FLOAT, 0, 0, 0);
-            rlEnableVertexAttribute(rlgCtx->lightShader.locs[SHADER_LOC_VERTEX_TANGENT]);
+            rlSetVertexAttribute(rlgCtx->shaders[RLG_SHADER_LIGHT].locs[RLG_LOC_VERTEX_TANGENT], 4, RL_FLOAT, 0, 0, 0);
+            rlEnableVertexAttribute(rlgCtx->shaders[RLG_SHADER_LIGHT].locs[RLG_LOC_VERTEX_TANGENT]);
         }
 
         // Bind mesh VBO data: vertex texcoords2 (shader-location = 5, if available)
-        if (rlgCtx->lightShader.locs[SHADER_LOC_VERTEX_TEXCOORD02] != -1)
+        if (rlgCtx->shaders[RLG_SHADER_LIGHT].locs[RLG_LOC_VERTEX_TEXCOORD02] != -1)
         {
             rlEnableVertexBuffer(mesh.vboId[5]);
-            rlSetVertexAttribute(rlgCtx->lightShader.locs[SHADER_LOC_VERTEX_TEXCOORD02], 2, RL_FLOAT, 0, 0, 0);
-            rlEnableVertexAttribute(rlgCtx->lightShader.locs[SHADER_LOC_VERTEX_TEXCOORD02]);
+            rlSetVertexAttribute(rlgCtx->shaders[RLG_SHADER_LIGHT].locs[RLG_LOC_VERTEX_TEXCOORD02], 2, RL_FLOAT, 0, 0, 0);
+            rlEnableVertexAttribute(rlgCtx->shaders[RLG_SHADER_LIGHT].locs[RLG_LOC_VERTEX_TEXCOORD02]);
         }
 
         if (mesh.indices != NULL) rlEnableVertexBufferElement(mesh.vboId[6]);
@@ -2793,7 +2803,7 @@ void RLG_DrawMesh(Mesh mesh, Material material, Matrix transform)
         }
 
         // Send combined model-view-projection matrix to shader
-        rlSetUniformMatrix(rlgCtx->lightShader.locs[SHADER_LOC_MATRIX_MVP], matModelViewProjection);
+        rlSetUniformMatrix(rlgCtx->shaders[RLG_SHADER_LIGHT].locs[RLG_LOC_MATRIX_MVP], matModelViewProjection);
 
         // Draw mesh
         if (mesh.indices != NULL) rlDrawVertexArrayElements(0, mesh.triangleCount*3, 0);
@@ -2871,6 +2881,9 @@ void RLG_DrawModelEx(Model model, Vector3 position, Vector3 rotationAxis, float 
         model.materials[model.meshMaterial[i]].maps[MATERIAL_MAP_DIFFUSE].color = color;
     }
 }
+
+#undef TOSTRING
+#undef STRINGIFY
 
 #endif //RLIGHTS_IMPLEMENTATION
 #endif //RLIGHTS_H

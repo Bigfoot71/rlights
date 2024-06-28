@@ -28,9 +28,9 @@ int main(void)
     RLG_Context rlgCtx = RLG_CreateContext(1);
     RLG_SetContext(rlgCtx);
 
-    RLG_SetMap(RLG_MAP_NORMAL, true);
+    RLG_UseMap(MATERIAL_MAP_NORMAL, true);
 
-    RLG_SetLight(0, true);
+    RLG_UseLight(0, true);
     RLG_SetLightType(0, RLG_SPOTLIGHT);
     RLG_SetLightValue(0, RLG_LIGHT_ENERGY, 2.0f);
     RLG_SetLightValue(0, RLG_LIGHT_INNER_CUTOFF, 17.5f);

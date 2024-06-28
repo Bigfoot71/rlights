@@ -1,10 +1,19 @@
 #version 330
 
-#define NUM_LIGHTS %i   ///< Indicate the desired number of lights
+#define NUM_LIGHTS     %i   ///< Indicate the desired number of lights
+#define NUM_MATERIALS  7
 
-#define DIRLIGHT  0
-#define OMNILIGHT 1
-#define SPOTLIGHT 2
+#define DIRLIGHT       0
+#define OMNILIGHT      1
+#define SPOTLIGHT      2
+
+#define ALBEDO         0
+#define METALNESS      1
+#define NORMAL         2
+#define ROUGHNESS      3
+#define OCCLUSION      4
+#define EMISSION       5
+#define HEIGHT         6
 
 #define PI 3.1415926535897932384626433832795028
 
@@ -14,6 +23,15 @@ in vec2 fragTexCoord;
 in vec3 fragNormal;
 in vec4 fragColor;
 flat in mat3 TBN;
+
+out vec4 outColor;
+
+struct Material {
+    sampler2D texture;
+    mediump vec4 color;
+    mediump float value;
+    lowp int active;
+};
 
 struct Light {
     sampler2D shadowMap;      ///< Sampler for the shadow map texture
@@ -35,38 +53,14 @@ struct Light {
     lowp int enabled;         ///< Indicates if the light is active (1 for true, 0 for false)
 };
 
+uniform Material materials[NUM_MATERIALS];
 uniform Light lights[NUM_LIGHTS];
 
-uniform lowp int useMetalnessMap;
-uniform lowp int useRoughnessMap;
-uniform lowp int useOcclusionMap;
-uniform lowp int useEmissiveMap;
-uniform lowp int useNormalMap;
-uniform lowp int useHeightMap;
-
-uniform sampler2D texture0;   // albedo
-uniform sampler2D texture1;   // metalness
-uniform sampler2D texture2;   // normal
-uniform sampler2D texture3;   // roughness
-uniform sampler2D texture4;   // occlusion
-uniform sampler2D texture5;   // emissive
-uniform sampler2D texture6;   // height
-
-uniform vec3 colEmissive;     // sent by rlights
-uniform vec4 colDiffuse;      // sent by raylib
-uniform vec3 colAmbient;      // sent by rlights
-
-uniform float metalness;
-uniform float roughness;
-uniform float specular;
-
-uniform float heightScale;
 uniform lowp int parallaxMinLayers;
 uniform lowp int parallaxMaxLayers;
 
+uniform vec3 colAmbient;
 uniform vec3 viewPos;
-
-out vec4 outColor;
 
 float DistributionGGX(float cosTheta, float alpha)
 {
@@ -99,8 +93,8 @@ vec3 ComputeF0(float metallic, float specular, vec3 albedo)
 
 vec2 Parallax(vec2 uv, vec3 V)
 {
-    float height = 1.0 - texture(texture6, uv).r;
-    return uv - vec2(V.xy/V.z)*height*heightScale;
+    float height = 1.0 - texture(materials[HEIGHT].texture, uv).r;
+    return uv - vec2(V.xy/V.z)*height*materials[HEIGHT].value;
 }
 
 vec2 DeepParallax(vec2 uv, vec3 V)
@@ -113,22 +107,23 @@ vec2 DeepParallax(vec2 uv, vec3 V)
     float layerDepth = 1.0/numLayers;
     float currentLayerDepth = 0.0;
 
-    vec2 P = V.xy/V.z*heightScale;
+    vec2 P = V.xy/V.z*materials[HEIGHT].value;
     vec2 deltaTexCoord = P/numLayers;
 
     vec2 currentUV = uv;
-    float currentDepthMapValue = 1.0 - texture(texture6, currentUV).y;
+    float currentDepthMapValue = 1.0 - texture(materials[HEIGHT].texture, currentUV).y;
     
     while(currentLayerDepth < currentDepthMapValue)
     {
         currentUV += deltaTexCoord;
         currentLayerDepth += layerDepth;
-        currentDepthMapValue = 1.0 - texture(texture6, currentUV).y;
+        currentDepthMapValue = 1.0 - texture(materials[HEIGHT].texture, currentUV).y;
     }
 
     vec2 prevTexCoord = currentUV - deltaTexCoord;
     float afterDepth  = currentDepthMapValue + currentLayerDepth;
-    float beforeDepth = 1.0 - texture(texture6, prevTexCoord).y - currentLayerDepth - layerDepth;
+    float beforeDepth = 1.0 - texture(materials[HEIGHT].texture,
+        prevTexCoord).y - currentLayerDepth - layerDepth;
 
     float weight = afterDepth/(afterDepth - beforeDepth);
     return prevTexCoord*weight + currentUV*(1.0 - weight);
@@ -166,11 +161,11 @@ float Shadow(int i)
 void main()
 {
     // Compute the view direction vector for this fragment
-    vec3 V = normalize(viewPos - fragPosition);
+    vec3 V = normalize( viewPos  - fragPosition);
 
     // Compute fragTexCoord (UV), apply parallax if height map is enabled
     vec2 uv = fragTexCoord;
-    if (useHeightMap != 0)
+    if (materials[HEIGHT].active != 0)
     {
         uv = (parallaxMinLayers > 0 && parallaxMaxLayers > 1)
             ? DeepParallax(uv, V) : Parallax(uv, V);
@@ -182,23 +177,25 @@ void main()
     }
 
     // Compute albedo (base color) by sampling the texture and multiplying by the diffuse color
-    vec3 albedo = texture(texture0, uv).rgb;
-    albedo *= colDiffuse.rgb*fragColor.rgb;
+    vec3 albedo = materials[ALBEDO].color.rgb*fragColor.rgb;
+    albedo *= texture(materials[ALBEDO].texture, uv).rgb*float(materials[ALBEDO].active);
 
     // Compute metallic factor; if a metalness map is used, sample it
-    float metallic = metalness;
-    if (useMetalnessMap != 0) metallic *= texture(texture1, uv).b;
+    float metalness = materials[METALNESS].value;
+    if (materials[METALNESS].active != 0)
+        metalness *= texture(materials[METALNESS].texture, uv).b;
 
     // Compute roughness factor; if a roughness map is used, sample it
-    float rough = roughness;
-    if (useRoughnessMap != 0) rough *= texture(texture3, uv).g;
+    float roughness = materials[ROUGHNESS].value;
+    if (materials[ROUGHNESS].active != 0)
+        roughness *= texture(materials[ROUGHNESS].texture, uv).g;
 
     // Compute F0 (reflectance at normal incidence) based on the metallic factor
-    vec3 F0 = ComputeF0(metallic, specular, albedo);
+    vec3 F0 = ComputeF0(metalness, 0.5, albedo);
 
     // Compute the normal vector; if a normal map is used, transform it to tangent space
-    vec3 N = (useNormalMap == 0) ? normalize(fragNormal)
-        : normalize(TBN*(texture(texture2, uv).rgb*2.0 - 1.0));
+    vec3 N = (materials[NORMAL].active == 0) ? normalize(fragNormal)
+        : normalize(TBN*(texture(materials[NORMAL].texture, uv).rgb*2.0 - 1.0));
 
     // Compute the dot product of the normal and view direction
     float NdotV = dot(N, V);
@@ -249,9 +246,9 @@ void main()
 
             // Compute diffuse lighting (Burley model) if the material is not fully metallic
             vec3 diffLight = vec3(0.0);
-            if (metallic < 1.0)
+            if (metalness < 1.0)
             {
-                float FD90_minus_1 = 2.0*cLdotH*cLdotH*rough - 0.5;
+                float FD90_minus_1 = 2.0*cLdotH*cLdotH*roughness - 0.5;
                 float FdV = 1.0 + FD90_minus_1*SchlickFresnel(cNdotV);
                 float FdL = 1.0 + FD90_minus_1*SchlickFresnel(cNdotL);
 
@@ -263,9 +260,9 @@ void main()
             // NOTE: When roughness is 0, specular light should not be entirely disabled.
             // TODO: Handle perfect mirror reflection when roughness is 0.
             vec3 specLight = vec3(0.0);
-            if (rough > 0.0)
+            if (roughness > 0.0)
             {
-                float alphaGGX = rough*rough;
+                float alphaGGX = roughness*roughness;
                 float D = DistributionGGX(cNdotH, alphaGGX);
                 float G = GeometrySmith(cNdotL, cNdotV, alphaGGX);
 
@@ -306,22 +303,26 @@ void main()
 
     // Compute ambient (with occlusion)
     vec3 ambient = colAmbient;
-    if (useOcclusionMap != 0)
+    if (materials[OCCLUSION].active != 0)
     {
-        float ao = texture(texture4, uv).r;
+        float ao = texture(materials[OCCLUSION].texture, uv).r;
         ambient *= ao;
+
+        float lightAffect = mix(1.0, ao, materials[OCCLUSION].value);
+        diffLighting *= lightAffect;
+        specLighting *= lightAffect;
     }
 
     // Compute the final diffuse color, including ambient and diffuse lighting contributions
     vec3 diffuse = albedo*(ambient + diffLighting);
 
     // Compute emission color; if an emissive map is used, sample it
-    vec3 emission = colEmissive;
-    if (useEmissiveMap != 0)
+    vec3 emission = materials[EMISSION].color.rgb;
+    if (materials[EMISSION].active != 0)
     {
-        emission *= texture(texture5, uv).rgb;
+        emission *= texture(materials[EMISSION].texture, uv).rgb;
     }
 
     // Compute the final fragment color by combining diffuse, specular, and emission contributions
     outColor = vec4(diffuse + specLighting + emission, 1.0);
-}
+};

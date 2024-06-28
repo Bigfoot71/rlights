@@ -6,7 +6,9 @@
 - **Directional Lights**: Simulate sunlight or other distant light sources.
 - **Omni-Directional Lights**: Point lights that emit in all directions.
 - **Spotlights**: Lights with a specific direction and cone of influence.
+- **PBR**: Supports Physically Based Rendering (PBR) including Occlusion, Roughness, and Metalness (ORM), with Burley diffuse and SchlickGGX specularity.
 - **Normal Mapping**: Adds depth and detail to surfaces without increasing polygon count.
+- **Parallax Mapping**: Creates an illusion of depth by displacing the texture coordinates, enhancing the surface detail with minimal geometry.
 - **Shadow Mapping**: Allows the rendering of cast shadows in your scenes.
 - **Integrated Shaders**: The header already contains all the shaders, but you can also use your own shaders.
 
@@ -42,10 +44,9 @@ int main(void)
     RLG_Context rlgCtx = RLG_CreateContext(1);
     RLG_SetContext(rlgCtx);
 
-    RLG_SetLight(0, true);
+    RLG_UseLight(0, true);
     RLG_SetLightType(0, RLG_OMNILIGHT);
-    RLG_SetLightXYZ(0, RLG_LIGHT_POSITION, 2, 2, 2);
-    RLG_SetLightXYZ(0, RLG_LIGHT_COLOR, 0.5f, 0.0, 1.0);
+    RLG_SetLightVec3(0, RLG_LIGHT_POSITION, camera.position);
 
     Model cube = LoadModelFromMesh(GenMeshCube(1, 1, 1));
 
@@ -86,36 +87,40 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 RLG_Context RLG_CreateContext(unsigned int lightCount);
 void RLG_DestroyContext(RLG_Context ctx);
-
 void RLG_SetContext(RLG_Context ctx);
 RLG_Context RLG_GetContext(void);
 
-void RLG_SetCustomShaderCode(RLG_Shader shaderType, const char *vsCode, const char *fsCode);
+void RLG_SetCustomShaderCode(RLG_Shader shader, const char *vsCode, const char *fsCode);
+const Shader* RLG_GetShader(RLG_Shader shader);
 
-const Shader* RLG_GetShader(RLG_Shader shaderType);
-
-/* Global Variables Management */
+/* Management of Specific Variables */
 
 void RLG_SetViewPosition(float x, float y, float z);
 void RLG_SetViewPositionV(Vector3 position);
 Vector3 RLG_GetViewPosition(void);
 
+void SetAmbientColor(Color color);
+Color GetAmbientColor(void);
+
+void SetParallaxLayers(int min, int max);
+void GetParallaxLayers(int* min, int* max);
+
 /* Materials Management */
 
-void RLG_SetMap(RLG_MaterialMap map, bool active);
-bool RLG_IsMapEnabled(RLG_MaterialMap map);
+void RLG_UseMap(MaterialMapIndex mapIndex, bool active);
+bool RLG_IsMapUsed(MaterialMapIndex mapIndex);
 
-void RLG_SetMaterialValue(RLG_MaterialProperty property, float value);
-void RLG_SetMaterialColor(RLG_MaterialProperty property, Color color);
-float RLG_GetMaterialValue(RLG_MaterialProperty property);
-Color RLG_GetMaterialColor(RLG_MaterialProperty property);
+void RLG_UseDefaultMap(MaterialMapIndex mapIndex, bool active);
+void RLG_SetDefaultMap(MaterialMapIndex mapIndex, MaterialMap map);
+MaterialMap RLG_GetDefaultMap(MaterialMapIndex mapIndex);
+bool RLG_IsDefaultMapUsed(MaterialMapIndex mapIndex);
 
 /* Lighting Management */
 
 unsigned int RLG_GetLightcount(void);
 
-void RLG_SetLight(unsigned int light, bool active);
-bool RLG_IsLightEnabled(unsigned int light);
+void RLG_UseLight(unsigned int light, bool active);
+bool RLG_IsLightUsed(unsigned int light);
 void RLG_ToggleLight(unsigned int light);
 
 void RLG_SetLightType(unsigned int light, RLG_LightType type);
@@ -124,12 +129,12 @@ RLG_LightType RLG_GetLightType(unsigned int light);
 void RLG_SetLightValue(unsigned int light, RLG_LightProperty property, float value);
 void RLG_SetLightXYZ(unsigned int light, RLG_LightProperty property, float x, float y, float z);
 void RLG_SetLightVec3(unsigned int light, RLG_LightProperty property, Vector3 value);
-void RLG_SetLightColor(unsigned int light, Color color);
 
+void RLG_SetLightColor(unsigned int light, Color color);
 float RLG_GetLightValue(unsigned int light, RLG_LightProperty property);
 Vector3 RLG_GetLightVec3(unsigned int light, RLG_LightProperty property);
-Color RLG_GetLightColor(unsigned int light);
 
+Color RLG_GetLightColor(unsigned int light);
 void RLG_LightTranslate(unsigned int light, float x, float y, float z);
 void RLG_LightTranslateV(unsigned int light, Vector3 v);
 
@@ -153,7 +158,6 @@ float RLG_GetShadowBias(unsigned int light);
 
 void RLG_BeginShadowCast(unsigned int light);
 void RLG_EndShadowCast(void);
-
 void RLG_ClearShadowMap(void);
 
 void RLG_DrawShadowMap(unsigned int light, int x, int y, int w, int h);
@@ -163,7 +167,7 @@ void RLG_CastMesh(Mesh mesh, Matrix transform);
 void RLG_CastModel(Model model, Vector3 position, float scale);
 void RLG_CastModelEx(Model model, Vector3 position, Vector3 rotationAxis, float rotationAngle, Vector3 scale);
 
-/* Mesh Drawing Functions */
+/* Mesh/Model Drawing Functions */
 
 void RLG_DrawMesh(Mesh mesh, Material material, Matrix transform);
 void RLG_DrawModel(Model model, Vector3 position, float scale, Color tint);

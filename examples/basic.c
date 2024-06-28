@@ -17,7 +17,7 @@ int main(void)
     RLG_Context rlgCtx = RLG_CreateContext(1);
     RLG_SetContext(rlgCtx);
 
-    RLG_SetLight(0, true);
+    RLG_UseLight(0, true);
     RLG_SetLightType(0, RLG_OMNILIGHT);
     RLG_SetLightXYZ(0, RLG_LIGHT_POSITION, 2, 2, 2);
     RLG_SetLightXYZ(0, RLG_LIGHT_COLOR, 0.5f, 0.0, 1.0);
