@@ -2688,26 +2688,29 @@ void RLG_DrawMesh(Mesh mesh, Material material, Matrix transform)
     // Bind active texture maps (if available)
     for (int i = 0; i < 11; i++)
     {
-        if (material.maps[i].texture.id > 0)
+        if (rlgCtx->material.data.useMaps[i])
         {
-            // Select current shader texture slot
-            rlActiveTextureSlot(i);
+            int textureID = (rlgCtx->usedDefaultMaps[i])
+                ? rlgCtx->defaultMaps[i].texture.id
+                : material.maps[i].texture.id;
 
-            // Enable texture for active slot
-            if ((i == MATERIAL_MAP_IRRADIANCE) || (i == MATERIAL_MAP_PREFILTER) || (i == MATERIAL_MAP_CUBEMAP))
+            if (textureID > 0)
             {
-                rlEnableTextureCubemap((rlgCtx->usedDefaultMaps[i])
-                    ? rlgCtx->defaultMaps[i].texture.id
-                    : material.maps[i].texture.id);
-            }
-            else
-            {
-                rlEnableTexture((rlgCtx->usedDefaultMaps[i])
-                    ? rlgCtx->defaultMaps[i].texture.id
-                    : material.maps[i].texture.id);
-            }
+                // Select current shader texture slot
+                rlActiveTextureSlot(i);
 
-            rlSetUniform(rlgCtx->shaders[RLG_SHADER_LIGHT].locs[RLG_LOC_MAP_ALBEDO + i], &i, SHADER_UNIFORM_INT, 1);
+                // Enable texture for active slot
+                if ((i == MATERIAL_MAP_IRRADIANCE) || (i == MATERIAL_MAP_PREFILTER) || (i == MATERIAL_MAP_CUBEMAP))
+                {
+                    rlEnableTextureCubemap(textureID);
+                }
+                else
+                {
+                    rlEnableTexture(textureID);
+                }
+
+                rlSetUniform(rlgCtx->shaders[RLG_SHADER_LIGHT].locs[RLG_LOC_MAP_ALBEDO + i], &i, SHADER_UNIFORM_INT, 1);
+            }
         }
     }
 
