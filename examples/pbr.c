@@ -78,10 +78,11 @@ int main(void)
             sphere.transform = MatrixMultiply(sphere.transform, rotationY);
         }
 
-        if (IsKeyPressed(KEY_N)) RLG_UseMap(MATERIAL_MAP_NORMAL, !RLG_IsMapUsed(MATERIAL_MAP_NORMAL));
-        if (IsKeyPressed(KEY_M)) RLG_UseMap(MATERIAL_MAP_METALNESS, !RLG_IsMapUsed(MATERIAL_MAP_METALNESS));
-        if (IsKeyPressed(KEY_R)) RLG_UseMap(MATERIAL_MAP_ROUGHNESS, !RLG_IsMapUsed(MATERIAL_MAP_ROUGHNESS));
-        if (IsKeyPressed(KEY_O)) RLG_UseMap(MATERIAL_MAP_OCCLUSION, !RLG_IsMapUsed(MATERIAL_MAP_OCCLUSION));
+        if (IsKeyPressed(KEY_KP_0)) RLG_UseMap(MATERIAL_MAP_ALBEDO, !RLG_IsMapUsed(MATERIAL_MAP_ALBEDO));
+        if (IsKeyPressed(KEY_KP_1)) RLG_UseMap(MATERIAL_MAP_NORMAL, !RLG_IsMapUsed(MATERIAL_MAP_NORMAL));
+        if (IsKeyPressed(KEY_KP_2)) RLG_UseMap(MATERIAL_MAP_METALNESS, !RLG_IsMapUsed(MATERIAL_MAP_METALNESS));
+        if (IsKeyPressed(KEY_KP_3)) RLG_UseMap(MATERIAL_MAP_ROUGHNESS, !RLG_IsMapUsed(MATERIAL_MAP_ROUGHNESS));
+        if (IsKeyPressed(KEY_KP_4)) RLG_UseMap(MATERIAL_MAP_OCCLUSION, !RLG_IsMapUsed(MATERIAL_MAP_OCCLUSION));
 
         BeginDrawing();
 
@@ -91,7 +92,13 @@ int main(void)
                 RLG_DrawModel(sphere, Vector3Zero(), modelScale, WHITE);
             EndMode3D();
 
-            DrawTextureEx(preview, Vector2Zero(), 0, 0.125, WHITE);
+            DrawTextureEx(preview, (Vector2) { 800 - preview.width*0.125f, 0 }, 0, 0.125f, WHITE);
+
+            DrawText(TextFormat("[KP_0] - ALBEDO: %s", RLG_IsMapUsed(MATERIAL_MAP_ALBEDO) ? "ON" : "OFF"), 10, 10, 20, LIME);
+            DrawText(TextFormat("[KP_1] - NORMAL: %s", RLG_IsMapUsed(MATERIAL_MAP_NORMAL) ? "ON" : "OFF"), 10, 40, 20, LIME);
+            DrawText(TextFormat("[KP_2] - METALNESS: %s", RLG_IsMapUsed(MATERIAL_MAP_METALNESS) ? "ON" : "OFF"), 10, 70, 20, LIME);
+            DrawText(TextFormat("[KP_3] - ROUGHNESS: %s", RLG_IsMapUsed(MATERIAL_MAP_ROUGHNESS) ? "ON" : "OFF"), 10, 100, 20, LIME);
+            DrawText(TextFormat("[KP_4] - OCCLUSION: %s", RLG_IsMapUsed(MATERIAL_MAP_OCCLUSION) ? "ON" : "OFF"), 10, 130, 20, LIME);
 
         EndDrawing();
     }
