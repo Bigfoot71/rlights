@@ -966,7 +966,8 @@ static const char rlgLightingFS[] = GLSL_VERSION_DEF
 
         // Compute albedo (base color) by sampling the texture and multiplying by the diffuse color
         "vec3 albedo = materials[ALBEDO].color.rgb*fragColor.rgb;"
-        "albedo *= TEX(materials[ALBEDO].texture, uv).rgb*float(materials[ALBEDO].active);"
+        "if (materials[ALBEDO].active != 0)"
+            "albedo *= TEX(materials[ALBEDO].texture, uv).rgb;"
 
         // Compute metallic factor; if a metalness map is used, sample it
         "float metalness = materials[METALNESS].value;"
