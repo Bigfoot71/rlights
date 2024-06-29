@@ -34,23 +34,24 @@ struct Material {
 };
 
 struct Light {
-    sampler2D shadowMap;      ///< Sampler for the shadow map texture
-    vec3 position;            ///< Position of the light in world coordinates
-    vec3 direction;           ///< Direction vector of the light (for directional and spotlights)
-    vec3 color;               ///< Diffuse color of the light
-    float energy;             ///< Energy factor of the diffuse light color
-    float specular;           ///< Specular amount of the light
-    float size;               ///< Light size (spotlight, omnilight only)
-    float innerCutOff;        ///< Inner cutoff angle for spotlights (cosine of the angle)
-    float outerCutOff;        ///< Outer cutoff angle for spotlights (cosine of the angle)
-    float constant;           ///< Constant attenuation factor
-    float linear;             ///< Linear attenuation factor
-    float quadratic;          ///< Quadratic attenuation factor
-    float shadowMapTxlSz;     ///< Texel size of the shadow map
-    float depthBias;          ///< Bias value to avoid self-shadowing artifacts
-    lowp int type;            ///< Type of the light (e.g., point, directional, spotlight)
-    lowp int shadow;          ///< Indicates if the light casts shadows (1 for true, 0 for false)
-    lowp int enabled;         ///< Indicates if the light is active (1 for true, 0 for false)
+    samplerCube shadowCubemap;    ///< Sampler for the shadow map texture
+    sampler2D shadowMap;          ///< Sampler for the shadow map texture
+    vec3 position;                ///< Position of the light in world coordinates
+    vec3 direction;               ///< Direction vector of the light (for directional and spotlights)
+    vec3 color;                   ///< Diffuse color of the light
+    float energy;                 ///< Energy factor of the diffuse light color
+    float specular;               ///< Specular amount of the light
+    float size;                   ///< Light size (spotlight, omnilight only)
+    float innerCutOff;            ///< Inner cutoff angle for spotlights (cosine of the angle)
+    float outerCutOff;            ///< Outer cutoff angle for spotlights (cosine of the angle)
+    float constant;               ///< Constant attenuation factor
+    float linear;                 ///< Linear attenuation factor
+    float quadratic;              ///< Quadratic attenuation factor
+    float shadowMapTxlSz;         ///< Texel size of the shadow map
+    float depthBias;              ///< Bias value to avoid self-shadowing artifacts
+    lowp int type;                ///< Type of the light (e.g., point, directional, spotlight)
+    lowp int shadow;              ///< Indicates if the light casts shadows (1 for true, 0 for false)
+    lowp int enabled;             ///< Indicates if the light is active (1 for true, 0 for false)
 };
 
 uniform Material materials[NUM_MATERIALS];
@@ -58,6 +59,8 @@ uniform Light lights[NUM_LIGHTS];
 
 uniform lowp int parallaxMinLayers;
 uniform lowp int parallaxMaxLayers;
+
+uniform float farPlane;     ///< Used to scale depth values ​​when reading the depth cubemap (point shadows)
 
 uniform vec3 colAmbient;
 uniform vec3 viewPos;
@@ -129,13 +132,25 @@ vec2 DeepParallax(vec2 uv, vec3 V)
     return prevTexCoord*weight + currentUV*(1.0 - weight);
 }
 
+float ShadowOmni(int i, float cNdotL)
+{
+    vec3 fragToLight = fragPosition - lights[i].position;
+    float closestDepth = texture(lights[i].shadowCubemap, fragToLight).r;
+    closestDepth *= farPlane; // Rescale depth
+    float currentDepth = length(fragToLight);
+    float bias = lights[i].depthBias*max(1.0 - cNdotL, 0.05);
+    return currentDepth - bias > closestDepth ? 0.0 : 1.0;
+}
+
 float Shadow(int i)
 {
     vec4 p = fragPosLightSpace[i];
 
     vec3 projCoords = p.xyz/p.w;
     projCoords = projCoords*0.5 + 0.5;
-    projCoords.z -= lights[i].depthBias;
+
+    float bias = max(lights[i].depthBias*(1.0 - cNdotL), 0.00002) + 0.00001;
+    projCoords.z -= bias;
 
     if (projCoords.z > 1.0 || projCoords.x > 1.0 || projCoords.y > 1.0)
     {
@@ -290,7 +305,12 @@ void main()
                                         lights[i].quadratic*(distance*distance));
 
             // Apply shadow factor if the light casts shadows
-            float shadow = (lights[i].shadow != 0) ? Shadow(i) : 1.0;
+            float shadow = 1.0;
+            if (lights[i].shadow != 0)
+            {
+                shadow = (lights[i].type == OMNILIGHT)
+                    ? ShadowOmni(i, cNdotL) : Shadow(i, cNdotL);
+            }
 
             // Compute the final intensity factor combining intensity, attenuation, and shadow
             float factor = intensity*attenuation*shadow;

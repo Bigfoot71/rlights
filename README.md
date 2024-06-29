@@ -20,6 +20,8 @@ Using `rlights.h` is straightforward. Include the header file in your project wi
 #include "rlights.h"
 ```
 
+**WARNING**: Shadow rendering for omnidirectional lights in their current implementation requires support for depth cubemaps, a feature not yet supported by raylib/rlgl. Therefore, this repository includes Glad headers, which will be used by default if you have not defined _(e.g.)_ `#define GL_HEADER "GL.h"` before including `rlights.h`. You also have the option to define an optional second header with `GL_EXT_HEADER` for necessary extensions if needed.
+
 ### Example
 Here's a basic example demonstrating how to set up and use `rlights.h` with raylib:
 
@@ -87,6 +89,7 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 RLG_Context RLG_CreateContext(unsigned int lightCount);
 void RLG_DestroyContext(RLG_Context ctx);
+
 void RLG_SetContext(RLG_Context ctx);
 RLG_Context RLG_GetContext(void);
 
@@ -129,12 +132,12 @@ RLG_LightType RLG_GetLightType(unsigned int light);
 void RLG_SetLightValue(unsigned int light, RLG_LightProperty property, float value);
 void RLG_SetLightXYZ(unsigned int light, RLG_LightProperty property, float x, float y, float z);
 void RLG_SetLightVec3(unsigned int light, RLG_LightProperty property, Vector3 value);
-
 void RLG_SetLightColor(unsigned int light, Color color);
+
 float RLG_GetLightValue(unsigned int light, RLG_LightProperty property);
 Vector3 RLG_GetLightVec3(unsigned int light, RLG_LightProperty property);
-
 Color RLG_GetLightColor(unsigned int light);
+
 void RLG_LightTranslate(unsigned int light, float x, float y, float z);
 void RLG_LightTranslateV(unsigned int light, Vector3 v);
 
@@ -156,16 +159,12 @@ bool RLG_IsShadowEnabled(unsigned int light);
 void RLG_SetShadowBias(unsigned int light, float value);
 float RLG_GetShadowBias(unsigned int light);
 
-void RLG_BeginShadowCast(unsigned int light);
-void RLG_EndShadowCast(void);
-void RLG_ClearShadowMap(void);
+void RLG_UpdateShadowMap(unsigned int light, RLG_DrawFunc drawFunc);
+Texture RLG_GetShadowMap(unsigned int light);
 
-void RLG_DrawShadowMap(unsigned int light, int x, int y, int w, int h);
-void RLG_DrawShadowMapEx(unsigned int light, int x, int y, int w, int h, float near, float far);
-
-void RLG_CastMesh(Mesh mesh, Matrix transform);
-void RLG_CastModel(Model model, Vector3 position, float scale);
-void RLG_CastModelEx(Model model, Vector3 position, Vector3 rotationAxis, float rotationAngle, Vector3 scale);
+void RLG_CastMesh(Shader shader, Mesh mesh, Matrix transform);
+void RLG_CastModel(Shader shader, Model model, Vector3 position, float scale);
+void RLG_CastModelEx(Shader shader, Model model, Vector3 position, Vector3 rotationAxis, float rotationAngle, Vector3 scale);
 
 /* Mesh/Model Drawing Functions */
 

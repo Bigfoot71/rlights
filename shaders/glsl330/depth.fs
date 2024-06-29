@@ -1,8 +1,6 @@
 #version 330
 
-out vec4 outDepth;
-
 void main()
 {
-    outDepth = vec4(gl_FragCoord.z);
-};
+    // We don't need to do anything, we let the depth apply naturally
+}

@@ -7,20 +7,27 @@
 static Model cube = (Model) { 0 };
 static Model plane = (Model) { 0 };
 
-void draw(bool cast)
+void cast(Shader shader)
 {
-    if (cast)
+    for (int x = -1; x <= 1; x++)
     {
-        // NOTE: You are not required to use RLG_CastModel
-        //       to record their depth, but its use
-        //       is simpler and more optimized.
-        RLG_CastModel(plane, (Vector3) { 0, -0.5, 0 }, 1);
-        RLG_CastModel(cube, Vector3Zero(), 1);
+        for (int z = -1; z <= 1; z++)
+        {
+            RLG_CastModel(shader, cube, (Vector3) { x*5, 0.0f, z*5 }, 1);
+        }
     }
-    else
+}
+
+void draw(void)
+{
+    RLG_DrawModel(plane, (Vector3) { 0, -0.5, 0 }, 1, WHITE);
+
+    for (int x = -1; x <= 1; x++)
     {
-        RLG_DrawModel(plane, (Vector3) { 0, -0.5, 0 }, 1, WHITE);
-        RLG_DrawModel(cube, Vector3Zero(), 1, WHITE);
+        for (int z = -1; z <= 1; z++)
+        {
+            RLG_DrawModel(cube, (Vector3) { x*5, 0.0f, z*5 }, 1, WHITE);
+        }
     }
 }
 
@@ -43,7 +50,7 @@ int main(void)
     for (int i = 0; i < RLG_GetLightcount(); i++)
     {
         RLG_UseLight(i, true);
-        RLG_SetLightType(i, RLG_SPOTLIGHT);
+        RLG_SetLightType(i, RLG_OMNILIGHT);
 
         RLG_EnableShadow(i, 1024);
         RLG_SetLightXYZ(i, RLG_LIGHT_COLOR, 1 - i, 0.0f, i);
@@ -57,12 +64,18 @@ int main(void)
     }
 
     cube = LoadModelFromMesh(GenMeshCube(1, 1, 1));
-    plane = LoadModelFromMesh(GenMeshPlane(10, 10, 1, 1));
+    cube.materials[0].maps[MATERIAL_MAP_METALNESS].value = 0.9f;
+    cube.materials[0].maps[MATERIAL_MAP_ROUGHNESS].value = 0.1f;
+
+    plane = LoadModelFromMesh(GenMeshPlane(1000, 1000, 1, 1));
+    cube.materials[0].maps[MATERIAL_MAP_METALNESS].value = 0.5f;
+    cube.materials[0].maps[MATERIAL_MAP_ROUGHNESS].value = 0.5f;
 
     SetTargetFPS(60);
 
     while (!WindowShouldClose())
     {
+        UpdateCamera(&camera, CAMERA_ORBITAL);
         BeginDrawing();
 
             ClearBackground(BLACK);
@@ -73,13 +86,7 @@ int main(void)
                 RLG_SetLightXYZ(i, RLG_LIGHT_POSITION, s*5*cosf(GetTime()*(i+1)*0.5f), 2.5f, s*5*sinf(GetTime()*(i+1)*0.5f));
                 RLG_SetLightTarget(i, 0, 0, 0);
 
-                RLG_BeginShadowCast(i);
-                    RLG_ClearShadowMap();
-                    draw(true);
-                RLG_EndShadowCast();
-
-                RLG_DrawShadowMap(i, i*100, 0, 100, 100);
-                DrawRectangleLines(i*100, 0, 100, 100, RED);
+                RLG_UpdateShadowMap(i, cast);
             }
 
             BeginMode3D(camera);
@@ -88,7 +95,7 @@ int main(void)
                     DrawSphere(RLG_GetLightVec3(i, RLG_LIGHT_POSITION),
                         0.1f, RLG_GetLightColor(i));
                 }
-                draw(false);
+                draw();
             EndMode3D();
 
         EndDrawing();

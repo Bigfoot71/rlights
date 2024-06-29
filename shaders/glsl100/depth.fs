@@ -4,6 +4,5 @@ precision mediump float;
 
 void main()
 {
-    //gl_FragColor = vec4(gl_FragCoord.z);
-    gl_FragDepth = gl_FragCoord.z;
-};
+    // We don't need to do anything, we let the depth apply naturally
+}
