@@ -2699,12 +2699,22 @@ void RLG_DrawMesh(Mesh mesh, Material material, Matrix transform)
     // Upload to shader material.data.colDiffuse
     if (shader->locs[RLG_LOC_COLOR_DIFFUSE] != -1)
     {
-        float values[4] = {
-            (float)material.maps[MATERIAL_MAP_DIFFUSE].color.r/255.0f,
-            (float)material.maps[MATERIAL_MAP_DIFFUSE].color.g/255.0f,
-            (float)material.maps[MATERIAL_MAP_DIFFUSE].color.b/255.0f,
-            (float)material.maps[MATERIAL_MAP_DIFFUSE].color.a/255.0f
-        };
+        float values[4] = { };
+
+        if (rlgCtx->usedDefaultMaps[MATERIAL_MAP_ALBEDO])
+        {
+            values[0] = (float)rlgCtx->defaultMaps[MATERIAL_MAP_ALBEDO].color.r/255.0f;
+            values[1] = (float)rlgCtx->defaultMaps[MATERIAL_MAP_ALBEDO].color.g/255.0f;
+            values[2] = (float)rlgCtx->defaultMaps[MATERIAL_MAP_ALBEDO].color.b/255.0f;
+            values[3] = (float)rlgCtx->defaultMaps[MATERIAL_MAP_ALBEDO].color.a/255.0f;
+        }
+        else
+        {
+            values[0] = (float)material.maps[MATERIAL_MAP_ALBEDO].color.r/255.0f;
+            values[1] = (float)material.maps[MATERIAL_MAP_ALBEDO].color.g/255.0f;
+            values[2] = (float)material.maps[MATERIAL_MAP_ALBEDO].color.b/255.0f;
+            values[3] = (float)material.maps[MATERIAL_MAP_ALBEDO].color.a/255.0f;
+        }
 
         rlSetUniform(shader->locs[RLG_LOC_COLOR_DIFFUSE], values, SHADER_UNIFORM_VEC4, 1);
     }
@@ -2723,10 +2733,10 @@ void RLG_DrawMesh(Mesh mesh, Material material, Matrix transform)
         }
         else
         {
-            values[0] = (float)material.maps[MATERIAL_MAP_SPECULAR].color.r/255.0f;
-            values[1] = (float)material.maps[MATERIAL_MAP_SPECULAR].color.g/255.0f;
-            values[2] = (float)material.maps[MATERIAL_MAP_SPECULAR].color.b/255.0f;
-            values[3] = (float)material.maps[MATERIAL_MAP_SPECULAR].color.a/255.0f;
+            values[0] = (float)material.maps[MATERIAL_MAP_METALNESS].color.r/255.0f;
+            values[1] = (float)material.maps[MATERIAL_MAP_METALNESS].color.g/255.0f;
+            values[2] = (float)material.maps[MATERIAL_MAP_METALNESS].color.b/255.0f;
+            values[3] = (float)material.maps[MATERIAL_MAP_METALNESS].color.a/255.0f;
         }
 
         rlSetUniform(shader->locs[RLG_LOC_COLOR_SPECULAR], values, SHADER_UNIFORM_VEC4, 1);
