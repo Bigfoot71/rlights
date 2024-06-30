@@ -236,14 +236,14 @@ Vector3 RLG_GetViewPosition(void);
  * 
  * @param color The ambient color as a Color structure.
  */
-void SetAmbientColor(Color color);
+void RLG_SetAmbientColor(Color color);
 
 /**
  * @brief Get the current ambient color.
  * 
  * @return The current ambient color as a Color structure.
  */
-Color GetAmbientColor(void);
+Color RLG_GetAmbientColor(void);
 
 /**
  * @brief Set the minimum and maximum layers for parallax mapping.
@@ -251,7 +251,7 @@ Color GetAmbientColor(void);
  * @param min The minimum layer index.
  * @param max The maximum layer index.
  */
-void SetParallaxLayers(int min, int max);
+void RLG_SetParallaxLayers(int min, int max);
 
 /**
  * @brief Get the current minimum and maximum layers for parallax mapping.
@@ -259,7 +259,7 @@ void SetParallaxLayers(int min, int max);
  * @param min Pointer to store the minimum layer index.
  * @param max Pointer to store the maximum layer index.
  */
-void GetParallaxLayers(int* min, int* max);
+void RLG_GetParallaxLayers(int* min, int* max);
 
 /**
  * @brief Activate or deactivate texture sampling in the materials of models.
@@ -1927,7 +1927,7 @@ Vector3 RLG_GetViewPosition(void)
     return rlgCtx->viewPos;
 }
 
-void SetAmbientColor(Color color)
+void RLG_SetAmbientColor(Color color)
 {
     rlgCtx->colAmbient.x = (float)color.r/255.0f;
     rlgCtx->colAmbient.y = (float)color.g/255.0f;
@@ -1937,7 +1937,7 @@ void SetAmbientColor(Color color)
         rlgCtx->shaders[RLG_SHADER_LIGHTING].locs[RLG_LOC_COLOR_AMBIENT],
         &rlgCtx->colAmbient, SHADER_UNIFORM_VEC3);
 }
-Color GetAmbientColor(void)
+Color RLG_GetAmbientColor(void)
 {
     Color color = { 0 };
 
@@ -1949,7 +1949,7 @@ Color GetAmbientColor(void)
     return color;
 }
 
-void SetParallaxLayers(int min, int max)
+void RLG_SetParallaxLayers(int min, int max)
 {
     if (min != rlgCtx->material.data.parallaxMinLayers)
     {
@@ -1964,7 +1964,7 @@ void SetParallaxLayers(int min, int max)
     }
 }
 
-void GetParallaxLayers(int* min, int* max)
+void RLG_GetParallaxLayers(int* min, int* max)
 {
     if (min != NULL) *min = rlgCtx->material.data.parallaxMinLayers;
     if (max != NULL) *max = rlgCtx->material.data.parallaxMaxLayers;

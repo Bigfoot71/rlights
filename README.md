@@ -102,11 +102,11 @@ void RLG_SetViewPosition(float x, float y, float z);
 void RLG_SetViewPositionV(Vector3 position);
 Vector3 RLG_GetViewPosition(void);
 
-void SetAmbientColor(Color color);
-Color GetAmbientColor(void);
+void RLG_SetAmbientColor(Color color);
+Color RLG_GetAmbientColor(void);
 
-void SetParallaxLayers(int min, int max);
-void GetParallaxLayers(int* min, int* max);
+void RLG_SetParallaxLayers(int min, int max);
+void RLG_GetParallaxLayers(int* min, int* max);
 
 /* Materials Management */
 
