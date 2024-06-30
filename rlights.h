@@ -1633,7 +1633,7 @@ RLG_Context RLG_CreateContext(unsigned int count)
 
         lightShader.locs[RLG_LOC_COLOR_DIFFUSE]      = rlGetLocationUniform(lightShader.id, TextFormat("maps[%i].color", MATERIAL_MAP_ALBEDO));
         lightShader.locs[RLG_LOC_COLOR_SPECULAR]     = rlGetLocationUniform(lightShader.id, TextFormat("maps[%i].color", MATERIAL_MAP_METALNESS));
-        lightShader.locs[RLG_LOC_COLOR_EMISSION]     = rlGetLocationUniform(lightShader.id, TextFormat("maps[%i].color", RLG_LOC_COLOR_EMISSION));
+        lightShader.locs[RLG_LOC_COLOR_EMISSION]     = rlGetLocationUniform(lightShader.id, TextFormat("maps[%i].color", MATERIAL_MAP_EMISSION));
 
         lightShader.locs[RLG_LOC_MAP_ALBEDO]         = rlGetLocationUniform(lightShader.id, TextFormat("maps[%i].texture", MATERIAL_MAP_ALBEDO));
         lightShader.locs[RLG_LOC_MAP_METALNESS]      = rlGetLocationUniform(lightShader.id, TextFormat("maps[%i].texture", MATERIAL_MAP_METALNESS));
