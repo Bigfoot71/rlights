@@ -40,7 +40,7 @@ int main(void)
     const int lightCount = 1;
 
     LoadShaderCode(lightCount, &lightVS, &lightFS);
-    RLG_SetCustomShaderCode(RLG_SHADER_LIGHT, lightVS, lightFS);
+    RLG_SetCustomShaderCode(RLG_SHADER_LIGHTING, lightVS, lightFS);
 
     RLG_Context rlgCtx = RLG_CreateContext(1);
     RLG_SetContext(rlgCtx);
