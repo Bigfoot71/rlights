@@ -154,7 +154,7 @@ float ShadowOmni(int i, float cNdotL)
     return currentDepth - bias > closestDepth ? 0.0 : 1.0;
 }
 
-float Shadow(int i)
+float Shadow(int i, float cNdotL)
 {
     vec4 p = fragPosLightSpace[i];
 
