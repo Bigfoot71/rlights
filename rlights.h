@@ -44,9 +44,12 @@ typedef enum {
  * @brief Enum representing different types of shaders.
  */
 typedef enum {
-    RLG_SHADER_LIGHTING = 0,                ///< Enum representing the lighting shader.
-    RLG_SHADER_DEPTH,                       ///< Enum representing the depth shader.
-    RLG_SHADER_DEPTH_CUBEMAP,               ///< Enum representing the depth cubemap shader.
+    RLG_SHADER_LIGHTING = 0,                ///< Enum representing the main lighting shader.
+    RLG_SHADER_DEPTH,                       ///< Enum representing the depth writing shader for shadow maps.
+    RLG_SHADER_DEPTH_CUBEMAP,               ///< Enum representing the depth writing shader for shadow cubemaps.
+    RLG_SHADER_EQUIRECTANGULAR_TO_CUBEMAP,  ///< Enum representing the shader for generating skyboxes from HDR textures.
+    RLG_SHADER_IRRADIANCE_CONVOLUTION,      ///< Enum representing the shader for generating irradiance maps from skyboxes.
+    RLG_SHADER_SKYBOX                       ///< Enum representing the shader for rendering skyboxes.
 } RLG_Shader;
 
 /**
@@ -114,6 +117,23 @@ typedef enum {
     RLG_COUNT_LOCS
 
 } RLG_ShaderLocationIndex;
+
+/**
+ * @brief Structure representing a skybox with associated textures and buffers.
+ *
+ * This structure contains the textures and buffer IDs necessary for rendering
+ * a skybox. It includes the cubemap texture, the irradiance texture, vertex
+ * buffer object (VBO) IDs, vertex array object (VAO) ID, and a flag indicating
+ * whether the skybox is in high dynamic range (HDR).
+ */
+typedef struct {
+    TextureCubemap cubemap;       ///< The cubemap texture representing the skybox.
+    TextureCubemap irradiance;    ///< The irradiance cubemap texture for diffuse lighting.
+    int vboPostionsID;            ///< The ID of the vertex buffer object for positions.
+    int vboIndicesID;             ///< The ID of the vertex buffer object for indices.
+    int vaoID;                    ///< The ID of the vertex array object.
+    bool isHDR;                   ///< Flag indicating if the skybox is HDR (high dynamic range).
+} RLG_Skybox;
 
 /**
  * @brief Opaque type for a lighting context handle.
@@ -626,6 +646,54 @@ void RLG_DrawModel(Model model, Vector3 position, float scale, Color tint);
  */
 void RLG_DrawModelEx(Model model, Vector3 position, Vector3 rotationAxis, float rotationAngle, Vector3 scale, Color tint);
 
+/**
+ * @brief Loads a skybox from a file.
+ *
+ * This function loads a skybox texture from the specified file and returns
+ * a RLG_Skybox structure containing the cubemap texture.
+ *
+ * @param skyboxFileName The path to the skybox texture file.
+ * @return RLG_Skybox The loaded skybox.
+ */
+RLG_Skybox RLG_LoadSkybox(const char* skyboxFileName);
+
+/**
+ * @brief Loads a HDR skybox from a file with specified size and format.
+ *
+ * This function loads a high dynamic range (HDR) skybox texture from the
+ * specified file. It creates a cubemap texture with the given size and format.
+ *
+ * @note On some Android devices with WebGL, framebuffer objects (FBO)
+ * do not properly support a FLOAT-based attachment, so the function uses
+ * PIXELFORMAT_UNCOMPRESSED_R8G8B8A8 instead of PIXELFORMAT_UNCOMPRESSED_R32G32B32A32.
+ *
+ * @param skyboxFileName The path to the skybox texture file.
+ * @param size The size of the cubemap texture.
+ * @param format The pixel format of the cubemap texture.
+ * @return RLG_Skybox The loaded HDR skybox.
+ */
+RLG_Skybox RLG_LoadSkyboxHDR(const char* skyboxFileName, int size, int format);
+
+/**
+ * @brief Unloads a skybox.
+ *
+ * This function unloads the specified skybox, freeing the associated
+ * resources.
+ *
+ * @param skybox The skybox to be unloaded.
+ */
+void RLG_UnloadSkybox(RLG_Skybox skybox);
+
+/**
+ * @brief Draws a skybox.
+ *
+ * This function renders the specified skybox.
+ *
+ * @param skybox The skybox to be drawn.
+ */
+void RLG_DrawSkybox(RLG_Skybox skybox);
+
+
 #if defined(__cplusplus)
 }
 #endif
@@ -645,7 +713,7 @@ void RLG_DrawModelEx(Model model, Vector3 position, Vector3 rotationAxis, float 
 /* Helper defintions */
 
 #define RLG_COUNT_MATERIAL_MAPS 12  ///< Same as MAX_MATERIAL_MAPS defined in raylib/config.h
-#define RLG_COUNT_SHADERS 3         ///< Total shader used by rlights.h internally
+#define RLG_COUNT_SHADERS 6         ///< Total shader used by rlights.h internally
 
 /* Uniform names definitions */
 
@@ -762,20 +830,24 @@ static const char rlgLightingVS[] = GLSL_VERSION_DEF
 static const char rlgLightingFS[] = GLSL_VERSION_DEF
     GLSL_TEXTURE_DEF GLSL_TEXTURE_CUBE_DEF
 
-    "#define NUM_LIGHTS"    " %i\n"
-    "#define NUM_MATERIALS" " 7\n"
+    "#define NUM_LIGHTS"                " %i\n"
+    "#define NUM_MATERIAL_MAPS"         " 7\n"
+    "#define NUM_MATERIAL_CUBEMAPS"     " 2\n"
 
-    "#define DIRLIGHT"      " 0\n"
-    "#define OMNILIGHT"     " 1\n"
-    "#define SPOTLIGHT"     " 2\n"
+    "#define DIRLIGHT"                  " 0\n"
+    "#define OMNILIGHT"                 " 1\n"
+    "#define SPOTLIGHT"                 " 2\n"
 
-    "#define ALBEDO"        " 0\n"
-    "#define METALNESS"     " 1\n"
-    "#define NORMAL"        " 2\n"
-    "#define ROUGHNESS"     " 3\n"
-    "#define OCCLUSION"     " 4\n"
-    "#define EMISSION"      " 5\n"
-    "#define HEIGHT"        " 6\n"
+    "#define ALBEDO"                    " 0\n"
+    "#define METALNESS"                 " 1\n"
+    "#define NORMAL"                    " 2\n"
+    "#define ROUGHNESS"                 " 3\n"
+    "#define OCCLUSION"                 " 4\n"
+    "#define EMISSION"                  " 5\n"
+    "#define HEIGHT"                    " 6\n"
+
+    "#define CUBEMAP"                   " 0\n"
+    "#define IRRADIANCE"                " 1\n"
 
     "#define PI 3.1415926535897932384626433832795028\n"
 
@@ -795,8 +867,15 @@ static const char rlgLightingFS[] = GLSL_VERSION_DEF
 
     GLSL_FS_OUT_DEF
 
-    "struct Material {"
+    "struct MaterialMap {"
         "sampler2D texture;"
+        "mediump vec4 color;"
+        "mediump float value;"
+        "lowp int active;"
+    "};"
+
+    "struct MaterialCubemap {"
+        "samplerCube texture;"
         "mediump vec4 color;"
         "mediump float value;"
         "lowp int active;"
@@ -823,7 +902,8 @@ static const char rlgLightingFS[] = GLSL_VERSION_DEF
         "lowp int enabled;"             ///< Indicates if the light is active (1 for true, 0 for false)
     "};"
 
-    "uniform Material materials[NUM_MATERIALS];"
+    "uniform MaterialCubemap cubemaps[NUM_MATERIAL_CUBEMAPS];"
+    "uniform MaterialMap maps[NUM_MATERIAL_MAPS];"
     "uniform Light lights[NUM_LIGHTS];"
 
     "uniform lowp int parallaxMinLayers;"
@@ -865,8 +945,8 @@ static const char rlgLightingFS[] = GLSL_VERSION_DEF
 
     "vec2 Parallax(vec2 uv, vec3 V)"
     "{"
-        "float height = 1.0 - TEX(materials[HEIGHT].texture, uv).r;"
-        "return uv - vec2(V.xy/V.z)*height*materials[HEIGHT].value;"
+        "float height = 1.0 - TEX(maps[HEIGHT].texture, uv).r;"
+        "return uv - vec2(V.xy/V.z)*height*maps[HEIGHT].value;"
     "}"
 
     "vec2 DeepParallax(vec2 uv, vec3 V)"
@@ -879,22 +959,22 @@ static const char rlgLightingFS[] = GLSL_VERSION_DEF
         "float layerDepth = 1.0/numLayers;"
         "float currentLayerDepth = 0.0;"
 
-        "vec2 P = V.xy/V.z*materials[HEIGHT].value;"
+        "vec2 P = V.xy/V.z*maps[HEIGHT].value;"
         "vec2 deltaTexCoord = P/numLayers;"
     
         "vec2 currentUV = uv;"
-        "float currentDepthMapValue = 1.0 - TEX(materials[HEIGHT].texture, currentUV).y;"
+        "float currentDepthMapValue = 1.0 - TEX(maps[HEIGHT].texture, currentUV).y;"
         
         "while(currentLayerDepth < currentDepthMapValue)"
         "{"
             "currentUV += deltaTexCoord;"
             "currentLayerDepth += layerDepth;"
-            "currentDepthMapValue = 1.0 - TEX(materials[HEIGHT].texture, currentUV).y;"
+            "currentDepthMapValue = 1.0 - TEX(maps[HEIGHT].texture, currentUV).y;"
         "}"
 
         "vec2 prevTexCoord = currentUV - deltaTexCoord;"
         "float afterDepth  = currentDepthMapValue + currentLayerDepth;"
-        "float beforeDepth = 1.0 - TEX(materials[HEIGHT].texture,"
+        "float beforeDepth = 1.0 - TEX(maps[HEIGHT].texture,"
             "prevTexCoord).y - currentLayerDepth - layerDepth;"
 
         "float weight = afterDepth/(afterDepth - beforeDepth);"
@@ -953,7 +1033,7 @@ static const char rlgLightingFS[] = GLSL_VERSION_DEF
 
         // Compute fragTexCoord (UV), apply parallax if height map is enabled
         "vec2 uv = fragTexCoord;"
-        "if (materials[HEIGHT].active != 0)"
+        "if (maps[HEIGHT].active != 0)"
         "{"
             "uv = (parallaxMinLayers > 0 && parallaxMaxLayers > 1)"
                 "? DeepParallax(uv, V) : Parallax(uv, V);"
@@ -965,26 +1045,26 @@ static const char rlgLightingFS[] = GLSL_VERSION_DEF
         "}"
 
         // Compute albedo (base color) by sampling the texture and multiplying by the diffuse color
-        "vec3 albedo = materials[ALBEDO].color.rgb*fragColor.rgb;"
-        "if (materials[ALBEDO].active != 0)"
-            "albedo *= TEX(materials[ALBEDO].texture, uv).rgb;"
+        "vec3 albedo = maps[ALBEDO].color.rgb*fragColor.rgb;"
+        "if (maps[ALBEDO].active != 0)"
+            "albedo *= TEX(maps[ALBEDO].texture, uv).rgb;"
 
         // Compute metallic factor; if a metalness map is used, sample it
-        "float metalness = materials[METALNESS].value;"
-        "if (materials[METALNESS].active != 0)"
-            "metalness *= TEX(materials[METALNESS].texture, uv).b;"
+        "float metalness = maps[METALNESS].value;"
+        "if (maps[METALNESS].active != 0)"
+            "metalness *= TEX(maps[METALNESS].texture, uv).b;"
 
         // Compute roughness factor; if a roughness map is used, sample it
-        "float roughness = materials[ROUGHNESS].value;"
-        "if (materials[ROUGHNESS].active != 0)"
-            "roughness *= TEX(materials[ROUGHNESS].texture, uv).g;"
+        "float roughness = maps[ROUGHNESS].value;"
+        "if (maps[ROUGHNESS].active != 0)"
+            "roughness *= TEX(maps[ROUGHNESS].texture, uv).g;"
 
         // Compute F0 (reflectance at normal incidence) based on the metallic factor
         "vec3 F0 = ComputeF0(metalness, 0.5, albedo);"
 
         // Compute the normal vector; if a normal map is used, transform it to tangent space
-        "vec3 N = (materials[NORMAL].active == 0) ? normalize(fragNormal)"
-            ": normalize(TBN*(TEX(materials[NORMAL].texture, uv).rgb*2.0 - 1.0));"
+        "vec3 N = (maps[NORMAL].active == 0) ? normalize(fragNormal)"
+            ": normalize(TBN*(TEX(maps[NORMAL].texture, uv).rgb*2.0 - 1.0));"
 
         // Compute the dot product of the normal and view direction
         "float NdotV = dot(N, V);"
@@ -1095,26 +1175,41 @@ static const char rlgLightingFS[] = GLSL_VERSION_DEF
             "}"
         "}"
 
-        // Compute ambient (with occlusion)
+        // Compute ambient
         "vec3 ambient = " RLG_SHADER_UNIFORM_COLOR_AMBIENT ";"
-        "if (materials[OCCLUSION].active != 0)"
+        "if (cubemaps[IRRADIANCE].active != 0)"
         "{"
-            "float ao = TEX(materials[OCCLUSION].texture, uv).r;"
+            "vec3 kS = F0 + (1.0 - F0)*SchlickFresnel(cNdotV);"
+            "vec3 kD = (1.0 - kS)*(1.0 - metalness);"
+            "ambient = kD*TEXCUBE(cubemaps[IRRADIANCE].texture, N).rgb;"
+        "}"
+
+        // Compute ambient occlusion
+        "if (maps[OCCLUSION].active != 0)"
+        "{"
+            "float ao = TEX(maps[OCCLUSION].texture, uv).r;"
             "ambient *= ao;"
 
-            "float lightAffect = mix(1.0, ao, materials[OCCLUSION].value);"
+            "float lightAffect = mix(1.0, ao, maps[OCCLUSION].value);"
             "diffLighting *= lightAffect;"
             "specLighting *= lightAffect;"
+        "}"
+
+        // Skybox reflection
+        "if (cubemaps[CUBEMAP].active != 0)"
+        "{"
+            "vec3 reflectCol = TEXCUBE(cubemaps[CUBEMAP].texture, reflect(-V, N)).rgb;"
+            "specLighting = mix(specLighting, reflectCol, 1.0 - roughness);"
         "}"
 
         // Compute the final diffuse color, including ambient and diffuse lighting contributions
         "vec3 diffuse = albedo*(ambient + diffLighting);"
 
         // Compute emission color; if an emissive map is used, sample it
-        "vec3 emission = materials[EMISSION].color.rgb;"
-        "if (materials[EMISSION].active != 0)"
+        "vec3 emission = maps[EMISSION].color.rgb;"
+        "if (maps[EMISSION].active != 0)"
         "{"
-            "emission *= TEX(materials[EMISSION].texture, uv).rgb;"
+            "emission *= TEX(maps[EMISSION].texture, uv).rgb;"
         "}"
 
         // Compute the final fragment color by combining diffuse, specular, and emission contributions
@@ -1171,6 +1266,130 @@ static const char rlgShadowMapFS[] = GLSL_VERSION_DEF
         GLSL_FINAL_COLOR("vec4(vec3(depth/far), 1.0)")
     "}";
 
+static const char rlgCubemapVS[] = GLSL_VERSION_DEF
+    GLSL_VS_IN("vec3 vertexPosition")
+    GLSL_VS_OUT("vec3 fragPosition")
+
+    "uniform mat4 matProjection;"
+    "uniform mat4 matView;"
+
+    "void main()"
+    "{"
+        "fragPosition = vertexPosition;"
+        "gl_Position = matProjection*matView*vec4(vertexPosition, 1.0);"
+    "}";
+
+static const char rlgEquirectangularToCubemapFS[] = GLSL_VERSION_DEF
+    GLSL_TEXTURE_DEF
+
+    GLSL_PRECISION("mediump float")
+    GLSL_FS_IN("vec3 fragPosition")
+    GLSL_FS_OUT_DEF
+
+    "uniform sampler2D equirectangularMap;"
+
+    "vec2 SampleSphericalMap(vec3 v)"
+    "{"
+        "vec2 uv = vec2(atan(v.z, v.x), asin(v.y));"
+        "uv *= vec2(0.1591, -0.3183);" // negative Y, to flip axis
+        "uv += 0.5;"
+        "return uv;"
+    "}"
+
+    "void main()"
+    "{"
+        "vec2 uv = SampleSphericalMap(normalize(fragPosition));"
+        "vec3 color = TEX(equirectangularMap, uv).rgb;"
+        GLSL_FINAL_COLOR("vec4(color, 1.0)")
+    "}";
+
+static const char rlgIrradianceConvolutionFS[] = GLSL_VERSION_DEF
+    GLSL_TEXTURE_CUBE_DEF
+
+    "#define PI 3.14159265359\n"
+
+    GLSL_PRECISION("mediump float")
+    GLSL_FS_IN("vec3 fragPosition")
+    GLSL_FS_OUT_DEF
+
+    "uniform samplerCube environmentMap;"
+
+    "void main()"
+    "{"
+        // The world vector acts as the normal of a tangent surface
+        // from the origin, aligned to WorldPos. Given this normal, calculate all
+        // incoming radiance of the environment. The result of this radiance
+        // is the radiance of light coming from -Normal direction, which is what
+        // we use in the PBR shader to sample irradiance.
+        "vec3 N = normalize(fragPosition);"
+
+        "vec3 irradiance = vec3(0.0);"
+        
+        // tangent space calculation from origin point
+        "vec3 up = vec3(0.0, 1.0, 0.0);"
+        "vec3 right = normalize(cross(up, N));"
+        "up = normalize(cross(N, right));"
+
+        "float sampleDelta = 0.025;"
+        "float nrSamples = 0.0;"
+
+        "for (float phi = 0.0; phi < 2.0 * PI; phi += sampleDelta)"
+        "{"
+            "for (float theta = 0.0; theta < 0.5 * PI; theta += sampleDelta)"
+            "{"
+                // spherical to cartesian (in tangent space)
+                "vec3 tangentSample = vec3(sin(theta) * cos(phi),  sin(theta) * sin(phi), cos(theta));"
+
+                // tangent space to world
+                "vec3 sampleVec = tangentSample.x * right + tangentSample.y * up + tangentSample.z * N; "
+
+                "irradiance += TEXCUBE(environmentMap, sampleVec).rgb * cos(theta) * sin(theta);"
+                "nrSamples++;"
+            "}"
+        "}"
+
+        "irradiance = PI * irradiance * (1.0 / float(nrSamples));"
+        GLSL_FINAL_COLOR("vec4(irradiance, 1.0)")
+    "}";
+
+static const char rlgSkyboxVS[] = GLSL_VERSION_DEF
+    GLSL_VS_IN("vec3 vertexPosition")
+    GLSL_VS_OUT("vec3 fragPosition")
+
+    "uniform mat4 matProjection;"
+    "uniform mat4 matView;"
+
+    "void main()"
+    "{"
+        "fragPosition = vertexPosition;"
+        "mat4 rotView = mat4(mat3(matView));"
+        "vec4 clipPos = matProjection*rotView*vec4(vertexPosition, 1.0);"
+        "gl_Position = clipPos;"
+    "}";
+
+static const char rlgSkyboxFS[] = GLSL_VERSION_DEF
+    GLSL_TEXTURE_CUBE_DEF
+
+    GLSL_PRECISION("mediump float")
+    GLSL_FS_IN("vec3 fragPosition")
+    GLSL_FS_OUT_DEF
+
+    "uniform samplerCube environmentMap;"
+    "uniform bool doGamma;"
+
+    "void main()"
+    "{"
+        "vec3 color = TEXCUBE(environmentMap, fragPosition).rgb;"
+
+        "if (doGamma)" // Apply gamma correction
+        "{"
+            "color = color/(color + vec3(1.0));"
+            "color = pow(color, vec3(1.0/2.2));"
+        "}"
+
+        GLSL_FINAL_COLOR("vec4(color, 1.0)")
+    "}";
+
 #endif //NO_EMBEDDED_SHADERS
 
 /* Types definitions */
@@ -1184,7 +1403,7 @@ struct RLG_ShadowMap
 
 struct RLG_Material ///< NOTE: This struct is used to handle data that cannot be stored in the MaterialMap struct of raylib.
 {
-    struct RLG_MaterialLocs
+    struct
     {
         int useMaps[RLG_COUNT_MATERIAL_MAPS];
         int parallaxMinLayers;
@@ -1192,7 +1411,7 @@ struct RLG_Material ///< NOTE: This struct is used to handle data that cannot be
     }
     locs;
 
-    struct RLG_MaterialData
+    struct
     {
         int useMaps[RLG_COUNT_MATERIAL_MAPS];
         int parallaxMinLayers;
@@ -1203,7 +1422,7 @@ struct RLG_Material ///< NOTE: This struct is used to handle data that cannot be
 
 struct RLG_Light
 {
-    struct RLG_LightLocs
+    struct
     {
         int vpMatrix;       ///< NOTE: Not present in the Light shader struct but in a separate uniform
         int shadowCubemap;
@@ -1227,7 +1446,7 @@ struct RLG_Light
     }
     locs;
 
-    struct RLG_LightData
+    struct
     {
         struct RLG_ShadowMap shadowMap;
         Vector3 position;
@@ -1250,6 +1469,13 @@ struct RLG_Light
     data;
 };
 
+struct RLG_SkyboxHandling
+{
+    int previousCubemapID;  /*< Indicates whether to update the data sent to the skybox
+                                shader if different from the ID of the skybox to render */
+    int locDoGamma;
+};
+
 static struct RLG_Core
 {
     /* Default material maps */
@@ -1260,6 +1486,10 @@ static struct RLG_Core
     /* Shaders */
 
     Shader shaders[RLG_COUNT_SHADERS];
+
+    /* Skybox handling data */
+
+    struct RLG_SkyboxHandling skybox;
 
     /* Lighting shader data*/
 
@@ -1291,14 +1521,29 @@ static struct RLG_Core
     static const char
         *rlgCachedDepthCubemapVS = rlgDepthCubemapVS,
         *rlgCachedDepthCubemapFS = rlgDepthCubemapFS;
+    static const char
+        *rlgCachedIrradianceConvolutionVS = rlgCubemapVS,
+        *rlgCachedIrradianceConvolutionFS = rlgIrradianceConvolutionFS;
+    static const char
+        *rlgCachedEquirectangularToCubemapVS = rlgCubemapVS,
+        *rlgCachedEquirectangularToCubemapFS = rlgEquirectangularToCubemapFS;
+    static const char
+        *rlgCachedSkyboxVS = rlgSkyboxVS,
+        *rlgCachedSkyboxFS = rlgSkyboxFS;
 #else
     static const char
-        *rlgCachedLightingVS     = NULL,
-        *rlgCachedLightingFS     = NULL,
-        *rlgCachedDepthVS        = NULL,
-        *rlgCachedDepthFS        = NULL,
-        *rlgCachedDepthCubemapVS = NULL,
-        *rlgCachedDepthCubemapFS = NULL;
+        *rlgCachedLightingVS                    = NULL,
+        *rlgCachedLightingFS                    = NULL,
+        *rlgCachedDepthVS                       = NULL,
+        *rlgCachedDepthFS                       = NULL,
+        *rlgCachedDepthCubemapVS                = NULL,
+        *rlgCachedDepthCubemapFS                = NULL,
+        *rlgCachedIrradianceConvolutionVS       = NULL,
+        *rlgCachedIrradianceConvolutionFS       = NULL,
+        *rlgCachedEquirectangularToCubemapVS    = NULL,
+        *rlgCachedEquirectangularToCubemapFS    = NULL,
+        *rlgCachedSkyboxVS                      = NULL,
+        *rlgCachedSkyboxFS                      = NULL;
 #endif //NO_EMBEDDED_SHADERS
 
 /* Public API */
@@ -1386,22 +1631,27 @@ RLG_Context RLG_CreateContext(unsigned int count)
         lightShader.locs[RLG_LOC_COLOR_AMBIENT]      = rlGetLocationUniform(lightShader.id, RLG_SHADER_UNIFORM_COLOR_AMBIENT);
         lightShader.locs[RLG_LOC_VECTOR_VIEW]        = rlGetLocationUniform(lightShader.id, RLG_SHADER_UNIFORM_VIEW_POSITION);
 
-        lightShader.locs[RLG_LOC_COLOR_DIFFUSE]      = rlGetLocationUniform(lightShader.id, TextFormat("materials[%i].color", MATERIAL_MAP_ALBEDO));
-        lightShader.locs[RLG_LOC_COLOR_SPECULAR]     = rlGetLocationUniform(lightShader.id, TextFormat("materials[%i].color", MATERIAL_MAP_METALNESS));
-        lightShader.locs[RLG_LOC_COLOR_EMISSION]     = rlGetLocationUniform(lightShader.id, TextFormat("materials[%i].color", RLG_LOC_COLOR_EMISSION));
+        lightShader.locs[RLG_LOC_COLOR_DIFFUSE]      = rlGetLocationUniform(lightShader.id, TextFormat("maps[%i].color", MATERIAL_MAP_ALBEDO));
+        lightShader.locs[RLG_LOC_COLOR_SPECULAR]     = rlGetLocationUniform(lightShader.id, TextFormat("maps[%i].color", MATERIAL_MAP_METALNESS));
+        lightShader.locs[RLG_LOC_COLOR_EMISSION]     = rlGetLocationUniform(lightShader.id, TextFormat("maps[%i].color", RLG_LOC_COLOR_EMISSION));
 
-        lightShader.locs[RLG_LOC_MAP_ALBEDO]         = rlGetLocationUniform(lightShader.id, TextFormat("materials[%i].texture", MATERIAL_MAP_ALBEDO));
-        lightShader.locs[RLG_LOC_MAP_METALNESS]      = rlGetLocationUniform(lightShader.id, TextFormat("materials[%i].texture", MATERIAL_MAP_METALNESS));
-        lightShader.locs[RLG_LOC_MAP_NORMAL]         = rlGetLocationUniform(lightShader.id, TextFormat("materials[%i].texture", MATERIAL_MAP_NORMAL));
-        lightShader.locs[RLG_LOC_MAP_ROUGHNESS]      = rlGetLocationUniform(lightShader.id, TextFormat("materials[%i].texture", MATERIAL_MAP_ROUGHNESS));
-        lightShader.locs[RLG_LOC_MAP_OCCLUSION]      = rlGetLocationUniform(lightShader.id, TextFormat("materials[%i].texture", MATERIAL_MAP_OCCLUSION));
-        lightShader.locs[RLG_LOC_MAP_EMISSION]       = rlGetLocationUniform(lightShader.id, TextFormat("materials[%i].texture", MATERIAL_MAP_EMISSION));
-        lightShader.locs[RLG_LOC_MAP_HEIGHT]         = rlGetLocationUniform(lightShader.id, TextFormat("materials[%i].texture", MATERIAL_MAP_HEIGHT));
+        lightShader.locs[RLG_LOC_MAP_ALBEDO]         = rlGetLocationUniform(lightShader.id, TextFormat("maps[%i].texture", MATERIAL_MAP_ALBEDO));
+        lightShader.locs[RLG_LOC_MAP_METALNESS]      = rlGetLocationUniform(lightShader.id, TextFormat("maps[%i].texture", MATERIAL_MAP_METALNESS));
+        lightShader.locs[RLG_LOC_MAP_NORMAL]         = rlGetLocationUniform(lightShader.id, TextFormat("maps[%i].texture", MATERIAL_MAP_NORMAL));
+        lightShader.locs[RLG_LOC_MAP_ROUGHNESS]      = rlGetLocationUniform(lightShader.id, TextFormat("maps[%i].texture", MATERIAL_MAP_ROUGHNESS));
+        lightShader.locs[RLG_LOC_MAP_OCCLUSION]      = rlGetLocationUniform(lightShader.id, TextFormat("maps[%i].texture", MATERIAL_MAP_OCCLUSION));
+        lightShader.locs[RLG_LOC_MAP_EMISSION]       = rlGetLocationUniform(lightShader.id, TextFormat("maps[%i].texture", MATERIAL_MAP_EMISSION));
+        lightShader.locs[RLG_LOC_MAP_HEIGHT]         = rlGetLocationUniform(lightShader.id, TextFormat("maps[%i].texture", MATERIAL_MAP_HEIGHT));
+        lightShader.locs[RLG_LOC_MAP_BRDF]           = rlGetLocationUniform(lightShader.id, TextFormat("maps[%i].texture", MATERIAL_MAP_HEIGHT + 1));
 
-        lightShader.locs[RLG_LOC_METALNESS_SCALE]    = rlGetLocationUniform(lightShader.id, TextFormat("materials[%i].value", MATERIAL_MAP_METALNESS));
-        lightShader.locs[RLG_LOC_ROUGHNESS_SCALE]    = rlGetLocationUniform(lightShader.id, TextFormat("materials[%i].value", MATERIAL_MAP_ROUGHNESS));
-        lightShader.locs[RLG_LOC_AO_LIGHT_AFFECT]    = rlGetLocationUniform(lightShader.id, TextFormat("materials[%i].value", MATERIAL_MAP_OCCLUSION));
-        lightShader.locs[RLG_LOC_HEIGHT_SCALE]       = rlGetLocationUniform(lightShader.id, TextFormat("materials[%i].value", MATERIAL_MAP_HEIGHT));
+        lightShader.locs[RLG_LOC_MAP_CUBEMAP]        = rlGetLocationUniform(lightShader.id, TextFormat("cubemaps[%i].texture", 0));
+        lightShader.locs[RLG_LOC_MAP_IRRADIANCE]     = rlGetLocationUniform(lightShader.id, TextFormat("cubemaps[%i].texture", 1));
+        lightShader.locs[RLG_LOC_MAP_PREFILTER]      = rlGetLocationUniform(lightShader.id, TextFormat("cubemaps[%i].texture", 2));
+
+        lightShader.locs[RLG_LOC_METALNESS_SCALE]    = rlGetLocationUniform(lightShader.id, TextFormat("maps[%i].value", MATERIAL_MAP_METALNESS));
+        lightShader.locs[RLG_LOC_ROUGHNESS_SCALE]    = rlGetLocationUniform(lightShader.id, TextFormat("maps[%i].value", MATERIAL_MAP_ROUGHNESS));
+        lightShader.locs[RLG_LOC_AO_LIGHT_AFFECT]    = rlGetLocationUniform(lightShader.id, TextFormat("maps[%i].value", MATERIAL_MAP_OCCLUSION));
+        lightShader.locs[RLG_LOC_HEIGHT_SCALE]       = rlGetLocationUniform(lightShader.id, TextFormat("maps[%i].value", MATERIAL_MAP_HEIGHT));
 
         // Definition of the lighting shader once initialization is successful
         rlgCtx->shaders[RLG_SHADER_LIGHTING] = lightShader;
@@ -1424,9 +1674,18 @@ RLG_Context RLG_CreateContext(unsigned int count)
         &rlgCtx->colAmbient, RL_SHADER_UNIFORM_VEC3);
 
     // Retrieving lighting shader uniforms indicating which textures we should sample
-    for (int i = 0; i < RLG_COUNT_MATERIAL_MAPS; i++)
+    for (int i = 0, mapID = 0, cubemapID = 0; i < RLG_COUNT_MATERIAL_MAPS; i++)
     {
-        rlgCtx->material.locs.useMaps[i] = GetShaderLocation(lightShader, TextFormat("materials[%i].active", i));
+        if (i == MATERIAL_MAP_CUBEMAP || i == MATERIAL_MAP_IRRADIANCE || i == MATERIAL_MAP_PREFILTER)
+        {
+            rlgCtx->material.locs.useMaps[i] = GetShaderLocation(lightShader, TextFormat("cubemaps[%i].active", cubemapID));
+            cubemapID++;
+        }
+        else
+        {
+            rlgCtx->material.locs.useMaps[i] = GetShaderLocation(lightShader, TextFormat("maps[%i].active", mapID));
+            mapID++;
+        }
     }
 
     // Default activation of diffuse texture sampling
@@ -1494,22 +1753,6 @@ RLG_Context RLG_CreateContext(unsigned int count)
     // Set light count
     rlgCtx->lightCount = count;
 
-    // Load depth shader (used for shadow casting)
-    rlgCtx->shaders[RLG_SHADER_DEPTH] = LoadShaderFromMemory(rlgCachedDepthVS, rlgCachedDepthFS);
-
-    // Load depth cubemap shader (used for omnilight shadow casting)
-    rlgCtx->shaders[RLG_SHADER_DEPTH_CUBEMAP] = LoadShaderFromMemory(rlgCachedDepthCubemapVS, rlgCachedDepthCubemapFS);
-    rlgCtx->locDepthCubemapLightPos = GetShaderLocation(rlgCtx->shaders[RLG_SHADER_DEPTH_CUBEMAP], "lightPos");
-    rlgCtx->locDepthCubemapFar = GetShaderLocation(rlgCtx->shaders[RLG_SHADER_DEPTH_CUBEMAP], "farPlane");
-
-    // Get Near/Far render values
-    rlgCtx->zNear = 0.01f;  // TODO: replace with rlGetCullDistanceNear()
-    rlgCtx->zFar = 1000.0f; // TODO: replace with rlGetCullDistanceFar()
-
-    // Send Near/Far to shaders who need it
-    SetShaderValue(rlgCtx->shaders[RLG_SHADER_DEPTH_CUBEMAP],
-        rlgCtx->locDepthCubemapFar, &rlgCtx->zFar, SHADER_UNIFORM_FLOAT);
-
     // Init default material maps
     Texture defaultTexture = {
         .id = rlGetTextureIdDefault(),
@@ -1528,6 +1771,47 @@ RLG_Context RLG_CreateContext(unsigned int count)
     rlgCtx->defaultMaps[MATERIAL_MAP_EMISSION].color = BLACK;
     rlgCtx->defaultMaps[MATERIAL_MAP_HEIGHT].texture = defaultTexture;
     rlgCtx->defaultMaps[MATERIAL_MAP_HEIGHT].value = 0.05f;
+
+    // Load depth shader (used for shadow casting)
+    rlgCtx->shaders[RLG_SHADER_DEPTH] = LoadShaderFromMemory(rlgCachedDepthVS, rlgCachedDepthFS);
+
+    // Load depth cubemap shader (used for omnilight shadow casting)
+    rlgCtx->shaders[RLG_SHADER_DEPTH_CUBEMAP] = LoadShaderFromMemory(rlgCachedDepthCubemapVS, rlgCachedDepthCubemapFS);
+    rlgCtx->locDepthCubemapLightPos = GetShaderLocation(rlgCtx->shaders[RLG_SHADER_DEPTH_CUBEMAP], "lightPos");
+    rlgCtx->locDepthCubemapFar = GetShaderLocation(rlgCtx->shaders[RLG_SHADER_DEPTH_CUBEMAP], "farPlane");
+
+    // Get Near/Far render values
+    rlgCtx->zNear = 0.01f;  // TODO: replace with rlGetCullDistanceNear()
+    rlgCtx->zFar = 1000.0f; // TODO: replace with rlGetCullDistanceFar()
+
+    // Send Near/Far to shaders who need it
+    SetShaderValue(rlgCtx->shaders[RLG_SHADER_DEPTH_CUBEMAP],
+        rlgCtx->locDepthCubemapFar, &rlgCtx->zFar, SHADER_UNIFORM_FLOAT);
+
+    // Load equirectangular to cubemap shader (used for skybox cubemap generation)
+    rlgCtx->shaders[RLG_SHADER_EQUIRECTANGULAR_TO_CUBEMAP] = LoadShaderFromMemory(
+        rlgCachedEquirectangularToCubemapVS, rlgCachedEquirectangularToCubemapFS);
+
+    SetShaderValue(rlgCtx->shaders[RLG_SHADER_EQUIRECTANGULAR_TO_CUBEMAP], GetShaderLocation(
+        rlgCtx->shaders[RLG_SHADER_EQUIRECTANGULAR_TO_CUBEMAP], "equirectangularMap"),
+        (int[1]){ 0 }, SHADER_UNIFORM_INT);
+
+    // Load irradiance convolution shader (used to generate irradiance map of the skybox cubemap)
+    rlgCtx->shaders[RLG_SHADER_IRRADIANCE_CONVOLUTION] = LoadShaderFromMemory(
+        rlgCachedIrradianceConvolutionVS, rlgCachedIrradianceConvolutionFS);
+
+    SetShaderValue(rlgCtx->shaders[RLG_SHADER_IRRADIANCE_CONVOLUTION], GetShaderLocation(
+        rlgCtx->shaders[RLG_SHADER_IRRADIANCE_CONVOLUTION], "environmentMap"),
+        (int[1]){ 0 }, SHADER_UNIFORM_INT);
+
+    // Load skybox shader
+    rlgCtx->shaders[RLG_SHADER_SKYBOX] = LoadShaderFromMemory(rlgCachedSkyboxVS, rlgCachedSkyboxFS);
+    rlgCtx->skybox.locDoGamma = GetShaderLocation(rlgCtx->shaders[RLG_SHADER_SKYBOX], "doGamma");
+
+    SetShaderValue(rlgCtx->shaders[RLG_SHADER_SKYBOX],
+        GetShaderLocation(rlgCtx->shaders[RLG_SHADER_SKYBOX], "environmentMap"),
+        (int[1]){ 0 },
+        SHADER_UNIFORM_INT);
 
     return (RLG_Context)rlgCtx;
 }
@@ -1592,6 +1876,21 @@ void RLG_SetCustomShaderCode(RLG_Shader shader, const char *vsCode, const char *
         case RLG_SHADER_DEPTH_CUBEMAP:
             rlgCachedDepthCubemapVS = vsCode;
             rlgCachedDepthCubemapFS = fsCode;
+            break;
+
+        case RLG_SHADER_EQUIRECTANGULAR_TO_CUBEMAP:
+            rlgCachedEquirectangularToCubemapVS = vsCode;
+            rlgCachedEquirectangularToCubemapFS = fsCode;
+            break;
+
+        case RLG_SHADER_IRRADIANCE_CONVOLUTION:
+            rlgCachedIrradianceConvolutionVS = vsCode;
+            rlgCachedIrradianceConvolutionFS = fsCode;
+            break;
+
+        case RLG_SHADER_SKYBOX:
+            rlgCachedSkyboxVS = vsCode;
+            rlgCachedSkyboxFS = fsCode;
             break;
 
         default:
@@ -2492,7 +2791,7 @@ void RLG_UpdateShadowMap(unsigned int light, RLG_DrawFunc drawFunc)
 
         case RLG_OMNILIGHT:
             // Perspective projection for omnidirectional light
-            rlMultMatrixf(MatrixToFloat(MatrixPerspective(90 * DEG2RAD, 1.0, rlgCtx->zNear, rlgCtx->zFar)));
+            rlMultMatrixf(MatrixToFloat(MatrixPerspective(90*DEG2RAD, 1.0, rlgCtx->zNear, rlgCtx->zFar)));
             break;
     }
 
@@ -3082,6 +3381,500 @@ void RLG_DrawModelEx(Model model, Vector3 position, Vector3 rotationAxis, float 
         RLG_DrawMesh(model.meshes[i], model.materials[model.meshMaterial[i]], model.transform);
         model.materials[model.meshMaterial[i]].maps[MATERIAL_MAP_DIFFUSE].color = color;
     }
+}
+
+RLG_Skybox RLG_LoadSkybox(const char* skyboxFileName)
+{
+    // Define the positions of the vertices for a cube
+    static const float positions[] =
+    {
+        // Front face
+        -0.5f, -0.5f,  0.5f,    // Vertex 0
+         0.5f, -0.5f,  0.5f,    // Vertex 1
+         0.5f,  0.5f,  0.5f,    // Vertex 2
+        -0.5f,  0.5f,  0.5f,    // Vertex 3
+
+        // Back face
+        -0.5f, -0.5f, -0.5f,    // Vertex 4
+         0.5f, -0.5f, -0.5f,    // Vertex 5
+         0.5f,  0.5f, -0.5f,    // Vertex 6
+        -0.5f,  0.5f, -0.5f     // Vertex 7
+    };
+
+    // Define the indices for drawing the cube faces
+    const unsigned short indices[] =
+    {
+        // Front face
+        0, 1, 2,
+        2, 3, 0,
+
+        // Right face
+        1, 5, 6,
+        6, 2, 1,
+
+        // Back face
+        5, 4, 7,
+        7, 6, 5,
+
+        // Left face
+        4, 0, 3,
+        3, 7, 4,
+
+        // Top face
+        3, 2, 6,
+        6, 7, 3,
+
+        // Bottom face
+        4, 5, 1,
+        1, 0, 4
+    };
+
+    RLG_Skybox skybox = { 0 };
+
+    // Load vertex array object (VAO) and bind it
+    skybox.vaoID = rlLoadVertexArray();
+    rlEnableVertexArray(skybox.vaoID);
+    {
+        // Load vertex buffer object (VBO) for positions and bind it
+        skybox.vboPostionsID = rlLoadVertexBuffer(positions, sizeof(positions), false);
+        rlSetVertexAttribute(0, 3, RL_FLOAT, 0, 0, 0);
+        rlEnableVertexAttribute(0);
+
+        // Load element buffer object (EBO) for indices and bind it
+        skybox.vboIndicesID = rlLoadVertexBufferElement(indices, sizeof(indices), false);
+    }
+    rlDisableVertexArray();
+
+    // Load the cubemap texture from the image file
+    Image img = LoadImage(skyboxFileName);
+    skybox.cubemap = LoadTextureCubemap(img, CUBEMAP_LAYOUT_AUTO_DETECT);
+    UnloadImage(img);
+
+    // Generate Irradiance Cubemap
+    {
+        int size = skybox.cubemap.width / 16;
+        size = (size < 8) ? 8 : size;
+
+        // Create a renderbuffer for depth attachment
+        unsigned int rbo = rlLoadTextureDepth(size, size, true);
+
+        // Create a cubemap texture to hold the HDR data
+        skybox.irradiance.id = rlLoadTextureCubemap(NULL, size, skybox.cubemap.format);
+        rlCubemapParameters(skybox.irradiance.id, RL_TEXTURE_MIN_FILTER, RL_TEXTURE_FILTER_LINEAR);
+        rlCubemapParameters(skybox.irradiance.id, GL_TEXTURE_MAG_FILTER, RL_TEXTURE_FILTER_LINEAR);
+
+        // Create and configure the framebuffer
+        unsigned int fbo = rlLoadFramebuffer(size, size);
+        rlFramebufferAttach(fbo, rbo, RL_ATTACHMENT_DEPTH, RL_ATTACHMENT_RENDERBUFFER, 0);
+        rlFramebufferAttach(fbo, skybox.irradiance.id, RL_ATTACHMENT_COLOR_CHANNEL0, RL_ATTACHMENT_CUBEMAP_POSITIVE_X, 0);
+
+        // Validate the framebuffer configuration
+        if (rlFramebufferComplete(fbo))
+        {
+            TraceLog(LOG_INFO, "FBO: [ID %i] Framebuffer object created successfully", fbo);
+        }  
+
+        // Enable the shader for converting HDR equirectangular environment map to cubemap faces
+        rlEnableShader(rlgCtx->shaders[RLG_SHADER_IRRADIANCE_CONVOLUTION].id);
+
+        // Set the projection matrix for the shader
+        Matrix matFboProjection = MatrixPerspective(90.0 * DEG2RAD, 1.0, 0.1, 10.0);
+        rlSetUniformMatrix(rlgCtx->shaders[RLG_SHADER_IRRADIANCE_CONVOLUTION].locs[SHADER_LOC_MATRIX_PROJECTION], matFboProjection);
+
+        // Define view matrices for each cubemap face
+        Matrix fboViews[6] = {
+            MatrixLookAt((Vector3){ 0.0f, 0.0f, 0.0f }, (Vector3){  1.0f,  0.0f,  0.0f }, (Vector3){ 0.0f, -1.0f,  0.0f }),
+            MatrixLookAt((Vector3){ 0.0f, 0.0f, 0.0f }, (Vector3){ -1.0f,  0.0f,  0.0f }, (Vector3){ 0.0f, -1.0f,  0.0f }),
+            MatrixLookAt((Vector3){ 0.0f, 0.0f, 0.0f }, (Vector3){  0.0f,  1.0f,  0.0f }, (Vector3){ 0.0f,  0.0f,  1.0f }),
+            MatrixLookAt((Vector3){ 0.0f, 0.0f, 0.0f }, (Vector3){  0.0f, -1.0f,  0.0f }, (Vector3){ 0.0f,  0.0f, -1.0f }),
+            MatrixLookAt((Vector3){ 0.0f, 0.0f, 0.0f }, (Vector3){  0.0f,  0.0f,  1.0f }, (Vector3){ 0.0f, -1.0f,  0.0f }),
+            MatrixLookAt((Vector3){ 0.0f, 0.0f, 0.0f }, (Vector3){  0.0f,  0.0f, -1.0f }, (Vector3){ 0.0f, -1.0f,  0.0f })
+        };
+
+        // Set the viewport to match the framebuffer dimensions
+        rlViewport(0, 0, size, size);
+        rlDisableBackfaceCulling();
+
+        // Activate the panorama texture
+        rlActiveTextureSlot(0);
+        rlEnableTextureCubemap(skybox.cubemap.id);
+
+        for (int i = 0; i < 6; i++)
+        {
+            // Set the view matrix for the current cubemap face
+            rlSetUniformMatrix(rlgCtx->shaders[RLG_SHADER_IRRADIANCE_CONVOLUTION].locs[SHADER_LOC_MATRIX_VIEW], fboViews[i]);
+            
+            // Attach the current cubemap face to the framebuffer
+            rlFramebufferAttach(fbo, skybox.irradiance.id, RL_ATTACHMENT_COLOR_CHANNEL0, RL_ATTACHMENT_CUBEMAP_POSITIVE_X + i, 0);
+            rlEnableFramebuffer(fbo);
+
+            // Clear the framebuffer and draw the cube face
+            rlClearScreenBuffers();
+            rlLoadDrawCube();
+        }
+
+        // Disable the shader and textures
+        rlDisableShader();
+        rlDisableTextureCubemap();
+        rlDisableFramebuffer();
+
+        // Unload the framebuffer and its attachments
+        rlUnloadFramebuffer(fbo);
+
+        // Reset the viewport to default dimensions
+        rlViewport(0, 0, rlGetFramebufferWidth(), rlGetFramebufferHeight());
+        rlEnableBackfaceCulling();
+
+        // Set the cubemap properties
+        skybox.cubemap.width = size;
+        skybox.cubemap.height = size;
+        skybox.cubemap.mipmaps = 1;
+        skybox.cubemap.format = skybox.cubemap.format;
+    }
+
+    return skybox;
+}
+
+RLG_Skybox RLG_LoadSkyboxHDR(const char* skyboxFileName, int size, int format)
+{
+    // Define the positions of the vertices for a cube
+    static const float positions[] =
+    {
+        // Front face
+        -0.5f, -0.5f,  0.5f,    // Vertex 0
+         0.5f, -0.5f,  0.5f,    // Vertex 1
+         0.5f,  0.5f,  0.5f,    // Vertex 2
+        -0.5f,  0.5f,  0.5f,    // Vertex 3
+
+        // Back face
+        -0.5f, -0.5f, -0.5f,    // Vertex 4
+         0.5f, -0.5f, -0.5f,    // Vertex 5
+         0.5f,  0.5f, -0.5f,    // Vertex 6
+        -0.5f,  0.5f, -0.5f     // Vertex 7
+    };
+
+    // Define the indices for drawing the cube faces
+    const unsigned short indices[] =
+    {
+        // Front face
+        0, 1, 2,
+        2, 3, 0,
+
+        // Right face
+        1, 5, 6,
+        6, 2, 1,
+
+        // Back face
+        5, 4, 7,
+        7, 6, 5,
+
+        // Left face
+        4, 0, 3,
+        3, 7, 4,
+
+        // Top face
+        3, 2, 6,
+        6, 7, 3,
+
+        // Bottom face
+        4, 5, 1,
+        1, 0, 4
+    };
+
+    RLG_Skybox skybox = { 0 };
+
+    // Generate a vertex array object (VAO) for the skybox
+    skybox.vaoID = rlLoadVertexArray();
+    rlEnableVertexArray(skybox.vaoID);
+    {
+        // Load the vertex positions into a vertex buffer object (VBO)
+        skybox.vboPostionsID = rlLoadVertexBuffer(positions, sizeof(positions), false);
+        rlSetVertexAttribute(0, 3, RL_FLOAT, 0, 0, 0);
+        rlEnableVertexAttribute(0);
+
+        // Load the indices into an element buffer object (EBO)
+        skybox.vboIndicesID = rlLoadVertexBufferElement(indices, sizeof(indices), false);
+    }
+    rlDisableVertexArray();
+
+    // Create a framebuffer object (FBO) to generate the skybox and irradiance map
+    unsigned int fbo = rlLoadFramebuffer(0, 0);
+
+    // Generate the cubemap for the skybox
+    {
+        // Load the HDR panorama texture
+        Texture2D panorama = LoadTexture(skyboxFileName);
+
+        // Create a renderbuffer for depth attachment
+        unsigned int rbo = rlLoadTextureDepth(size, size, true);
+
+        // Create a cubemap texture to hold the HDR data
+        skybox.cubemap.id = rlLoadTextureCubemap(NULL, size, format);
+
+        // Configure the framebuffer with the renderbuffer and cubemap texture
+        rlFramebufferAttach(fbo, rbo, RL_ATTACHMENT_DEPTH, RL_ATTACHMENT_RENDERBUFFER, 0);
+        rlFramebufferAttach(fbo, skybox.cubemap.id, RL_ATTACHMENT_COLOR_CHANNEL0, RL_ATTACHMENT_CUBEMAP_POSITIVE_X, 0);
+
+        // Validate the framebuffer configuration
+        if (rlFramebufferComplete(fbo))
+        {
+            TraceLog(LOG_INFO, "FBO: [ID %i] Framebuffer object created successfully", fbo);
+        }
+
+        // Enable the shader to convert the HDR equirectangular map to cubemap faces
+        rlEnableShader(rlgCtx->shaders[RLG_SHADER_EQUIRECTANGULAR_TO_CUBEMAP].id);
+
+        // Set the projection matrix for the shader
+        Matrix matFboProjection = MatrixPerspective(90.0 * DEG2RAD, 1.0, 0.1, 10.0);
+        rlSetUniformMatrix(rlgCtx->shaders[RLG_SHADER_EQUIRECTANGULAR_TO_CUBEMAP].locs[SHADER_LOC_MATRIX_PROJECTION], matFboProjection);
+
+        // Define view matrices for each cubemap face
+        Matrix fboViews[6] = {
+            MatrixLookAt((Vector3){ 0.0f, 0.0f, 0.0f }, (Vector3){  1.0f,  0.0f,  0.0f }, (Vector3){ 0.0f, -1.0f,  0.0f }),
+            MatrixLookAt((Vector3){ 0.0f, 0.0f, 0.0f }, (Vector3){ -1.0f,  0.0f,  0.0f }, (Vector3){ 0.0f, -1.0f,  0.0f }),
+            MatrixLookAt((Vector3){ 0.0f, 0.0f, 0.0f }, (Vector3){  0.0f,  1.0f,  0.0f }, (Vector3){ 0.0f,  0.0f,  1.0f }),
+            MatrixLookAt((Vector3){ 0.0f, 0.0f, 0.0f }, (Vector3){  0.0f, -1.0f,  0.0f }, (Vector3){ 0.0f,  0.0f, -1.0f }),
+            MatrixLookAt((Vector3){ 0.0f, 0.0f, 0.0f }, (Vector3){  0.0f,  0.0f,  1.0f }, (Vector3){ 0.0f, -1.0f,  0.0f }),
+            MatrixLookAt((Vector3){ 0.0f, 0.0f, 0.0f }, (Vector3){  0.0f,  0.0f, -1.0f }, (Vector3){ 0.0f, -1.0f,  0.0f })
+        };
+
+        // Set the viewport to match the framebuffer dimensions
+        rlViewport(0, 0, size, size);
+        rlDisableBackfaceCulling();
+
+        // Activate the panorama texture
+        rlActiveTextureSlot(0);
+        rlEnableTexture(panorama.id);
+
+        for (int i = 0; i < 6; i++)
+        {
+            // Set the view matrix for the current cubemap face
+            rlSetUniformMatrix(rlgCtx->shaders[RLG_SHADER_EQUIRECTANGULAR_TO_CUBEMAP].locs[SHADER_LOC_MATRIX_VIEW], fboViews[i]);
+            
+            // Attach the current cubemap face to the framebuffer
+            rlFramebufferAttach(fbo, skybox.cubemap.id, RL_ATTACHMENT_COLOR_CHANNEL0, RL_ATTACHMENT_CUBEMAP_POSITIVE_X + i, 0);
+            rlEnableFramebuffer(fbo);
+
+            // Clear the framebuffer and draw the cube
+            rlClearScreenBuffers();
+            rlLoadDrawCube();
+        }
+
+        // Disable the shader and textures
+        rlDisableShader();
+        rlDisableTexture();
+        rlDisableFramebuffer();
+
+        // Reset the viewport to default dimensions
+        rlViewport(0, 0, rlGetFramebufferWidth(), rlGetFramebufferHeight());
+        rlEnableBackfaceCulling();
+
+        // Set the cubemap properties
+        skybox.cubemap.width = size;
+        skybox.cubemap.height = size;
+        skybox.cubemap.mipmaps = 1;
+        skybox.cubemap.format = format;
+
+        // Unload the panorama texture as it's no longer needed
+        UnloadTexture(panorama);
+    }
+
+    // Generate the irradiance cubemap
+    {
+        int irrSize = skybox.cubemap.width / 16;
+        irrSize = (irrSize < 8) ? 8 : irrSize;
+
+        // Create a renderbuffer for depth attachment
+        unsigned int rbo = rlLoadTextureDepth(irrSize, irrSize, true);
+
+        // Create a cubemap texture to hold the irradiance data
+        skybox.irradiance.id = rlLoadTextureCubemap(NULL, irrSize, skybox.cubemap.format);
+        rlCubemapParameters(skybox.irradiance.id, RL_TEXTURE_MIN_FILTER, RL_TEXTURE_FILTER_LINEAR);
+        rlCubemapParameters(skybox.irradiance.id, GL_TEXTURE_MAG_FILTER, RL_TEXTURE_FILTER_LINEAR);
+
+        // Create and configure the framebuffer
+        unsigned int fbo = rlLoadFramebuffer(irrSize, irrSize);
+        rlFramebufferAttach(fbo, rbo, RL_ATTACHMENT_DEPTH, RL_ATTACHMENT_RENDERBUFFER, 0);
+        rlFramebufferAttach(fbo, skybox.irradiance.id, RL_ATTACHMENT_COLOR_CHANNEL0, RL_ATTACHMENT_CUBEMAP_POSITIVE_X, 0);
+
+        // Validate the framebuffer configuration
+        if (rlFramebufferComplete(fbo))
+        {
+            TraceLog(LOG_INFO, "FBO: [ID %i] Framebuffer object created successfully", fbo);
+        }
+
+        // Enable the shader for irradiance convolution
+        rlEnableShader(rlgCtx->shaders[RLG_SHADER_IRRADIANCE_CONVOLUTION].id);
+
+        // Set the projection matrix for the shader
+        Matrix matFboProjection = MatrixPerspective(90.0 * DEG2RAD, 1.0, 0.1, 10.0);
+        rlSetUniformMatrix(rlgCtx->shaders[RLG_SHADER_IRRADIANCE_CONVOLUTION].locs[SHADER_LOC_MATRIX_PROJECTION], matFboProjection);
+
+        // Define view matrices for each cubemap face
+        Matrix fboViews[6] = {
+            MatrixLookAt((Vector3){ 0.0f, 0.0f, 0.0f }, (Vector3){  1.0f,  0.0f,  0.0f }, (Vector3){ 0.0f, -1.0f,  0.0f }),
+            MatrixLookAt((Vector3){ 0.0f, 0.0f, 0.0f }, (Vector3){ -1.0f,  0.0f,  0.0f }, (Vector3){ 0.0f, -1.0f,  0.0f }),
+            MatrixLookAt((Vector3){ 0.0f, 0.0f, 0.0f }, (Vector3){  0.0f,  1.0f,  0.0f }, (Vector3){ 0.0f,  0.0f,  1.0f }),
+            MatrixLookAt((Vector3){ 0.0f, 0.0f, 0.0f }, (Vector3){  0.0f, -1.0f,  0.0f }, (Vector3){ 0.0f,  0.0f, -1.0f }),
+            MatrixLookAt((Vector3){ 0.0f, 0.0f, 0.0f }, (Vector3){  0.0f,  0.0f,  1.0f }, (Vector3){ 0.0f, -1.0f,  0.0f }),
+            MatrixLookAt((Vector3){ 0.0f, 0.0f, 0.0f }, (Vector3){  0.0f,  0.0f, -1.0f }, (Vector3){ 0.0f, -1.0f,  0.0f })
+        };
+
+        // Set the viewport to match the framebuffer dimensions
+        rlViewport(0, 0, irrSize, irrSize);
+        rlDisableBackfaceCulling();
+
+        // Activate the cubemap texture
+        rlActiveTextureSlot(0);
+        rlEnableTextureCubemap(skybox.cubemap.id);
+
+        for (int i = 0; i < 6; i++)
+        {
+            // Set the view matrix for the current cubemap face
+            rlSetUniformMatrix(rlgCtx->shaders[RLG_SHADER_IRRADIANCE_CONVOLUTION].locs[SHADER_LOC_MATRIX_VIEW], fboViews[i]);
+            
+            // Attach the current cubemap face to the framebuffer
+            rlFramebufferAttach(fbo, skybox.irradiance.id, RL_ATTACHMENT_COLOR_CHANNEL0, RL_ATTACHMENT_CUBEMAP_POSITIVE_X + i, 0);
+            rlEnableFramebuffer(fbo);
+
+            // Clear the framebuffer and draw the cube
+            rlClearScreenBuffers();
+            rlLoadDrawCube();
+        }
+
+        // Disable the shader and textures
+        rlDisableShader();
+        rlDisableTextureCubemap();
+        rlDisableFramebuffer();
+
+        // Reset the viewport to default dimensions
+        rlViewport(0, 0, rlGetFramebufferWidth(), rlGetFramebufferHeight());
+        rlEnableBackfaceCulling();
+
+        // Set the cubemap properties
+        skybox.cubemap.width = irrSize;
+        skybox.cubemap.height = irrSize;
+        skybox.cubemap.mipmaps = 1;
+        skybox.cubemap.format = skybox.cubemap.format;
+    }
+
+    // Unload the framebuffer
+    rlUnloadFramebuffer(fbo);
+
+    // Indicate that the texture used is HDR
+    skybox.isHDR = true;
+
+    return skybox;
+}
+
+void RLG_UnloadSkybox(RLG_Skybox skybox)
+{
+    UnloadTexture(skybox.cubemap);
+    UnloadTexture(skybox.irradiance);
+
+    rlUnloadVertexArray(skybox.vaoID);
+    rlUnloadVertexBuffer(skybox.vboIndicesID);
+    rlUnloadVertexBuffer(skybox.vboPostionsID);
+}
+
+void RLG_DrawSkybox(RLG_Skybox skybox)
+{
+    Shader *shader = &rlgCtx->shaders[RLG_SHADER_SKYBOX];
+
+    // Bind shader program
+    rlEnableShader(shader->id);
+
+    if (rlgCtx->skybox.previousCubemapID != skybox.cubemap.id)
+    {
+        rlSetUniform(rlgCtx->skybox.locDoGamma, (int[1]) { skybox.isHDR ? 1 : 0 }, SHADER_UNIFORM_INT, 1);
+        rlgCtx->skybox.previousCubemapID = skybox.cubemap.id;
+    }
+
+    rlDisableBackfaceCulling();
+    rlDisableDepthMask();
+
+    // Get current view/projection matrices
+    Matrix matView = rlGetMatrixModelview();
+    Matrix matProjection = rlGetMatrixProjection();
+
+    // Upload view and projection matrices (if locations available)
+    if (shader->locs[SHADER_LOC_MATRIX_VIEW] != -1) rlSetUniformMatrix(shader->locs[SHADER_LOC_MATRIX_VIEW], matView);
+    if (shader->locs[SHADER_LOC_MATRIX_PROJECTION] != -1) rlSetUniformMatrix(shader->locs[SHADER_LOC_MATRIX_PROJECTION], matProjection);
+
+    // Bind cubemap texture (if available)
+    if (skybox.cubemap.id > 0)
+    {
+        rlActiveTextureSlot(0);
+        rlEnableTextureCubemap(skybox.cubemap.id);
+    }
+
+    // Try binding vertex array objects (VAO) or use VBOs if not possible
+    if (!rlEnableVertexArray(skybox.vaoID))
+    {
+        // Bind mesh VBO data: vertex position (shader-location = 0)
+        rlEnableVertexBuffer(skybox.vboPostionsID);
+        rlSetVertexAttribute(shader->locs[SHADER_LOC_VERTEX_POSITION], 3, RL_FLOAT, 0, 0, 0);
+        rlEnableVertexAttribute(shader->locs[SHADER_LOC_VERTEX_POSITION]);
+
+        if (skybox.vboIndicesID != 0)
+        {
+            rlEnableVertexBufferElement(skybox.vboIndicesID);
+        }
+    }
+
+    int eyeCount = 1;
+    if (rlIsStereoRenderEnabled()) eyeCount = 2;
+
+    for (int eye = 0; eye < eyeCount; eye++)
+    {
+        // Calculate model-view-projection matrix (MVP)
+        Matrix matModelViewProjection = MatrixIdentity();
+        if (eyeCount == 1)
+        {
+            matModelViewProjection = MatrixMultiply(matView, matProjection);
+        }
+        else
+        {
+            // Setup current eye viewport (half screen width)
+            rlViewport(eye*rlGetFramebufferWidth()/2, 0, rlGetFramebufferWidth()/2, rlGetFramebufferHeight());
+            matModelViewProjection = MatrixMultiply(MatrixMultiply(matView, rlGetMatrixViewOffsetStereo(eye)), rlGetMatrixProjectionStereo(eye));
+        }
+
+        // Send combined model-view-projection matrix to shader
+        rlSetUniformMatrix(shader->locs[SHADER_LOC_MATRIX_MVP], matModelViewProjection);
+
+        // Draw mesh
+        if (skybox.vboIndicesID != 0)
+        {
+            rlDrawVertexArrayElements(0, 36, 0);
+        }
+        else
+        {
+            rlDrawVertexArray(0, 36);
+        }
+    }
+
+    // Unbind bound cubemap texture
+    if (skybox.cubemap.id > 0)
+    {
+        rlActiveTextureSlot(0);
+        rlDisableTextureCubemap();
+    }
+
+    // Disable all possible vertex array objects (or VBOs)
+    rlDisableVertexArray();
+    rlDisableVertexBuffer();
+    rlDisableVertexBufferElement();
+
+    // Disable shader program
+    rlDisableShader();
+
+    // Restore rlgl internal modelview and projection matrices
+    rlSetMatrixModelview(matView);
+    rlSetMatrixProjection(matProjection);
+
+    rlEnableBackfaceCulling();
+    rlEnableDepthMask();
 }
 
 #undef TOSTRING

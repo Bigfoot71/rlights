@@ -171,4 +171,11 @@ void RLG_CastModelEx(Shader shader, Model model, Vector3 position, Vector3 rotat
 void RLG_DrawMesh(Mesh mesh, Material material, Matrix transform);
 void RLG_DrawModel(Model model, Vector3 position, float scale, Color tint);
 void RLG_DrawModelEx(Model model, Vector3 position, Vector3 rotationAxis, float rotationAngle, Vector3 scale, Color tint);
+
+/* Fonctions de gestion des skyboxes */
+
+RLG_Skybox RLG_LoadSkybox(const char* skyboxFileName);
+RLG_Skybox RLG_LoadSkyboxHDR(const char* skyboxFileName, int size, int format);
+void RLG_UnloadSkybox(RLG_Skybox skybox);
+void RLG_DrawSkybox(RLG_Skybox skybox);
 ```

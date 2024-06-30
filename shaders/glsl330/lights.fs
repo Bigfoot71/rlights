@@ -1,19 +1,23 @@
 #version 330
 
-#define NUM_LIGHTS     %i   ///< Indicate the desired number of lights
-#define NUM_MATERIALS  7
+#define NUM_LIGHTS              %i
+#define NUM_MATERIAL_MAPS       7
+#define NUM_MATERIAL_CUBEMAPS   2
 
-#define DIRLIGHT       0
-#define OMNILIGHT      1
-#define SPOTLIGHT      2
+#define DIRLIGHT                0
+#define OMNILIGHT               1
+#define SPOTLIGHT               2
 
-#define ALBEDO         0
-#define METALNESS      1
-#define NORMAL         2
-#define ROUGHNESS      3
-#define OCCLUSION      4
-#define EMISSION       5
-#define HEIGHT         6
+#define ALBEDO                  0
+#define METALNESS               1
+#define NORMAL                  2
+#define ROUGHNESS               3
+#define OCCLUSION               4
+#define EMISSION                5
+#define HEIGHT                  6
+
+#define CUBEMAP                 0
+#define IRRADIANCE              1
 
 #define PI 3.1415926535897932384626433832795028
 
@@ -26,8 +30,15 @@ flat in mat3 TBN;
 
 out vec4 outColor;
 
-struct Material {
+struct MaterialMap {
     sampler2D texture;
+    mediump vec4 color;
+    mediump float value;
+    lowp int active;
+};
+
+struct MaterialCubemap {
+    samplerCube texture;
     mediump vec4 color;
     mediump float value;
     lowp int active;
@@ -54,7 +65,8 @@ struct Light {
     lowp int enabled;             ///< Indicates if the light is active (1 for true, 0 for false)
 };
 
-uniform Material materials[NUM_MATERIALS];
+uniform MaterialCubemap cubemaps[NUM_MATERIAL_CUBEMAPS];
+uniform MaterialMap maps[NUM_MATERIAL_MAPS];
 uniform Light lights[NUM_LIGHTS];
 
 uniform lowp int parallaxMinLayers;
@@ -96,8 +108,8 @@ vec3 ComputeF0(float metallic, float specular, vec3 albedo)
 
 vec2 Parallax(vec2 uv, vec3 V)
 {
-    float height = 1.0 - texture(materials[HEIGHT].texture, uv).r;
-    return uv - vec2(V.xy/V.z)*height*materials[HEIGHT].value;
+    float height = 1.0 - texture(maps[HEIGHT].texture, uv).r;
+    return uv - vec2(V.xy/V.z)*height*maps[HEIGHT].value;
 }
 
 vec2 DeepParallax(vec2 uv, vec3 V)
@@ -110,22 +122,22 @@ vec2 DeepParallax(vec2 uv, vec3 V)
     float layerDepth = 1.0/numLayers;
     float currentLayerDepth = 0.0;
 
-    vec2 P = V.xy/V.z*materials[HEIGHT].value;
+    vec2 P = V.xy/V.z*maps[HEIGHT].value;
     vec2 deltaTexCoord = P/numLayers;
 
     vec2 currentUV = uv;
-    float currentDepthMapValue = 1.0 - texture(materials[HEIGHT].texture, currentUV).y;
+    float currentDepthMapValue = 1.0 - texture(maps[HEIGHT].texture, currentUV).y;
     
     while(currentLayerDepth < currentDepthMapValue)
     {
         currentUV += deltaTexCoord;
         currentLayerDepth += layerDepth;
-        currentDepthMapValue = 1.0 - texture(materials[HEIGHT].texture, currentUV).y;
+        currentDepthMapValue = 1.0 - texture(maps[HEIGHT].texture, currentUV).y;
     }
 
     vec2 prevTexCoord = currentUV - deltaTexCoord;
     float afterDepth  = currentDepthMapValue + currentLayerDepth;
-    float beforeDepth = 1.0 - texture(materials[HEIGHT].texture,
+    float beforeDepth = 1.0 - texture(maps[HEIGHT].texture,
         prevTexCoord).y - currentLayerDepth - layerDepth;
 
     float weight = afterDepth/(afterDepth - beforeDepth);
@@ -180,7 +192,7 @@ void main()
 
     // Compute fragTexCoord (UV), apply parallax if height map is enabled
     vec2 uv = fragTexCoord;
-    if (materials[HEIGHT].active != 0)
+    if (maps[HEIGHT].active != 0)
     {
         uv = (parallaxMinLayers > 0 && parallaxMaxLayers > 1)
             ? DeepParallax(uv, V) : Parallax(uv, V);
@@ -192,26 +204,26 @@ void main()
     }
 
     // Compute albedo (base color) by sampling the texture and multiplying by the diffuse color
-    vec3 albedo = materials[ALBEDO].color.rgb*fragColor.rgb;
-    if (materials[ALBEDO].active != 0)
-        albedo *= texture(materials[ALBEDO].texture, uv).rgb;
+    vec3 albedo = maps[ALBEDO].color.rgb*fragColor.rgb;
+    if (maps[ALBEDO].active != 0)
+        albedo *= texture(maps[ALBEDO].texture, uv).rgb;
 
     // Compute metallic factor; if a metalness map is used, sample it
-    float metalness = materials[METALNESS].value;
-    if (materials[METALNESS].active != 0)
-        metalness *= texture(materials[METALNESS].texture, uv).b;
+    float metalness = maps[METALNESS].value;
+    if (maps[METALNESS].active != 0)
+        metalness *= texture(maps[METALNESS].texture, uv).b;
 
     // Compute roughness factor; if a roughness map is used, sample it
-    float roughness = materials[ROUGHNESS].value;
-    if (materials[ROUGHNESS].active != 0)
-        roughness *= texture(materials[ROUGHNESS].texture, uv).g;
+    float roughness = maps[ROUGHNESS].value;
+    if (maps[ROUGHNESS].active != 0)
+        roughness *= texture(maps[ROUGHNESS].texture, uv).g;
 
     // Compute F0 (reflectance at normal incidence) based on the metallic factor
     vec3 F0 = ComputeF0(metalness, 0.5, albedo);
 
     // Compute the normal vector; if a normal map is used, transform it to tangent space
-    vec3 N = (materials[NORMAL].active == 0) ? normalize(fragNormal)
-        : normalize(TBN*(texture(materials[NORMAL].texture, uv).rgb*2.0 - 1.0));
+    vec3 N = (maps[NORMAL].active == 0) ? normalize(fragNormal)
+        : normalize(TBN*(texture(maps[NORMAL].texture, uv).rgb*2.0 - 1.0));
 
     // Compute the dot product of the normal and view direction
     float NdotV = dot(N, V);
@@ -322,26 +334,41 @@ void main()
         }
     }
 
-    // Compute ambient (with occlusion)
+    // Compute ambient
     vec3 ambient = colAmbient;
-    if (materials[OCCLUSION].active != 0)
+    if (cubemaps[IRRADIANCE].active != 0)
     {
-        float ao = texture(materials[OCCLUSION].texture, uv).r;
+        vec3 kS = F0 + (1.0 - F0)*SchlickFresnel(cNdotV);
+        vec3 kD = (1.0 - kS)*(1.0 - metalness);
+        ambient = kD*texture(cubemaps[IRRADIANCE].texture, N).rgb;
+    }
+
+    // Compute ambient occlusion
+    if (maps[OCCLUSION].active != 0)
+    {
+        float ao = texture(maps[OCCLUSION].texture, uv).r;
         ambient *= ao;
 
-        float lightAffect = mix(1.0, ao, materials[OCCLUSION].value);
+        float lightAffect = mix(1.0, ao, maps[OCCLUSION].value);
         diffLighting *= lightAffect;
         specLighting *= lightAffect;
+    }
+
+    // Skybox reflection
+    if (cubemaps[CUBEMAP].active != 0)
+    {
+        vec3 reflectCol = texture(cubemaps[CUBEMAP].texture, reflect(-V, N)).rgb;
+        specLighting = mix(specLighting, reflectCol, 1.0 - roughness);
     }
 
     // Compute the final diffuse color, including ambient and diffuse lighting contributions
     vec3 diffuse = albedo*(ambient + diffLighting);
 
     // Compute emission color; if an emissive map is used, sample it
-    vec3 emission = materials[EMISSION].color.rgb;
-    if (materials[EMISSION].active != 0)
+    vec3 emission = maps[EMISSION].color.rgb;
+    if (maps[EMISSION].active != 0)
     {
-        emission *= texture(materials[EMISSION].texture, uv).rgb;
+        emission *= texture(maps[EMISSION].texture, uv).rgb;
     }
 
     // Compute the final fragment color by combining diffuse, specular, and emission contributions
