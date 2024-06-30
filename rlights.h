@@ -1951,11 +1951,17 @@ Color GetAmbientColor(void)
 
 void SetParallaxLayers(int min, int max)
 {
-    rlgCtx->material.data.parallaxMinLayers = min;
-    rlgCtx->material.data.parallaxMaxLayers = max;
+    if (min != rlgCtx->material.data.parallaxMinLayers)
+    {
+        rlgCtx->material.data.parallaxMinLayers = min;
+        SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], rlgCtx->material.locs.parallaxMinLayers, &min, RL_SHADER_UNIFORM_INT);
+    }
 
-    SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], rlgCtx->material.locs.parallaxMinLayers, &min, RL_SHADER_UNIFORM_INT);
-    SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], rlgCtx->material.locs.parallaxMaxLayers, &max, RL_SHADER_UNIFORM_INT);
+    if (max != rlgCtx->material.data.parallaxMaxLayers)
+    {
+        rlgCtx->material.data.parallaxMaxLayers = max;
+        SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], rlgCtx->material.locs.parallaxMaxLayers, &max, RL_SHADER_UNIFORM_INT);
+    }
 }
 
 void GetParallaxLayers(int* min, int* max)
@@ -1968,9 +1974,12 @@ void RLG_UseMap(MaterialMapIndex mapIndex, bool active)
 {
     if (mapIndex >= 0 && mapIndex < RLG_COUNT_MATERIAL_MAPS)
     {
-        int v = (int)active;
-        rlgCtx->material.data.useMaps[mapIndex] = active;
-        SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], rlgCtx->material.locs.useMaps[mapIndex], &v, SHADER_UNIFORM_INT);
+        if (active != rlgCtx->material.data.useMaps[mapIndex])
+        {
+            int v = (int)active;
+            rlgCtx->material.data.useMaps[mapIndex] = active;
+            SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], rlgCtx->material.locs.useMaps[mapIndex], &v, SHADER_UNIFORM_INT);
+        }
     }
 }
 
@@ -2034,9 +2043,12 @@ void RLG_UseLight(unsigned int light, bool active)
 
     struct RLG_Light *l = &rlgCtx->lights[light];
 
-    l->data.enabled = (int)active;
-    SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.enabled,
-        &l->data.enabled, SHADER_UNIFORM_INT);
+    if (active != l->data.enabled)
+    {
+        l->data.enabled = (int)active;
+        SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.enabled,
+            &l->data.enabled, SHADER_UNIFORM_INT);
+    }
 }
 
 bool RLG_IsLightUsed(unsigned int light)
@@ -2121,46 +2133,72 @@ void RLG_SetLightValue(unsigned int light, RLG_LightProperty property, float val
             break;
 
         case RLG_LIGHT_ENERGY:
-            l->data.energy = value;
-            SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.energy,
-                &l->data.energy, SHADER_UNIFORM_FLOAT);
+            if (value != l->data.energy)
+            {
+                l->data.energy = value;
+                SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.energy,
+                    &l->data.energy, SHADER_UNIFORM_FLOAT);
+            }
             break;
 
         case RLG_LIGHT_SPECULAR:
-            l->data.specular = value;
-            SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.specular,
-                &l->data.specular, SHADER_UNIFORM_FLOAT);
+            if (value != l->data.specular)
+            {
+                l->data.specular = value;
+                SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.specular,
+                    &l->data.specular, SHADER_UNIFORM_FLOAT);
+            }
             break;
 
         case RLG_LIGHT_SIZE:
-            l->data.size = value;
-            SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.size,
-                &l->data.size, SHADER_UNIFORM_FLOAT);
+            if (value != l->data.size)
+            {
+                l->data.size = value;
+                SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.size,
+                    &l->data.size, SHADER_UNIFORM_FLOAT);
+            }
             break;
 
         case RLG_LIGHT_INNER_CUTOFF:
-            l->data.innerCutOff = cosf(value*DEG2RAD);
-            SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.innerCutOff,
-                &l->data.innerCutOff, SHADER_UNIFORM_FLOAT);
+            if (value != l->data.innerCutOff)
+            {
+                l->data.innerCutOff = value;
+                SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.innerCutOff,
+                    (float[1]){ cosf(value*DEG2RAD) }, SHADER_UNIFORM_FLOAT);
+            }
             break;
 
         case RLG_LIGHT_OUTER_CUTOFF:
-            l->data.outerCutOff = cosf(value*DEG2RAD);
-            SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.outerCutOff,
-                &l->data.outerCutOff, SHADER_UNIFORM_FLOAT);
+            if (value != l->data.outerCutOff)
+            {
+                l->data.outerCutOff = value;
+                SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.outerCutOff,
+                    (float[1]){ cosf(value*DEG2RAD) }, SHADER_UNIFORM_FLOAT);
+            }
             break;
 
         case RLG_LIGHT_ATTENUATION_CONSTANT:
-            l->data.constant = value;
-            SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.constant, &value, SHADER_UNIFORM_FLOAT);
+            if (value != l->data.constant)
+            {
+                l->data.constant = value;
+                SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.constant, &value, SHADER_UNIFORM_FLOAT);
+            }
+            break;
 
         case RLG_LIGHT_ATTENUATION_LINEAR:
-            l->data.linear = value;
-            SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.linear, &value, SHADER_UNIFORM_FLOAT);
+            if (value != l->data.linear)
+            {
+                l->data.linear = value;
+                SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.linear, &value, SHADER_UNIFORM_FLOAT);
+            }
+            break;
 
         case RLG_LIGHT_ATTENUATION_QUADRATIC:
-            l->data.quadratic = value;
-            SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.quadratic, &value, SHADER_UNIFORM_FLOAT);
+            if (value != l->data.quadratic)
+            {
+                l->data.quadratic = value;
+                SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.quadratic, &value, SHADER_UNIFORM_FLOAT);
+            }
             break;
 
         default:
@@ -2200,12 +2238,21 @@ void RLG_SetLightXYZ(unsigned int light, RLG_LightProperty property, float x, fl
             break;
 
         case RLG_LIGHT_ATTENUATION_CLQ:
-            l->data.linear = y;
-            l->data.constant = x;
-            l->data.quadratic = z;
-            SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.linear, &y, SHADER_UNIFORM_FLOAT);
-            SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.constant, &x, SHADER_UNIFORM_FLOAT);
-            SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.quadratic, &z, SHADER_UNIFORM_FLOAT);
+            if (x != l->data.constant)
+            {
+                l->data.constant = x;
+                SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.constant, &x, SHADER_UNIFORM_FLOAT);
+            }
+            if (y != l->data.linear)
+            {
+                l->data.linear = y;
+                SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.linear, &y, SHADER_UNIFORM_FLOAT);
+            }
+            if (z != l->data.quadratic)
+            {
+                l->data.quadratic = z;
+                SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.quadratic, &z, SHADER_UNIFORM_FLOAT);
+            }
             break;
 
         default:
@@ -2244,12 +2291,21 @@ void RLG_SetLightVec3(unsigned int light, RLG_LightProperty property, Vector3 va
             break;
 
         case RLG_LIGHT_ATTENUATION_CLQ:
-            l->data.linear = value.y;
-            l->data.constant = value.x;
-            l->data.quadratic = value.z;
-            SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.linear, &value.y, SHADER_UNIFORM_FLOAT);
-            SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.constant, &value.x, SHADER_UNIFORM_FLOAT);
-            SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.quadratic, &value.z, SHADER_UNIFORM_FLOAT);
+            if (value.x != l->data.constant)
+            {
+                l->data.constant = value.x;
+                SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.constant, &value.x, SHADER_UNIFORM_FLOAT);
+            }
+            if (value.y != l->data.linear)
+            {
+                l->data.linear = value.y;
+                SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.linear, &value.y, SHADER_UNIFORM_FLOAT);
+            }
+            if (value.z != l->data.quadratic)
+            {
+                l->data.quadratic = value.z;
+                SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.quadratic, &value.z, SHADER_UNIFORM_FLOAT);
+            }
             break;
 
         default:
@@ -2304,11 +2360,11 @@ float RLG_GetLightValue(unsigned int light, RLG_LightProperty property)
             break;
 
         case RLG_LIGHT_INNER_CUTOFF:
-            result = acosf(l->data.innerCutOff)*RAD2DEG;    // REVIEW: Store in degrees in RAM?
+            result = l->data.innerCutOff;
             break;
 
         case RLG_LIGHT_OUTER_CUTOFF:
-            result = acosf(l->data.outerCutOff)*RAD2DEG;    // REVIEW: Store in degrees in RAM?
+            result = l->data.outerCutOff;
             break;
 
         case RLG_LIGHT_ATTENUATION_CONSTANT:
