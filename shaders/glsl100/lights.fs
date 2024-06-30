@@ -1,4 +1,4 @@
-#version 330
+#version 100
 
 #define NUM_LIGHTS              %i
 #define NUM_MATERIAL_MAPS       7
@@ -357,7 +357,7 @@ void main()
     // Skybox reflection
     if (cubemaps[CUBEMAP].active != 0)
     {
-        vec3 reflectCol = textureCube(maps[CUBEMAP].texture, reflect(-V, N)).rgb;
+        vec3 reflectCol = textureCube(cubemaps[CUBEMAP].texture, reflect(-V, N)).rgb;
         specLighting = mix(specLighting, reflectCol, 1.0 - roughness);
     }
 
