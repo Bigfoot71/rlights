@@ -7,6 +7,11 @@
 static Model cube = (Model) { 0 };
 static Model plane = (Model) { 0 };
 
+void cast(Shader shader)
+{
+    RLG_CastModel(shader, cube, Vector3Zero(), 1);
+}
+
 int main(void)
 {
     InitWindow(800, 600, "shadow");
@@ -53,9 +58,7 @@ int main(void)
 
             ClearBackground(BLACK);
 
-            RLG_BeginShadowCast(0);
-                RLG_CastModel(cube, Vector3Zero(), 1);
-            RLG_EndShadowCast();
+            RLG_UpdateShadowMap(0, cast);
 
             BeginMode3D(camera);
                 RLG_DrawModel(plane, (Vector3) { 0, -0.5, 0 }, 1, WHITE);
