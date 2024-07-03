@@ -2620,7 +2620,7 @@ Vector3 RLG_GetLightTarget(unsigned int light)
     if (light >= rlgCtx->lightCount)
     {
         TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_GetLightTarget' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
-        return INIT_STRUCT_ZERO(Vector3);
+        return result;
     }
 
     struct RLG_Light *l = &rlgCtx->lights[light];
