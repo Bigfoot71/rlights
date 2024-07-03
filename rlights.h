@@ -707,8 +707,28 @@ void RLG_DrawSkybox(RLG_Skybox skybox);
 
 /* Helper macros */
 
-#define STRINGIFY(x) #x             ///< Undefined at the end of the header
-#define TOSTRING(x) STRINGIFY(x)    ///< Undefined at the end of the header
+#define STRINGIFY(x) #x             ///< NOTE: Undefined at the end of the header
+#define TOSTRING(x) STRINGIFY(x)    ///< NOTE: Undefined at the end of the header
+
+// General macro to initialize a structure with specific values
+// NOTE: Undefine at the end of the header
+// In C++, use the brace initializer list syntax: type{...}
+// In C, use the designated initializer syntax: (type){...}
+#ifdef __cplusplus
+    #define INIT_STRUCT(type, ...) { __VA_ARGS__ }
+#else
+    #define INIT_STRUCT(type, ...) (type) { __VA_ARGS__ }
+#endif
+
+// Macro to initialize a structure with zeros
+// NOTE: Undefine at the end of the header
+// In C++, use the brace initializer list syntax: type{}
+// In C, use the designated initializer syntax: (type){0}
+#ifdef __cplusplus
+    #define INIT_STRUCT_ZERO(type) {}
+#else
+    #define INIT_STRUCT_ZERO(type) (type) { 0 }
+#endif
 
 /* Helper defintions */
 
@@ -1666,8 +1686,8 @@ RLG_Context RLG_CreateContext(unsigned int count)
 #   endif //NO_EMBEDDED_SHADERS
 
     // Init default view position and ambient color
-    rlgCtx->colAmbient = (Vector3) { 0.1f, 0.1f, 0.1f };
-    rlgCtx->viewPos = (Vector3) { 0 };
+    rlgCtx->colAmbient = INIT_STRUCT(Vector3, 0.1f, 0.1f, 0.1f);
+    rlgCtx->viewPos = INIT_STRUCT_ZERO(Vector3);
 
     SetShaderValue(lightShader,
         lightShader.locs[RLG_LOC_COLOR_AMBIENT],
@@ -1704,10 +1724,10 @@ RLG_Context RLG_CreateContext(unsigned int count)
     {
         struct RLG_Light *light = &rlgCtx->lights[i];
 
-        light->data.shadowMap      = (struct RLG_ShadowMap) { 0 };
-        light->data.position       = (Vector3) { 0 };
-        light->data.direction      = (Vector3) { 0 };
-        light->data.color          = (Vector3) { 1.0f, 1.0f, 1.0f };
+        light->data.shadowMap      = INIT_STRUCT_ZERO(struct RLG_ShadowMap);
+        light->data.position       = INIT_STRUCT_ZERO(Vector3);
+        light->data.direction      = INIT_STRUCT_ZERO(Vector3);
+        light->data.color          = INIT_STRUCT(Vector3, 1.0f, 1.0f, 1.0f);
         light->data.energy         = 1.0f;
         light->data.specular       = 1.0f;
         light->data.size           = 0.0f;
@@ -1792,26 +1812,13 @@ RLG_Context RLG_CreateContext(unsigned int count)
     rlgCtx->shaders[RLG_SHADER_EQUIRECTANGULAR_TO_CUBEMAP] = LoadShaderFromMemory(
         rlgCachedEquirectangularToCubemapVS, rlgCachedEquirectangularToCubemapFS);
 
-    SetShaderValue(rlgCtx->shaders[RLG_SHADER_EQUIRECTANGULAR_TO_CUBEMAP], GetShaderLocation(
-        rlgCtx->shaders[RLG_SHADER_EQUIRECTANGULAR_TO_CUBEMAP], "equirectangularMap"),
-        (int[1]){ 0 }, SHADER_UNIFORM_INT);
-
     // Load irradiance convolution shader (used to generate irradiance map of the skybox cubemap)
     rlgCtx->shaders[RLG_SHADER_IRRADIANCE_CONVOLUTION] = LoadShaderFromMemory(
         rlgCachedIrradianceConvolutionVS, rlgCachedIrradianceConvolutionFS);
 
-    SetShaderValue(rlgCtx->shaders[RLG_SHADER_IRRADIANCE_CONVOLUTION], GetShaderLocation(
-        rlgCtx->shaders[RLG_SHADER_IRRADIANCE_CONVOLUTION], "environmentMap"),
-        (int[1]){ 0 }, SHADER_UNIFORM_INT);
-
     // Load skybox shader
     rlgCtx->shaders[RLG_SHADER_SKYBOX] = LoadShaderFromMemory(rlgCachedSkyboxVS, rlgCachedSkyboxFS);
     rlgCtx->skybox.locDoGamma = GetShaderLocation(rlgCtx->shaders[RLG_SHADER_SKYBOX], "doGamma");
-
-    SetShaderValue(rlgCtx->shaders[RLG_SHADER_SKYBOX],
-        GetShaderLocation(rlgCtx->shaders[RLG_SHADER_SKYBOX], "environmentMap"),
-        (int[1]){ 0 },
-        SHADER_UNIFORM_INT);
 
     return (RLG_Context)rlgCtx;
 }
@@ -1825,7 +1832,7 @@ void RLG_DestroyContext(RLG_Context ctx)
         if (IsShaderReady(pCtx->shaders[i]))
         {
             UnloadShader(pCtx->shaders[i]);
-            pCtx->shaders[i] = (Shader) { 0 };
+            pCtx->shaders[i] = INIT_STRUCT_ZERO(Shader);
         }
     }
 
@@ -1911,7 +1918,7 @@ const Shader* RLG_GetShader(RLG_Shader shader)
 
 void RLG_SetViewPosition(float x, float y, float z)
 {
-    RLG_SetViewPositionV((Vector3) { x, y, z });
+    RLG_SetViewPositionV(INIT_STRUCT(Vector3, x, y, z));
 }
 
 void RLG_SetViewPositionV(Vector3 position)
@@ -2127,7 +2134,7 @@ void RLG_SetLightValue(unsigned int light, RLG_LightProperty property, float val
     switch (property)
     {
         case RLG_LIGHT_COLOR:
-            l->data.color = (Vector3) { value, value, value };
+            l->data.color = INIT_STRUCT(Vector3, value, value, value);
             SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.color,
                 &l->data.color, SHADER_UNIFORM_VEC3);
             break;
@@ -2163,8 +2170,9 @@ void RLG_SetLightValue(unsigned int light, RLG_LightProperty property, float val
             if (value != l->data.innerCutOff)
             {
                 l->data.innerCutOff = value;
+                float c = cosf(value*DEG2RAD);
                 SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.innerCutOff,
-                    (float[1]){ cosf(value*DEG2RAD) }, SHADER_UNIFORM_FLOAT);
+                    &c, SHADER_UNIFORM_FLOAT);
             }
             break;
 
@@ -2172,8 +2180,9 @@ void RLG_SetLightValue(unsigned int light, RLG_LightProperty property, float val
             if (value != l->data.outerCutOff)
             {
                 l->data.outerCutOff = value;
+                float c = cosf(value*DEG2RAD);
                 SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.outerCutOff,
-                    (float[1]){ cosf(value*DEG2RAD) }, SHADER_UNIFORM_FLOAT);
+                    &c, SHADER_UNIFORM_FLOAT);
             }
             break;
 
@@ -2574,9 +2583,9 @@ void RLG_LightRotate(unsigned int light, Vector3 axis, float degrees)
         QuaternionInvert(rotationQuat));
 
     // Update the light direction with the rotated direction
-    l->data.direction = Vector3Normalize((Vector3) {
+    l->data.direction = Vector3Normalize(INIT_STRUCT(Vector3,
         rotatedQuat.x, rotatedQuat.y, rotatedQuat.z
-    });
+    ));
 
     SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.direction,
         &l->data.direction, SHADER_UNIFORM_VEC3);
@@ -2584,7 +2593,7 @@ void RLG_LightRotate(unsigned int light, Vector3 axis, float degrees)
 
 void RLG_SetLightTarget(unsigned int light, float x, float y, float z)
 {
-    RLG_SetLightTargetV(light, (Vector3) { x, y, z });
+    RLG_SetLightTargetV(light, INIT_STRUCT(Vector3, x, y, z));
 }
 
 void RLG_SetLightTargetV(unsigned int light, Vector3 targetPosition)
@@ -2606,17 +2615,18 @@ void RLG_SetLightTargetV(unsigned int light, Vector3 targetPosition)
 
 Vector3 RLG_GetLightTarget(unsigned int light)
 {
+    Vector3 result = INIT_STRUCT_ZERO(Vector3);
+
     if (light >= rlgCtx->lightCount)
     {
         TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_GetLightTarget' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
-        return (Vector3) { 0 };
+        return INIT_STRUCT_ZERO(Vector3);
     }
 
     struct RLG_Light *l = &rlgCtx->lights[light];
+    result = Vector3Add(l->data.position, l->data.direction);
 
-    return Vector3Add(
-        l->data.position,
-        l->data.direction);
+    return result;
 }
 
 void RLG_EnableShadow(unsigned int light, int shadowMapResolution)
@@ -2732,7 +2742,7 @@ void RLG_DisableShadow(unsigned int light)
         rlUnloadFramebuffer(l->data.shadowMap.id);
 
         // Fill shadow map struct with zeroes
-        l->data.shadowMap = (struct RLG_ShadowMap) { 0 };
+        l->data.shadowMap = INIT_STRUCT_ZERO(struct RLG_ShadowMap);
 
         // Send info to the shader
         l->data.shadow = false;
@@ -2940,7 +2950,7 @@ Texture RLG_GetShadowMap(unsigned int light)
     {
         // Log an error if the light ID exceeds the number of allocated lights
         TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_GetShadowMap' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
-        return (Texture) { 0 };
+        return INIT_STRUCT_ZERO(Texture);
     }
 
     return rlgCtx->lights[light].data.shadowMap.depth;
@@ -3842,7 +3852,8 @@ void RLG_DrawSkybox(RLG_Skybox skybox)
 
     if (rlgCtx->skybox.previousCubemapID != skybox.cubemap.id)
     {
-        rlSetUniform(rlgCtx->skybox.locDoGamma, (int[1]) { skybox.isHDR ? 1 : 0 }, SHADER_UNIFORM_INT, 1);
+        int isHDR = (int)skybox.isHDR;
+        rlSetUniform(rlgCtx->skybox.locDoGamma, &isHDR, SHADER_UNIFORM_INT, 1);
         rlgCtx->skybox.previousCubemapID = skybox.cubemap.id;
     }
 
@@ -3935,6 +3946,9 @@ void RLG_DrawSkybox(RLG_Skybox skybox)
 
 #undef TOSTRING
 #undef STRINGIFY
+
+#undef INIT_STRUCT
+#undef INIT_STRUCT_ZERO
 
 #endif //RLIGHTS_IMPLEMENTATION
 #endif //RLIGHTS_H
