@@ -2911,7 +2911,7 @@ void RLG_UpdateShadowMap(unsigned int light, RLG_DrawFunc drawFunc)
         else
         {
             // Calculate the view matrix for directional and spotlight
-            matView = MatrixLookAt(l->data.position, Vector3Add(l->data.position, l->data.direction), (Vector3){ 0, 1, 0 });
+            matView = MatrixLookAt(l->data.position, Vector3Add(l->data.position, l->data.direction), INIT_STRUCT(Vector3, 0, 1, 0));
 
             // Calculate and send the view-projection matrix to the lighting shader for later rendering
             Matrix viewProj = MatrixMultiply(matView, rlGetMatrixProjection());
@@ -3549,12 +3549,12 @@ RLG_Skybox RLG_LoadSkybox(const char* skyboxFileName)
 
         // Define view matrices for each cubemap face
         Matrix fboViews[6] = {
-            MatrixLookAt((Vector3){ 0.0f, 0.0f, 0.0f }, (Vector3){  1.0f,  0.0f,  0.0f }, (Vector3){ 0.0f, -1.0f,  0.0f }),
-            MatrixLookAt((Vector3){ 0.0f, 0.0f, 0.0f }, (Vector3){ -1.0f,  0.0f,  0.0f }, (Vector3){ 0.0f, -1.0f,  0.0f }),
-            MatrixLookAt((Vector3){ 0.0f, 0.0f, 0.0f }, (Vector3){  0.0f,  1.0f,  0.0f }, (Vector3){ 0.0f,  0.0f,  1.0f }),
-            MatrixLookAt((Vector3){ 0.0f, 0.0f, 0.0f }, (Vector3){  0.0f, -1.0f,  0.0f }, (Vector3){ 0.0f,  0.0f, -1.0f }),
-            MatrixLookAt((Vector3){ 0.0f, 0.0f, 0.0f }, (Vector3){  0.0f,  0.0f,  1.0f }, (Vector3){ 0.0f, -1.0f,  0.0f }),
-            MatrixLookAt((Vector3){ 0.0f, 0.0f, 0.0f }, (Vector3){  0.0f,  0.0f, -1.0f }, (Vector3){ 0.0f, -1.0f,  0.0f })
+            MatrixLookAt(INIT_STRUCT_ZERO(Vector3), INIT_STRUCT(Vector3,  1.0f,  0.0f,  0.0f), INIT_STRUCT(Vector3, 0.0f, -1.0f,  0.0f)),
+            MatrixLookAt(INIT_STRUCT_ZERO(Vector3), INIT_STRUCT(Vector3, -1.0f,  0.0f,  0.0f), INIT_STRUCT(Vector3, 0.0f, -1.0f,  0.0f)),
+            MatrixLookAt(INIT_STRUCT_ZERO(Vector3), INIT_STRUCT(Vector3,  0.0f,  1.0f,  0.0f), INIT_STRUCT(Vector3, 0.0f,  0.0f,  1.0f)),
+            MatrixLookAt(INIT_STRUCT_ZERO(Vector3), INIT_STRUCT(Vector3,  0.0f, -1.0f,  0.0f), INIT_STRUCT(Vector3, 0.0f,  0.0f, -1.0f)),
+            MatrixLookAt(INIT_STRUCT_ZERO(Vector3), INIT_STRUCT(Vector3,  0.0f,  0.0f,  1.0f), INIT_STRUCT(Vector3, 0.0f, -1.0f,  0.0f)),
+            MatrixLookAt(INIT_STRUCT_ZERO(Vector3), INIT_STRUCT(Vector3,  0.0f,  0.0f, -1.0f), INIT_STRUCT(Vector3, 0.0f, -1.0f,  0.0f))
         };
 
         // Set the viewport to match the framebuffer dimensions
@@ -3696,12 +3696,12 @@ RLG_Skybox RLG_LoadSkyboxHDR(const char* skyboxFileName, int size, int format)
 
         // Define view matrices for each cubemap face
         Matrix fboViews[6] = {
-            MatrixLookAt((Vector3){ 0.0f, 0.0f, 0.0f }, (Vector3){  1.0f,  0.0f,  0.0f }, (Vector3){ 0.0f, -1.0f,  0.0f }),
-            MatrixLookAt((Vector3){ 0.0f, 0.0f, 0.0f }, (Vector3){ -1.0f,  0.0f,  0.0f }, (Vector3){ 0.0f, -1.0f,  0.0f }),
-            MatrixLookAt((Vector3){ 0.0f, 0.0f, 0.0f }, (Vector3){  0.0f,  1.0f,  0.0f }, (Vector3){ 0.0f,  0.0f,  1.0f }),
-            MatrixLookAt((Vector3){ 0.0f, 0.0f, 0.0f }, (Vector3){  0.0f, -1.0f,  0.0f }, (Vector3){ 0.0f,  0.0f, -1.0f }),
-            MatrixLookAt((Vector3){ 0.0f, 0.0f, 0.0f }, (Vector3){  0.0f,  0.0f,  1.0f }, (Vector3){ 0.0f, -1.0f,  0.0f }),
-            MatrixLookAt((Vector3){ 0.0f, 0.0f, 0.0f }, (Vector3){  0.0f,  0.0f, -1.0f }, (Vector3){ 0.0f, -1.0f,  0.0f })
+            MatrixLookAt(INIT_STRUCT_ZERO(Vector3), INIT_STRUCT(Vector3,  1.0f,  0.0f,  0.0f), INIT_STRUCT(Vector3, 0.0f, -1.0f,  0.0f)),
+            MatrixLookAt(INIT_STRUCT_ZERO(Vector3), INIT_STRUCT(Vector3, -1.0f,  0.0f,  0.0f), INIT_STRUCT(Vector3, 0.0f, -1.0f,  0.0f)),
+            MatrixLookAt(INIT_STRUCT_ZERO(Vector3), INIT_STRUCT(Vector3,  0.0f,  1.0f,  0.0f), INIT_STRUCT(Vector3, 0.0f,  0.0f,  1.0f)),
+            MatrixLookAt(INIT_STRUCT_ZERO(Vector3), INIT_STRUCT(Vector3,  0.0f, -1.0f,  0.0f), INIT_STRUCT(Vector3, 0.0f,  0.0f, -1.0f)),
+            MatrixLookAt(INIT_STRUCT_ZERO(Vector3), INIT_STRUCT(Vector3,  0.0f,  0.0f,  1.0f), INIT_STRUCT(Vector3, 0.0f, -1.0f,  0.0f)),
+            MatrixLookAt(INIT_STRUCT_ZERO(Vector3), INIT_STRUCT(Vector3,  0.0f,  0.0f, -1.0f), INIT_STRUCT(Vector3, 0.0f, -1.0f,  0.0f))
         };
 
         // Set the viewport to match the framebuffer dimensions
@@ -3778,12 +3778,12 @@ RLG_Skybox RLG_LoadSkyboxHDR(const char* skyboxFileName, int size, int format)
 
         // Define view matrices for each cubemap face
         Matrix fboViews[6] = {
-            MatrixLookAt((Vector3){ 0.0f, 0.0f, 0.0f }, (Vector3){  1.0f,  0.0f,  0.0f }, (Vector3){ 0.0f, -1.0f,  0.0f }),
-            MatrixLookAt((Vector3){ 0.0f, 0.0f, 0.0f }, (Vector3){ -1.0f,  0.0f,  0.0f }, (Vector3){ 0.0f, -1.0f,  0.0f }),
-            MatrixLookAt((Vector3){ 0.0f, 0.0f, 0.0f }, (Vector3){  0.0f,  1.0f,  0.0f }, (Vector3){ 0.0f,  0.0f,  1.0f }),
-            MatrixLookAt((Vector3){ 0.0f, 0.0f, 0.0f }, (Vector3){  0.0f, -1.0f,  0.0f }, (Vector3){ 0.0f,  0.0f, -1.0f }),
-            MatrixLookAt((Vector3){ 0.0f, 0.0f, 0.0f }, (Vector3){  0.0f,  0.0f,  1.0f }, (Vector3){ 0.0f, -1.0f,  0.0f }),
-            MatrixLookAt((Vector3){ 0.0f, 0.0f, 0.0f }, (Vector3){  0.0f,  0.0f, -1.0f }, (Vector3){ 0.0f, -1.0f,  0.0f })
+            MatrixLookAt(INIT_STRUCT_ZERO(Vector3), INIT_STRUCT(Vector3,  1.0f,  0.0f,  0.0f), INIT_STRUCT(Vector3, 0.0f, -1.0f,  0.0f)),
+            MatrixLookAt(INIT_STRUCT_ZERO(Vector3), INIT_STRUCT(Vector3, -1.0f,  0.0f,  0.0f), INIT_STRUCT(Vector3, 0.0f, -1.0f,  0.0f)),
+            MatrixLookAt(INIT_STRUCT_ZERO(Vector3), INIT_STRUCT(Vector3,  0.0f,  1.0f,  0.0f), INIT_STRUCT(Vector3, 0.0f,  0.0f,  1.0f)),
+            MatrixLookAt(INIT_STRUCT_ZERO(Vector3), INIT_STRUCT(Vector3,  0.0f, -1.0f,  0.0f), INIT_STRUCT(Vector3, 0.0f,  0.0f, -1.0f)),
+            MatrixLookAt(INIT_STRUCT_ZERO(Vector3), INIT_STRUCT(Vector3,  0.0f,  0.0f,  1.0f), INIT_STRUCT(Vector3, 0.0f, -1.0f,  0.0f)),
+            MatrixLookAt(INIT_STRUCT_ZERO(Vector3), INIT_STRUCT(Vector3,  0.0f,  0.0f, -1.0f), INIT_STRUCT(Vector3, 0.0f, -1.0f,  0.0f))
         };
 
         // Set the viewport to match the framebuffer dimensions
