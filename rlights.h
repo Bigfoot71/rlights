@@ -1774,11 +1774,13 @@ RLG_Context RLG_CreateContext(unsigned int count)
     rlgCtx->lightCount = count;
 
     // Init default material maps
-    Texture defaultTexture = {
-        .id = rlGetTextureIdDefault(),
-        .width = 1, .height = 1, .mipmaps = 0,
-        .format = RL_PIXELFORMAT_UNCOMPRESSED_R8G8B8A8
-    };
+    Texture defaultTexture  = INIT_STRUCT_ZERO(Texture);
+    defaultTexture.id       = rlGetTextureIdDefault();
+    defaultTexture.width    = 1;
+    defaultTexture.height   = 1;
+    defaultTexture.mipmaps  = 1;
+    defaultTexture.format   = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8;
+
     rlgCtx->defaultMaps[MATERIAL_MAP_ALBEDO].texture = defaultTexture;
     rlgCtx->defaultMaps[MATERIAL_MAP_ALBEDO].color = WHITE;
     rlgCtx->defaultMaps[MATERIAL_MAP_METALNESS].texture = defaultTexture;
