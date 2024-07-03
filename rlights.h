@@ -1491,8 +1491,8 @@ struct RLG_Light
 
 struct RLG_SkyboxHandling
 {
-    int previousCubemapID;  /*< Indicates whether to update the data sent to the skybox
-                                shader if different from the ID of the skybox to render */
+    unsigned int previousCubemapID;  /*< Indicates whether to update the data sent to the skybox
+                                         shader if different from the ID of the skybox to render */
     int locDoGamma;
 };
 
@@ -1515,7 +1515,7 @@ static struct RLG_Core
 
     struct RLG_Material material;
     struct RLG_Light *lights;
-    int lightCount;
+    unsigned int lightCount;
 
     Vector3 colAmbient;
     Vector3 viewPos;
@@ -1720,7 +1720,7 @@ RLG_Context RLG_CreateContext(unsigned int count)
 
     // Allocation and initialization of the desired number of lights
     rlgCtx->lights = (struct RLG_Light*)calloc(count, sizeof(struct RLG_Light));
-    for (int i = 0; i < count; i++)
+    for (unsigned int i = 0; i < count; i++)
     {
         struct RLG_Light *light = &rlgCtx->lights[i];
 
@@ -1838,7 +1838,7 @@ void RLG_DestroyContext(RLG_Context ctx)
 
     if (pCtx->lights != NULL)
     {
-        for (int i = 0; i < pCtx->lightCount; i++)
+        for (unsigned int i = 0; i < pCtx->lightCount; i++)
         {
             struct RLG_Light *light = &pCtx->lights[i];
 
@@ -2569,7 +2569,6 @@ void RLG_LightRotate(unsigned int light, Vector3 axis, float degrees)
     };
 
     // Convert the current direction vector to a quaternion
-    Vector3 normalizedAxis = Vector3Normalize(axis);
     Quaternion directionQuat = {
         l->data.direction.x,
         l->data.direction.y,
@@ -3256,7 +3255,7 @@ void RLG_DrawMesh(Mesh mesh, Material material, Matrix transform)
     }
 
     // Bind depth textures for shadow mapping
-    for (int i = 0; i < rlgCtx->lightCount; i++)
+    for (unsigned int i = 0; i < rlgCtx->lightCount; i++)
     {
         const struct RLG_Light *l = &rlgCtx->lights[i];
 
@@ -3384,7 +3383,7 @@ void RLG_DrawMesh(Mesh mesh, Material material, Matrix transform)
     }
 
     // Unbind depth textures
-    for (int i = 0; i < rlgCtx->lightCount; i++)
+    for (unsigned int i = 0; i < rlgCtx->lightCount; i++)
     {
         const struct RLG_Light *l = &rlgCtx->lights[i];
 
