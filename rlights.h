@@ -1925,10 +1925,15 @@ void RLG_SetViewPosition(float x, float y, float z)
 
 void RLG_SetViewPositionV(Vector3 position)
 {
-    rlgCtx->viewPos = position;
-    SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING],
-        rlgCtx->shaders[RLG_SHADER_LIGHTING].locs[RLG_LOC_VECTOR_VIEW],
-        &rlgCtx->viewPos, SHADER_UNIFORM_VEC3);
+    int loc = rlgCtx->shaders[RLG_SHADER_LIGHTING].locs[RLG_LOC_VECTOR_VIEW];
+
+    if (loc != -1)
+    {
+        rlgCtx->viewPos = position;
+        SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING],
+            loc, &rlgCtx->viewPos, SHADER_UNIFORM_VEC3);
+    }
+
 }
 
 Vector3 RLG_GetViewPosition(void)
@@ -1938,13 +1943,17 @@ Vector3 RLG_GetViewPosition(void)
 
 void RLG_SetAmbientColor(Color color)
 {
-    rlgCtx->colAmbient.x = (float)color.r/255.0f;
-    rlgCtx->colAmbient.y = (float)color.g/255.0f;
-    rlgCtx->colAmbient.z = (float)color.b/255.0f;
+    int loc = rlgCtx->shaders[RLG_SHADER_LIGHTING].locs[RLG_LOC_COLOR_AMBIENT];
 
-    SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING],
-        rlgCtx->shaders[RLG_SHADER_LIGHTING].locs[RLG_LOC_COLOR_AMBIENT],
-        &rlgCtx->colAmbient, SHADER_UNIFORM_VEC3);
+    if (loc != -1)
+    {
+        rlgCtx->colAmbient.x = (float)color.r/255.0f;
+        rlgCtx->colAmbient.y = (float)color.g/255.0f;
+        rlgCtx->colAmbient.z = (float)color.b/255.0f;
+
+        SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING],
+            loc, &rlgCtx->colAmbient, SHADER_UNIFORM_VEC3);
+    }
 }
 Color RLG_GetAmbientColor(void)
 {
@@ -1960,16 +1969,22 @@ Color RLG_GetAmbientColor(void)
 
 void RLG_SetParallaxLayers(int min, int max)
 {
-    if (min != rlgCtx->material.data.parallaxMinLayers)
+    if (rlgCtx->material.locs.parallaxMinLayers != -1 &&
+        min != rlgCtx->material.data.parallaxMinLayers)
     {
         rlgCtx->material.data.parallaxMinLayers = min;
-        SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], rlgCtx->material.locs.parallaxMinLayers, &min, RL_SHADER_UNIFORM_INT);
+        SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING],
+            rlgCtx->material.locs.parallaxMinLayers,
+            &min, RL_SHADER_UNIFORM_INT);
     }
 
-    if (max != rlgCtx->material.data.parallaxMaxLayers)
+    if (rlgCtx->material.locs.parallaxMaxLayers != -1 &&
+        max != rlgCtx->material.data.parallaxMaxLayers)
     {
         rlgCtx->material.data.parallaxMaxLayers = max;
-        SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], rlgCtx->material.locs.parallaxMaxLayers, &max, RL_SHADER_UNIFORM_INT);
+        SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING],
+            rlgCtx->material.locs.parallaxMaxLayers,
+            &max, RL_SHADER_UNIFORM_INT);
     }
 }
 
@@ -1983,7 +1998,8 @@ void RLG_UseMap(MaterialMapIndex mapIndex, bool active)
 {
     if (mapIndex >= 0 && mapIndex < RLG_COUNT_MATERIAL_MAPS)
     {
-        if (active != rlgCtx->material.data.useMaps[mapIndex])
+        if (rlgCtx->material.locs.useMaps[mapIndex] != -1 &&
+            active != rlgCtx->material.data.useMaps[mapIndex])
         {
             int v = (int)active;
             rlgCtx->material.data.useMaps[mapIndex] = active;
@@ -2055,8 +2071,8 @@ void RLG_UseLight(unsigned int light, bool active)
     if (active != l->data.enabled)
     {
         l->data.enabled = (int)active;
-        SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.enabled,
-            &l->data.enabled, SHADER_UNIFORM_INT);
+        SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING],
+            l->locs.enabled, &l->data.enabled, SHADER_UNIFORM_INT);
     }
 }
 
@@ -3242,7 +3258,9 @@ void RLG_DrawMesh(Mesh mesh, Material material, Matrix transform)
                 rlActiveTextureSlot(i);
 
                 // Enable texture for active slot
-                if ((i == MATERIAL_MAP_IRRADIANCE) || (i == MATERIAL_MAP_PREFILTER) || (i == MATERIAL_MAP_CUBEMAP))
+                if (i == MATERIAL_MAP_IRRADIANCE ||
+                    i == MATERIAL_MAP_PREFILTER ||
+                    i == MATERIAL_MAP_CUBEMAP)
                 {
                     rlEnableTextureCubemap(textureID);
                 }
@@ -3373,7 +3391,9 @@ void RLG_DrawMesh(Mesh mesh, Material material, Matrix transform)
             rlActiveTextureSlot(i);
 
             // Disable texture for active slot
-            if ((i == MATERIAL_MAP_IRRADIANCE) || (i == MATERIAL_MAP_PREFILTER) || (i == MATERIAL_MAP_CUBEMAP))
+            if (i == MATERIAL_MAP_IRRADIANCE ||
+                i == MATERIAL_MAP_PREFILTER ||
+                i == MATERIAL_MAP_CUBEMAP)
             {
                 rlDisableTextureCubemap();
             }
