@@ -54,7 +54,7 @@ int main(void)
         if (metalness)
         {
             MaterialMap map = RLG_GetDefaultMap(MATERIAL_MAP_METALNESS);
-            float newVal = Clamp(map.value + metalness*0.05f, 0.0f, 1.0f);
+            map.value = Clamp(map.value + metalness*0.05f, 0.0f, 1.0f);
             RLG_SetDefaultMap(MATERIAL_MAP_METALNESS, map);
         }
 
@@ -62,7 +62,7 @@ int main(void)
         if (roughness)
         {
             MaterialMap map = RLG_GetDefaultMap(MATERIAL_MAP_ROUGHNESS);
-            float newVal = Clamp(map.value + metalness*0.05f, 0.0f, 1.0f);
+            map.value = Clamp(map.value + roughness*0.05f, 0.0f, 1.0f);
             RLG_SetDefaultMap(MATERIAL_MAP_ROUGHNESS, map);
         }
 
