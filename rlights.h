@@ -1627,10 +1627,8 @@ RLG_Context RLG_CreateContext(unsigned int count)
     // After shader loading, we TRY to set default location names
     if (lightShader.id > 0)
     {
-        // NOTE: If any location is not found, loc point becomes -1
-
+        // NOTE: Locations that cannot be retrieved are set to -1 by 'rlGetLocationAttrib'
         lightShader.locs = (int*)malloc(RLG_COUNT_LOCS*sizeof(int));
-        for (int i = 0; i < RLG_COUNT_LOCS; i++) lightShader.locs[i] = -1;
 
         // Get handles to GLSL input attribute locations
         lightShader.locs[RLG_LOC_VERTEX_POSITION]    = rlGetLocationAttrib(lightShader.id, RLG_SHADER_ATTRIB_POSITION);
