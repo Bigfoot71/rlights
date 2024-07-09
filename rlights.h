@@ -737,21 +737,21 @@ void RLG_DrawSkybox(RLG_Skybox skybox);
 
 /* Uniform names definitions */
 
-#define RLG_SHADER_ATTRIB_POSITION              "vertexPosition"
-#define RLG_SHADER_ATTRIB_TEXCOORD              "vertexTexCoord"
-#define RLG_SHADER_ATTRIB_TEXCOORD2             "vertexTexCoord2"
-#define RLG_SHADER_ATTRIB_NORMAL                "vertexNormal"
-#define RLG_SHADER_ATTRIB_TANGENT               "vertexTangent"
-#define RLG_SHADER_ATTRIB_COLOR                 "vertexColor"
+#define RLG_SHADER_LIGHTING_ATTRIB_POSITION             "vertexPosition"
+#define RLG_SHADER_LIGHTING_ATTRIB_TEXCOORD             "vertexTexCoord"
+#define RLG_SHADER_LIGHTING_ATTRIB_TEXCOORD2            "vertexTexCoord2"
+#define RLG_SHADER_LIGHTING_ATTRIB_NORMAL               "vertexNormal"
+#define RLG_SHADER_LIGHTING_ATTRIB_TANGENT              "vertexTangent"
+#define RLG_SHADER_LIGHTING_ATTRIB_COLOR                "vertexColor"
 
-#define RLG_SHADER_UNIFORM_MATRIX_MVP           "mvp"
-#define RLG_SHADER_UNIFORM_MATRIX_VIEW          "matView"
-#define RLG_SHADER_UNIFORM_MATRIX_PROJECTION    "matProjection"
-#define RLG_SHADER_UNIFORM_MATRIX_MODEL         "matModel"
-#define RLG_SHADER_UNIFORM_MATRIX_NORMAL        "matNormal"
+#define RLG_SHADER_LIGHTING_UNIFORM_MATRIX_MVP          "mvp"
+#define RLG_SHADER_LIGHTING_UNIFORM_MATRIX_VIEW         "matView"
+#define RLG_SHADER_LIGHTING_UNIFORM_MATRIX_PROJECTION   "matProjection"
+#define RLG_SHADER_LIGHTING_UNIFORM_MATRIX_MODEL        "matModel"
+#define RLG_SHADER_LIGHTING_UNIFORM_MATRIX_NORMAL       "matNormal"
 
-#define RLG_SHADER_UNIFORM_COLOR_AMBIENT        "colAmbient"
-#define RLG_SHADER_UNIFORM_VIEW_POSITION        "viewPos"
+#define RLG_SHADER_LIGHTING_UNIFORM_COLOR_AMBIENT       "colAmbient"
+#define RLG_SHADER_LIGHTING_UNIFORM_VIEW_POSITION       "viewPos"
 
 /* Embedded shaders definition */
 
@@ -806,16 +806,16 @@ static const char rlgLightingVS[] = GLSL_VERSION_DEF
     GLSL_VS_OUT("vec4 fragPosLightSpace[NUM_LIGHTS]")
 #   endif
 
-    GLSL_VS_IN("vec3 " RLG_SHADER_ATTRIB_POSITION)
-    GLSL_VS_IN("vec2 " RLG_SHADER_ATTRIB_TEXCOORD)
-    GLSL_VS_IN("vec4 " RLG_SHADER_ATTRIB_TANGENT)
-    GLSL_VS_IN("vec3 " RLG_SHADER_ATTRIB_NORMAL)
-    GLSL_VS_IN("vec4 " RLG_SHADER_ATTRIB_COLOR)
+    GLSL_VS_IN("vec3 " RLG_SHADER_LIGHTING_ATTRIB_POSITION)
+    GLSL_VS_IN("vec2 " RLG_SHADER_LIGHTING_ATTRIB_TEXCOORD)
+    GLSL_VS_IN("vec4 " RLG_SHADER_LIGHTING_ATTRIB_TANGENT)
+    GLSL_VS_IN("vec3 " RLG_SHADER_LIGHTING_ATTRIB_NORMAL)
+    GLSL_VS_IN("vec4 " RLG_SHADER_LIGHTING_ATTRIB_COLOR)
 
     "uniform lowp int useNormalMap;"
-    "uniform mat4 " RLG_SHADER_UNIFORM_MATRIX_NORMAL ";"
-    "uniform mat4 " RLG_SHADER_UNIFORM_MATRIX_MODEL ";"
-    "uniform mat4 " RLG_SHADER_UNIFORM_MATRIX_MVP ";"
+    "uniform mat4 " RLG_SHADER_LIGHTING_UNIFORM_MATRIX_NORMAL ";"
+    "uniform mat4 " RLG_SHADER_LIGHTING_UNIFORM_MATRIX_MODEL ";"
+    "uniform mat4 " RLG_SHADER_LIGHTING_UNIFORM_MATRIX_MVP ";"
 
     GLSL_VS_OUT("vec3 fragPosition")
     GLSL_VS_OUT("vec2 fragTexCoord")
@@ -825,16 +825,16 @@ static const char rlgLightingVS[] = GLSL_VERSION_DEF
 
     "void main()"
     "{"
-        "fragPosition = vec3(" RLG_SHADER_UNIFORM_MATRIX_MODEL "*vec4(" RLG_SHADER_ATTRIB_POSITION ", 1.0));"
-        "fragNormal = (" RLG_SHADER_UNIFORM_MATRIX_NORMAL "*vec4(" RLG_SHADER_ATTRIB_NORMAL ", 0.0)).xyz;"
+        "fragPosition = vec3(" RLG_SHADER_LIGHTING_UNIFORM_MATRIX_MODEL "*vec4(" RLG_SHADER_LIGHTING_ATTRIB_POSITION ", 1.0));"
+        "fragNormal = (" RLG_SHADER_LIGHTING_UNIFORM_MATRIX_NORMAL "*vec4(" RLG_SHADER_LIGHTING_ATTRIB_NORMAL ", 0.0)).xyz;"
 
-        "fragTexCoord = " RLG_SHADER_ATTRIB_TEXCOORD ";"
-        "fragColor = " RLG_SHADER_ATTRIB_COLOR ";"
+        "fragTexCoord = " RLG_SHADER_LIGHTING_ATTRIB_TEXCOORD ";"
+        "fragColor = " RLG_SHADER_LIGHTING_ATTRIB_COLOR ";"
 
         // The TBN matrix is used to transform vectors from tangent space to world space
         // It is currently used to transform normals from a normal map to world space normals
-        "vec3 T = normalize(vec3(" RLG_SHADER_UNIFORM_MATRIX_MODEL "*vec4(" RLG_SHADER_ATTRIB_TANGENT ".xyz, 0.0)));"
-        "vec3 B = cross(fragNormal, T)*" RLG_SHADER_ATTRIB_TANGENT ".w;"
+        "vec3 T = normalize(vec3(" RLG_SHADER_LIGHTING_UNIFORM_MATRIX_MODEL "*vec4(" RLG_SHADER_LIGHTING_ATTRIB_TANGENT ".xyz, 0.0)));"
+        "vec3 B = cross(fragNormal, T)*" RLG_SHADER_LIGHTING_ATTRIB_TANGENT ".w;"
         "TBN = mat3(T, B, fragNormal);"
 
 #       if GLSL_VERSION > 100
@@ -844,7 +844,7 @@ static const char rlgLightingVS[] = GLSL_VERSION_DEF
         "}"
 #       endif
 
-        "gl_Position = " RLG_SHADER_UNIFORM_MATRIX_MVP "*vec4(" RLG_SHADER_ATTRIB_POSITION ", 1.0);"
+        "gl_Position = " RLG_SHADER_LIGHTING_UNIFORM_MATRIX_MVP "*vec4(" RLG_SHADER_LIGHTING_ATTRIB_POSITION ", 1.0);"
     "}";
 
 static const char rlgLightingFS[] = GLSL_VERSION_DEF
@@ -931,8 +931,8 @@ static const char rlgLightingFS[] = GLSL_VERSION_DEF
 
     "uniform float farPlane;"   ///< Used to scale depth values ​​when reading the depth cubemap (point shadows)
 
-    "uniform vec3 " RLG_SHADER_UNIFORM_COLOR_AMBIENT ";"
-    "uniform vec3 " RLG_SHADER_UNIFORM_VIEW_POSITION ";"
+    "uniform vec3 " RLG_SHADER_LIGHTING_UNIFORM_COLOR_AMBIENT ";"
+    "uniform vec3 " RLG_SHADER_LIGHTING_UNIFORM_VIEW_POSITION ";"
 
     "float DistributionGGX(float cosTheta, float alpha)"
     "{"
@@ -1049,7 +1049,7 @@ static const char rlgLightingFS[] = GLSL_VERSION_DEF
     "void main()"
     "{"
         // Compute the view direction vector for this fragment
-        "vec3 V = normalize(" RLG_SHADER_UNIFORM_VIEW_POSITION " - fragPosition);"
+        "vec3 V = normalize(" RLG_SHADER_LIGHTING_UNIFORM_VIEW_POSITION " - fragPosition);"
 
         // Compute fragTexCoord (UV), apply parallax if height map is enabled
         "vec2 uv = fragTexCoord;"
@@ -1196,7 +1196,7 @@ static const char rlgLightingFS[] = GLSL_VERSION_DEF
         "}"
 
         // Compute ambient
-        "vec3 ambient = " RLG_SHADER_UNIFORM_COLOR_AMBIENT ";"
+        "vec3 ambient = " RLG_SHADER_LIGHTING_UNIFORM_COLOR_AMBIENT ";"
         "if (cubemaps[IRRADIANCE].active != 0)"
         "{"
             "vec3 kS = F0 + (1.0 - F0)*SchlickFresnel(cNdotV);"
@@ -1631,23 +1631,23 @@ RLG_Context RLG_CreateContext(unsigned int count)
         lightShader.locs = (int*)malloc(RLG_COUNT_LOCS*sizeof(int));
 
         // Get handles to GLSL input attribute locations
-        lightShader.locs[RLG_LOC_VERTEX_POSITION]    = rlGetLocationAttrib(lightShader.id, RLG_SHADER_ATTRIB_POSITION);
-        lightShader.locs[RLG_LOC_VERTEX_TEXCOORD01]  = rlGetLocationAttrib(lightShader.id, RLG_SHADER_ATTRIB_TEXCOORD);
-        lightShader.locs[RLG_LOC_VERTEX_TEXCOORD02]  = rlGetLocationAttrib(lightShader.id, RLG_SHADER_ATTRIB_TEXCOORD2);
-        lightShader.locs[RLG_LOC_VERTEX_NORMAL]      = rlGetLocationAttrib(lightShader.id, RLG_SHADER_ATTRIB_NORMAL);
-        lightShader.locs[RLG_LOC_VERTEX_TANGENT]     = rlGetLocationAttrib(lightShader.id, RLG_SHADER_ATTRIB_TANGENT);
-        lightShader.locs[RLG_LOC_VERTEX_COLOR]       = rlGetLocationAttrib(lightShader.id, RLG_SHADER_ATTRIB_COLOR);
+        lightShader.locs[RLG_LOC_VERTEX_POSITION]    = rlGetLocationAttrib(lightShader.id, RLG_SHADER_LIGHTING_ATTRIB_POSITION);
+        lightShader.locs[RLG_LOC_VERTEX_TEXCOORD01]  = rlGetLocationAttrib(lightShader.id, RLG_SHADER_LIGHTING_ATTRIB_TEXCOORD);
+        lightShader.locs[RLG_LOC_VERTEX_TEXCOORD02]  = rlGetLocationAttrib(lightShader.id, RLG_SHADER_LIGHTING_ATTRIB_TEXCOORD2);
+        lightShader.locs[RLG_LOC_VERTEX_NORMAL]      = rlGetLocationAttrib(lightShader.id, RLG_SHADER_LIGHTING_ATTRIB_NORMAL);
+        lightShader.locs[RLG_LOC_VERTEX_TANGENT]     = rlGetLocationAttrib(lightShader.id, RLG_SHADER_LIGHTING_ATTRIB_TANGENT);
+        lightShader.locs[RLG_LOC_VERTEX_COLOR]       = rlGetLocationAttrib(lightShader.id, RLG_SHADER_LIGHTING_ATTRIB_COLOR);
 
         // Get handles to GLSL uniform locations (vertex shader)
-        lightShader.locs[RLG_LOC_MATRIX_MVP]         = rlGetLocationUniform(lightShader.id, RLG_SHADER_UNIFORM_MATRIX_MVP);
-        lightShader.locs[RLG_LOC_MATRIX_VIEW]        = rlGetLocationUniform(lightShader.id, RLG_SHADER_UNIFORM_MATRIX_VIEW);
-        lightShader.locs[RLG_LOC_MATRIX_PROJECTION]  = rlGetLocationUniform(lightShader.id, RLG_SHADER_UNIFORM_MATRIX_PROJECTION);
-        lightShader.locs[RLG_LOC_MATRIX_MODEL]       = rlGetLocationUniform(lightShader.id, RLG_SHADER_UNIFORM_MATRIX_MODEL);
-        lightShader.locs[RLG_LOC_MATRIX_NORMAL]      = rlGetLocationUniform(lightShader.id, RLG_SHADER_UNIFORM_MATRIX_NORMAL);
+        lightShader.locs[RLG_LOC_MATRIX_MVP]         = rlGetLocationUniform(lightShader.id, RLG_SHADER_LIGHTING_UNIFORM_MATRIX_MVP);
+        lightShader.locs[RLG_LOC_MATRIX_VIEW]        = rlGetLocationUniform(lightShader.id, RLG_SHADER_LIGHTING_UNIFORM_MATRIX_VIEW);
+        lightShader.locs[RLG_LOC_MATRIX_PROJECTION]  = rlGetLocationUniform(lightShader.id, RLG_SHADER_LIGHTING_UNIFORM_MATRIX_PROJECTION);
+        lightShader.locs[RLG_LOC_MATRIX_MODEL]       = rlGetLocationUniform(lightShader.id, RLG_SHADER_LIGHTING_UNIFORM_MATRIX_MODEL);
+        lightShader.locs[RLG_LOC_MATRIX_NORMAL]      = rlGetLocationUniform(lightShader.id, RLG_SHADER_LIGHTING_UNIFORM_MATRIX_NORMAL);
 
         // Get handles to GLSL uniform locations (fragment shader)
-        lightShader.locs[RLG_LOC_COLOR_AMBIENT]      = rlGetLocationUniform(lightShader.id, RLG_SHADER_UNIFORM_COLOR_AMBIENT);
-        lightShader.locs[RLG_LOC_VECTOR_VIEW]        = rlGetLocationUniform(lightShader.id, RLG_SHADER_UNIFORM_VIEW_POSITION);
+        lightShader.locs[RLG_LOC_COLOR_AMBIENT]      = rlGetLocationUniform(lightShader.id, RLG_SHADER_LIGHTING_UNIFORM_COLOR_AMBIENT);
+        lightShader.locs[RLG_LOC_VECTOR_VIEW]        = rlGetLocationUniform(lightShader.id, RLG_SHADER_LIGHTING_UNIFORM_VIEW_POSITION);
 
         lightShader.locs[RLG_LOC_COLOR_DIFFUSE]      = rlGetLocationUniform(lightShader.id, TextFormat("maps[%i].color", MATERIAL_MAP_ALBEDO));
         lightShader.locs[RLG_LOC_COLOR_SPECULAR]     = rlGetLocationUniform(lightShader.id, TextFormat("maps[%i].color", MATERIAL_MAP_METALNESS));
