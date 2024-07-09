@@ -1698,12 +1698,12 @@ RLG_Context RLG_CreateContext(unsigned int count)
     {
         if (i == MATERIAL_MAP_CUBEMAP || i == MATERIAL_MAP_IRRADIANCE || i == MATERIAL_MAP_PREFILTER)
         {
-            rlgCtx->material.locs.useMaps[i] = GetShaderLocation(lightShader, TextFormat("cubemaps[%i].active", cubemapID));
+            rlgCtx->material.locs.useMaps[i] = rlGetLocationUniform(lightShader.id, TextFormat("cubemaps[%i].active", cubemapID));
             cubemapID++;
         }
         else
         {
-            rlgCtx->material.locs.useMaps[i] = GetShaderLocation(lightShader, TextFormat("maps[%i].active", mapID));
+            rlgCtx->material.locs.useMaps[i] = rlGetLocationUniform(lightShader.id, TextFormat("maps[%i].active", mapID));
             mapID++;
         }
     }
@@ -1714,9 +1714,9 @@ RLG_Context RLG_CreateContext(unsigned int count)
         &rlgCtx->material.data.useMaps[MATERIAL_MAP_ALBEDO], SHADER_UNIFORM_INT);
 
     // Recovery of “special” lighting shader uniforms
-    rlgCtx->material.locs.parallaxMinLayers = GetShaderLocation(lightShader, "parallaxMinLayers");
-    rlgCtx->material.locs.parallaxMaxLayers = GetShaderLocation(lightShader, "parallaxMaxLayers");
-    rlgCtx->locLightingFar = GetShaderLocation(lightShader, "farPlane");
+    rlgCtx->material.locs.parallaxMinLayers = rlGetLocationUniform(lightShader.id, "parallaxMinLayers");
+    rlgCtx->material.locs.parallaxMaxLayers = rlGetLocationUniform(lightShader.id, "parallaxMaxLayers");
+    rlgCtx->locLightingFar = rlGetLocationUniform(lightShader.id, "farPlane");
 
     // Allocation and initialization of the desired number of lights
     rlgCtx->lights = (struct RLG_Light*)calloc(count, sizeof(struct RLG_Light));
@@ -1742,25 +1742,25 @@ RLG_Context RLG_CreateContext(unsigned int count)
         light->data.shadow         = 0;
         light->data.enabled        = 0;
 
-        light->locs.vpMatrix       = GetShaderLocation(lightShader, TextFormat("matLights[%i]", i));
-        light->locs.shadowCubemap  = GetShaderLocation(lightShader, TextFormat("lights[%i].shadowCubemap", i));
-        light->locs.shadowMap      = GetShaderLocation(lightShader, TextFormat("lights[%i].shadowMap", i));
-        light->locs.position       = GetShaderLocation(lightShader, TextFormat("lights[%i].position", i));
-        light->locs.direction      = GetShaderLocation(lightShader, TextFormat("lights[%i].direction", i));
-        light->locs.color          = GetShaderLocation(lightShader, TextFormat("lights[%i].color", i));
-        light->locs.energy         = GetShaderLocation(lightShader, TextFormat("lights[%i].energy", i));
-        light->locs.specular       = GetShaderLocation(lightShader, TextFormat("lights[%i].specular", i));
-        light->locs.size           = GetShaderLocation(lightShader, TextFormat("lights[%i].size", i));
-        light->locs.innerCutOff    = GetShaderLocation(lightShader, TextFormat("lights[%i].innerCutOff", i));
-        light->locs.outerCutOff    = GetShaderLocation(lightShader, TextFormat("lights[%i].outerCutOff", i));
-        light->locs.constant       = GetShaderLocation(lightShader, TextFormat("lights[%i].constant", i));
-        light->locs.linear         = GetShaderLocation(lightShader, TextFormat("lights[%i].linear", i));
-        light->locs.quadratic      = GetShaderLocation(lightShader, TextFormat("lights[%i].quadratic", i));
-        light->locs.shadowMapTxlSz = GetShaderLocation(lightShader, TextFormat("lights[%i].shadowMapTxlSz", i));
-        light->locs.depthBias      = GetShaderLocation(lightShader, TextFormat("lights[%i].depthBias", i));
-        light->locs.type           = GetShaderLocation(lightShader, TextFormat("lights[%i].type", i));
-        light->locs.shadow         = GetShaderLocation(lightShader, TextFormat("lights[%i].shadow", i));
-        light->locs.enabled        = GetShaderLocation(lightShader, TextFormat("lights[%i].enabled", i));
+        light->locs.vpMatrix       = rlGetLocationUniform(lightShader.id, TextFormat("matLights[%i]", i));
+        light->locs.shadowCubemap  = rlGetLocationUniform(lightShader.id, TextFormat("lights[%i].shadowCubemap", i));
+        light->locs.shadowMap      = rlGetLocationUniform(lightShader.id, TextFormat("lights[%i].shadowMap", i));
+        light->locs.position       = rlGetLocationUniform(lightShader.id, TextFormat("lights[%i].position", i));
+        light->locs.direction      = rlGetLocationUniform(lightShader.id, TextFormat("lights[%i].direction", i));
+        light->locs.color          = rlGetLocationUniform(lightShader.id, TextFormat("lights[%i].color", i));
+        light->locs.energy         = rlGetLocationUniform(lightShader.id, TextFormat("lights[%i].energy", i));
+        light->locs.specular       = rlGetLocationUniform(lightShader.id, TextFormat("lights[%i].specular", i));
+        light->locs.size           = rlGetLocationUniform(lightShader.id, TextFormat("lights[%i].size", i));
+        light->locs.innerCutOff    = rlGetLocationUniform(lightShader.id, TextFormat("lights[%i].innerCutOff", i));
+        light->locs.outerCutOff    = rlGetLocationUniform(lightShader.id, TextFormat("lights[%i].outerCutOff", i));
+        light->locs.constant       = rlGetLocationUniform(lightShader.id, TextFormat("lights[%i].constant", i));
+        light->locs.linear         = rlGetLocationUniform(lightShader.id, TextFormat("lights[%i].linear", i));
+        light->locs.quadratic      = rlGetLocationUniform(lightShader.id, TextFormat("lights[%i].quadratic", i));
+        light->locs.shadowMapTxlSz = rlGetLocationUniform(lightShader.id, TextFormat("lights[%i].shadowMapTxlSz", i));
+        light->locs.depthBias      = rlGetLocationUniform(lightShader.id, TextFormat("lights[%i].depthBias", i));
+        light->locs.type           = rlGetLocationUniform(lightShader.id, TextFormat("lights[%i].type", i));
+        light->locs.shadow         = rlGetLocationUniform(lightShader.id, TextFormat("lights[%i].shadow", i));
+        light->locs.enabled        = rlGetLocationUniform(lightShader.id, TextFormat("lights[%i].enabled", i));
 
         SetShaderValue(lightShader, light->locs.color, &light->data.color, SHADER_UNIFORM_VEC3);
         SetShaderValue(lightShader, light->locs.energy, &light->data.energy, SHADER_UNIFORM_FLOAT);
@@ -1799,8 +1799,8 @@ RLG_Context RLG_CreateContext(unsigned int count)
 
     // Load depth cubemap shader (used for omnilight shadow casting)
     rlgCtx->shaders[RLG_SHADER_DEPTH_CUBEMAP] = LoadShaderFromMemory(rlgCachedDepthCubemapVS, rlgCachedDepthCubemapFS);
-    rlgCtx->locDepthCubemapLightPos = GetShaderLocation(rlgCtx->shaders[RLG_SHADER_DEPTH_CUBEMAP], "lightPos");
-    rlgCtx->locDepthCubemapFar = GetShaderLocation(rlgCtx->shaders[RLG_SHADER_DEPTH_CUBEMAP], "farPlane");
+    rlgCtx->locDepthCubemapLightPos = rlGetLocationUniform(rlgCtx->shaders[RLG_SHADER_DEPTH_CUBEMAP].id, "lightPos");
+    rlgCtx->locDepthCubemapFar = rlGetLocationUniform(rlgCtx->shaders[RLG_SHADER_DEPTH_CUBEMAP].id, "farPlane");
 
     // Get Near/Far render values
     rlgCtx->zNear = 0.01f;  // TODO: replace with rlGetCullDistanceNear()
@@ -1820,7 +1820,7 @@ RLG_Context RLG_CreateContext(unsigned int count)
 
     // Load skybox shader
     rlgCtx->shaders[RLG_SHADER_SKYBOX] = LoadShaderFromMemory(rlgCachedSkyboxVS, rlgCachedSkyboxFS);
-    rlgCtx->skybox.locDoGamma = GetShaderLocation(rlgCtx->shaders[RLG_SHADER_SKYBOX], "doGamma");
+    rlgCtx->skybox.locDoGamma = rlGetLocationUniform(rlgCtx->shaders[RLG_SHADER_SKYBOX].id, "doGamma");
 
     return (RLG_Context)rlgCtx;
 }
