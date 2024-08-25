@@ -774,9 +774,6 @@ void RLG_DrawSkybox(RLG_Skybox skybox);
 #   define GLSL_FS_IN(x)            "varying " x ";"
 #   define GLSL_VS_OUT(x)           "varying " x ";"
 
-#   define GLSL_FS_FLAT_IN(x)       "varying " x ";"
-#   define GLSL_VS_FLAT_OUT(x)      "varying " x ";"
-
 #else
 
 #   define GLSL_TEXTURE_DEF         "#define TEX texture\n"
@@ -790,9 +787,6 @@ void RLG_DrawSkybox(RLG_Skybox skybox);
 #   define GLSL_VS_IN(x)            "in " x ";"
 #   define GLSL_FS_IN(x)            "in " x ";"
 #   define GLSL_VS_OUT(x)           "out " x ";"
-
-#   define GLSL_FS_FLAT_IN(x)       "flat in " x ";"
-#   define GLSL_VS_FLAT_OUT(x)      "flat out " x ";"
 
 #endif
 
@@ -821,7 +815,7 @@ static const char rlgLightingVS[] = GLSL_VERSION_DEF
     GLSL_VS_OUT("vec2 fragTexCoord")
     GLSL_VS_OUT("vec3 fragNormal")
     GLSL_VS_OUT("vec4 fragColor")
-    GLSL_VS_FLAT_OUT("mat3 TBN")
+    GLSL_VS_OUT("mat3 TBN")
 
     "void main()"
     "{"
@@ -883,7 +877,7 @@ static const char rlgLightingFS[] = GLSL_VERSION_DEF
     GLSL_FS_IN("vec2 fragTexCoord")
     GLSL_FS_IN("vec3 fragNormal")
     GLSL_FS_IN("vec4 fragColor")
-    GLSL_FS_FLAT_IN("mat3 TBN")
+    GLSL_FS_IN("mat3 TBN")
 
     GLSL_FS_OUT_DEF
 
