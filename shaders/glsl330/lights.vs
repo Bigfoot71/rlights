@@ -1,6 +1,6 @@
 #version 330
 
-#define NUM_LIGHTS %i   ///< Indicate the desired number of lights
+#define NUM_LIGHTS %i
 
 in vec3 vertexPosition;
 in vec2 vertexTexCoord;
@@ -19,22 +19,21 @@ out vec3 fragPosition;
 out vec2 fragTexCoord;
 out vec3 fragNormal;
 out vec4 fragColor;
-flat out mat3 TBN;
+out mat3 TBN;
 
 void main()
 {
     fragPosition = vec3(matModel*vec4(vertexPosition, 1.0));
     fragNormal = (matNormal*vec4(vertexNormal, 0.0)).xyz;
 
-    fragTexCoord = vertexTexCoord;
-    fragColor = vertexColor;
+    fragTexCoord = vertexTexCoord ;
+    fragColor = vertexColor ;
 
-    if (useNormalMap != 0)
-    {
-        vec3 T = normalize(vec3(matModel*vec4(vertexTangent.xyz, 0.0)));
-        vec3 B = cross(fragNormal, T)*vertexTangent.w;
-        TBN = mat3(T, B, fragNormal);
-    }
+    // The TBN matrix is used to transform vectors from tangent space to world space
+    // It is currently used to transform normals from a normal map to world space normals
+    vec3 T = normalize(vec3(matModel*vec4(vertexTangent.xyz, 0.0)));
+    vec3 B = cross(fragNormal, T)*vertexTangent.w;
+    TBN = mat3(T, B, fragNormal);
 
     for (int i = 0; i < NUM_LIGHTS; i++)
     {
@@ -42,4 +41,4 @@ void main()
     }
 
     gl_Position = mvp*vec4(vertexPosition, 1.0);
-};
+}

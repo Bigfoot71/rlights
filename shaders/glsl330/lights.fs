@@ -26,7 +26,7 @@ in vec3 fragPosition;
 in vec2 fragTexCoord;
 in vec3 fragNormal;
 in vec4 fragColor;
-flat in mat3 TBN;
+in mat3 TBN;
 
 out vec4 outColor;
 
@@ -373,4 +373,4 @@ void main()
 
     // Compute the final fragment color by combining diffuse, specular, and emission contributions
     outColor = vec4(diffuse + specLighting + emission, 1.0);
-};
+}

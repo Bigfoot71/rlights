@@ -22,15 +22,14 @@ void main()
     fragPosition = vec3(matModel*vec4(vertexPosition, 1.0));
     fragNormal = (matNormal*vec4(vertexNormal, 0.0)).xyz;
 
-    fragTexCoord = vertexTexCoord;
-    fragColor = vertexColor;
+    fragTexCoord = vertexTexCoord ;
+    fragColor = vertexColor ;
 
-    if (useNormalMap != 0)
-    {
-        vec3 T = normalize(vec3(matModel*vec4(vertexTangent.xyz, 0.0)));
-        vec3 B = cross(fragNormal, T)*vertexTangent.w;
-        TBN = mat3(T, B, fragNormal);
-    }
+    // The TBN matrix is used to transform vectors from tangent space to world space
+    // It is currently used to transform normals from a normal map to world space normals
+    vec3 T = normalize(vec3(matModel*vec4(vertexTangent.xyz, 0.0)));
+    vec3 B = cross(fragNormal, T)*vertexTangent.w;
+    TBN = mat3(T, B, fragNormal);
 
     gl_Position = mvp*vec4(vertexPosition, 1.0);
-};
+}
