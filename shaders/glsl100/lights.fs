@@ -54,9 +54,8 @@ struct Light {
     float size;                   ///< Light size (spotlight, omnilight only)
     float innerCutOff;            ///< Inner cutoff angle for spotlights (cosine of the angle)
     float outerCutOff;            ///< Outer cutoff angle for spotlights (cosine of the angle)
-    float constant;               ///< Constant attenuation factor
-    float linear;                 ///< Linear attenuation factor
-    float quadratic;              ///< Quadratic attenuation factor
+    float distance;               ///< Indicates the distance up to which the spotlights and omnilights shine
+    float attenuation;            ///< Light attenuation factor along the illumination distance of spotlights and omnilights
     float shadowMapTxlSz;         ///< Texel size of the shadow map
     float depthBias;              ///< Bias value to avoid self-shadowing artifacts
     lowp int type;                ///< Type of the light (e.g., point, directional, spotlight)
@@ -302,6 +301,21 @@ void main()
                 specLight = specBRDF*lightColE*lights[i].specular;
             }
 
+            // Apply shadow factor if the light casts shadows
+            float shadow = 1.0;
+            if (lights[i].shadow != 0)
+            {
+                shadow = (lights[i].type == OMNILIGHT)
+                    ? ShadowOmni(i, cNdotL) : Shadow(i, cNdotL);
+            }
+
+            // Apply attenuation based on the distance from the light
+            if (lights[i].type != DIRLIGHT) {
+                float distance = length(lights[i].position - fragPosition);
+                float atten = 1.0 - clamp(distance / lights[i].distance, 0.0, 1.0);
+                shadow *= atten*lights[i].attenuation;
+            }
+
             // Apply spotlight effect if the light is a spotlight
             float intensity = 1.0;
             if (lights[i].type == SPOTLIGHT)
@@ -311,26 +325,12 @@ void main()
                 intensity = smoothstep(0.0, 1.0, (theta - lights[i].outerCutOff)/epsilon);
             }
 
-            // Apply attenuation based on the distance from the light
-            float distance    = length(lights[i].position - fragPosition);
-            float attenuation = 1.0/(lights[i].constant +
-                                        lights[i].linear*distance +
-                                        lights[i].quadratic*(distance*distance));
-
-            // Apply shadow factor if the light casts shadows
-            float shadow = 1.0;
-            if (lights[i].shadow != 0)
-            {
-                shadow = (lights[i].type == OMNILIGHT)
-                    ? ShadowOmni(i, cNdotL) : Shadow(i, cNdotL);
-            }
-
             // Compute the final intensity factor combining intensity, attenuation, and shadow
             float factor = intensity*attenuation*shadow;
 
             // Accumulate the diffuse and specular lighting contributions
-            diffLighting += diffLight*factor;
-            specLighting += specLight*factor;
+            diffLighting += diffLight*shadow;
+            specLighting += specLight*shadow;
         }
     }
 
