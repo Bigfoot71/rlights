@@ -696,7 +696,6 @@ void RLG_DrawSkybox(RLG_Skybox skybox);
 }
 #endif
 
-#define RLIGHTS_IMPLEMENTATION
 #ifdef RLIGHTS_IMPLEMENTATION
 
 #include <raymath.h>
@@ -1166,7 +1165,7 @@ static const char rlgLightingFS[] = GLSL_VERSION_DEF
                 // Apply attenuation based on the distance from the light
                 "if (lights[i].type != DIRLIGHT) {"
                     "float distance = length(lights[i].position - fragPosition);"
-                    "float atten = 1.0 - clamp(distance / maxDistance, 0.0, 1.0);"
+                    "float atten = 1.0 - clamp(distance / lights[i].distance, 0.0, 1.0);"
                     "shadow *= atten*lights[i].attenuation;"
                 "}"
 
@@ -2797,14 +2796,15 @@ void RLG_UpdateShadowMap(unsigned int light, RLG_DrawFunc drawFunc)
     switch (l->data.type)
     {
         case RLG_DIRLIGHT:
-        case RLG_SPOTLIGHT:
-            // Orthographic projection for directional and spotlight
+            // Orthographic projection for directional
             rlOrtho(-10.0, 10.0, -10.0, 10.0, rlgCtx->zNear, rlgCtx->zFar);
+        case RLG_SPOTLIGHT:
+            // Perspective projection for spotlight
+            rlMultMatrixf(MatrixToFloat(MatrixPerspective(l->data.outerCutOff*DEG2RAD, 1.0, 0.01, l->data.distance)));
             break;
-
         case RLG_OMNILIGHT:
             // Perspective projection for omnidirectional light
-            rlMultMatrixf(MatrixToFloat(MatrixPerspective(90*DEG2RAD, 1.0, rlgCtx->zNear, rlgCtx->zFar)));
+            rlMultMatrixf(MatrixToFloat(MatrixPerspective(90*DEG2RAD, 1.0, 0.01, l->data.distance)));
             break;
     }
 
