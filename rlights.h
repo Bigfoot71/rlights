@@ -64,10 +64,8 @@ typedef enum {
     RLG_LIGHT_SIZE,                         ///< Light size, affects fade and shadow blur (spotlight, omnilight only).
     RLG_LIGHT_INNER_CUTOFF,                 ///< Inner cutoff angle of a spotlight.
     RLG_LIGHT_OUTER_CUTOFF,                 ///< Outer cutoff angle of a spotlight.
-    RLG_LIGHT_ATTENUATION_CLQ,              ///< Attenuation coefficients (constant, linear, quadratic) of the light.
-    RLG_LIGHT_ATTENUATION_CONSTANT,         ///< Constant attenuation coefficient of the light.
-    RLG_LIGHT_ATTENUATION_LINEAR,           ///< Linear attenuation coefficient of the light.
-    RLG_LIGHT_ATTENUATION_QUADRATIC         ///< Quadratic attenuation coefficient of the light.
+    RLG_LIGHT_DISTANCE,                     ///< Max distance up to which the spotlights and omnilights shine.
+    RLG_LIGHT_ATTENUATION,                  ///< Light attenuation factor along the illumination distance of spotlights and omnilights.
 } RLG_LightProperty;
 
 /**
@@ -698,6 +696,7 @@ void RLG_DrawSkybox(RLG_Skybox skybox);
 }
 #endif
 
+#define RLIGHTS_IMPLEMENTATION
 #ifdef RLIGHTS_IMPLEMENTATION
 
 #include <raymath.h>
@@ -906,9 +905,8 @@ static const char rlgLightingFS[] = GLSL_VERSION_DEF
         "float size;"                   ///< Light size (spotlight, omnilight only)
         "float innerCutOff;"            ///< Inner cutoff angle for spotlights (cosine of the angle)
         "float outerCutOff;"            ///< Outer cutoff angle for spotlights (cosine of the angle)
-        "float constant;"               ///< Constant attenuation factor
-        "float linear;"                 ///< Linear attenuation factor
-        "float quadratic;"              ///< Quadratic attenuation factor
+        "float distance;"               ///< Indicates the distance up to which the spotlights and omnilights shine
+        "float attenuation;"            ///< Light attenuation factor along the illumination distance of spotlights and omnilights
         "float shadowMapTxlSz;"         ///< Texel size of the shadow map
         "float depthBias;"              ///< Bias value to avoid self-shadowing artifacts
         "lowp int type;"                ///< Type of the light (e.g., point, directional, spotlight)
@@ -1157,21 +1155,6 @@ static const char rlgLightingFS[] = GLSL_VERSION_DEF
                     "specLight = specBRDF*lightColE*lights[i].specular;"
                 "}"
 
-                // Apply spotlight effect if the light is a spotlight
-                "float intensity = 1.0;"
-                "if (lights[i].type == SPOTLIGHT)"
-                "{"
-                    "float theta = dot(L, normalize(-lights[i].direction));"
-                    "float epsilon = (lights[i].innerCutOff - lights[i].outerCutOff);"
-                    "intensity = smoothstep(0.0, 1.0, (theta - lights[i].outerCutOff)/epsilon);"
-                "}"
-
-                // Apply attenuation based on the distance from the light
-                "float distance    = length(lights[i].position - fragPosition);"
-                "float attenuation = 1.0/(lights[i].constant +"
-                                         "lights[i].linear*distance +"
-                                         "lights[i].quadratic*(distance*distance));"
-
                 // Apply shadow factor if the light casts shadows
                 "float shadow = 1.0;"
                 "if (lights[i].shadow != 0)"
@@ -1180,12 +1163,24 @@ static const char rlgLightingFS[] = GLSL_VERSION_DEF
                         "? ShadowOmni(i, cNdotL) : Shadow(i, cNdotL);"
                 "}"
 
-                // Compute the final intensity factor combining intensity, attenuation, and shadow
-                "float factor = intensity*attenuation*shadow;"
+                // Apply attenuation based on the distance from the light
+                "if (lights[i].type != DIRLIGHT) {"
+                    "float distance = length(lights[i].position - fragPosition);"
+                    "float atten = 1.0 - clamp(distance / maxDistance, 0.0, 1.0);"
+                    "shadow *= atten*lights[i].attenuation;"
+                "}"
+
+                // Apply spotlight effect if the light is a spotlight
+                "if (lights[i].type == SPOTLIGHT)"
+                "{"
+                    "float theta = dot(L, normalize(-lights[i].direction));"
+                    "float epsilon = (lights[i].innerCutOff - lights[i].outerCutOff);"
+                    "shadow *= smoothstep(0.0, 1.0, (theta - lights[i].outerCutOff)/epsilon);"
+                "}"
 
                 // Accumulate the diffuse and specular lighting contributions
-                "diffLighting += diffLight*factor;"
-                "specLighting += specLight*factor;"
+                "diffLighting += diffLight*shadow;"
+                "specLighting += specLight*shadow;"
             "}"
         "}"
 
@@ -1449,9 +1444,8 @@ struct RLG_Light
         int size;
         int innerCutOff;
         int outerCutOff;
-        int constant;
-        int linear;
-        int quadratic;
+        int distance;
+        int attenuation;
         int shadowMapTxlSz;
         int depthBias;
         int type;
@@ -1471,9 +1465,8 @@ struct RLG_Light
         float size;
         float innerCutOff;
         float outerCutOff;
-        float constant;
-        float linear;
-        float quadratic;
+        float distance;
+        float attenuation;
         float shadowMapTxlSz;
         float depthBias;
         int type;
@@ -1725,9 +1718,8 @@ RLG_Context RLG_CreateContext(unsigned int count)
         light->data.size           = 0.0f;
         light->data.innerCutOff    = -1.0f;
         light->data.outerCutOff    = -1.0f;
-        light->data.constant       = 1.0f;
-        light->data.linear         = 0.0f;
-        light->data.quadratic      = 0.0f;
+        light->data.distance       = 8.0f;
+        light->data.attenuation    = 1.0f;
         light->data.shadowMapTxlSz = 0.0f;
         light->data.depthBias      = 0.0f;
         light->data.type           = RLG_DIRLIGHT;
@@ -1745,9 +1737,8 @@ RLG_Context RLG_CreateContext(unsigned int count)
         light->locs.size           = rlGetLocationUniform(lightShader.id, TextFormat("lights[%i].size", i));
         light->locs.innerCutOff    = rlGetLocationUniform(lightShader.id, TextFormat("lights[%i].innerCutOff", i));
         light->locs.outerCutOff    = rlGetLocationUniform(lightShader.id, TextFormat("lights[%i].outerCutOff", i));
-        light->locs.constant       = rlGetLocationUniform(lightShader.id, TextFormat("lights[%i].constant", i));
-        light->locs.linear         = rlGetLocationUniform(lightShader.id, TextFormat("lights[%i].linear", i));
-        light->locs.quadratic      = rlGetLocationUniform(lightShader.id, TextFormat("lights[%i].quadratic", i));
+        light->locs.distance       = rlGetLocationUniform(lightShader.id, TextFormat("lights[%i].distance", i));
+        light->locs.attenuation    = rlGetLocationUniform(lightShader.id, TextFormat("lights[%i].attenuation", i));
         light->locs.shadowMapTxlSz = rlGetLocationUniform(lightShader.id, TextFormat("lights[%i].shadowMapTxlSz", i));
         light->locs.depthBias      = rlGetLocationUniform(lightShader.id, TextFormat("lights[%i].depthBias", i));
         light->locs.type           = rlGetLocationUniform(lightShader.id, TextFormat("lights[%i].type", i));
@@ -1759,7 +1750,8 @@ RLG_Context RLG_CreateContext(unsigned int count)
         SetShaderValue(lightShader, light->locs.specular, &light->data.specular, SHADER_UNIFORM_FLOAT);
         SetShaderValue(lightShader, light->locs.innerCutOff, &light->data.innerCutOff, SHADER_UNIFORM_FLOAT);
         SetShaderValue(lightShader, light->locs.outerCutOff, &light->data.outerCutOff, SHADER_UNIFORM_FLOAT);
-        SetShaderValue(lightShader, light->locs.constant, &light->data.constant, SHADER_UNIFORM_FLOAT);
+        SetShaderValue(lightShader, light->locs.distance, &light->data.distance, SHADER_UNIFORM_FLOAT);
+        SetShaderValue(lightShader, light->locs.attenuation, &light->data.attenuation, SHADER_UNIFORM_FLOAT);
     }
 
     // Set light count
@@ -2196,27 +2188,19 @@ void RLG_SetLightValue(unsigned int light, RLG_LightProperty property, float val
             }
             break;
 
-        case RLG_LIGHT_ATTENUATION_CONSTANT:
-            if (value != l->data.constant)
+        case RLG_LIGHT_DISTANCE:
+            if (value != l->data.distance)
             {
-                l->data.constant = value;
-                SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.constant, &value, SHADER_UNIFORM_FLOAT);
+                l->data.distance = value;
+                SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.distance, &value, SHADER_UNIFORM_FLOAT);
             }
             break;
 
-        case RLG_LIGHT_ATTENUATION_LINEAR:
-            if (value != l->data.linear)
+        case RLG_LIGHT_ATTENUATION:
+            if (value != l->data.attenuation)
             {
-                l->data.linear = value;
-                SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.linear, &value, SHADER_UNIFORM_FLOAT);
-            }
-            break;
-
-        case RLG_LIGHT_ATTENUATION_QUADRATIC:
-            if (value != l->data.quadratic)
-            {
-                l->data.quadratic = value;
-                SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.quadratic, &value, SHADER_UNIFORM_FLOAT);
+                l->data.attenuation = value;
+                SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.attenuation, &value, SHADER_UNIFORM_FLOAT);
             }
             break;
 
@@ -2256,24 +2240,6 @@ void RLG_SetLightXYZ(unsigned int light, RLG_LightProperty property, float x, fl
                 &value, SHADER_UNIFORM_VEC3);
             break;
 
-        case RLG_LIGHT_ATTENUATION_CLQ:
-            if (x != l->data.constant)
-            {
-                l->data.constant = x;
-                SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.constant, &x, SHADER_UNIFORM_FLOAT);
-            }
-            if (y != l->data.linear)
-            {
-                l->data.linear = y;
-                SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.linear, &y, SHADER_UNIFORM_FLOAT);
-            }
-            if (z != l->data.quadratic)
-            {
-                l->data.quadratic = z;
-                SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.quadratic, &z, SHADER_UNIFORM_FLOAT);
-            }
-            break;
-
         default:
             break;
     }
@@ -2307,24 +2273,6 @@ void RLG_SetLightVec3(unsigned int light, RLG_LightProperty property, Vector3 va
             l->data.color = value;
             SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.color,
                 &value, SHADER_UNIFORM_VEC3);
-            break;
-
-        case RLG_LIGHT_ATTENUATION_CLQ:
-            if (value.x != l->data.constant)
-            {
-                l->data.constant = value.x;
-                SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.constant, &value.x, SHADER_UNIFORM_FLOAT);
-            }
-            if (value.y != l->data.linear)
-            {
-                l->data.linear = value.y;
-                SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.linear, &value.y, SHADER_UNIFORM_FLOAT);
-            }
-            if (value.z != l->data.quadratic)
-            {
-                l->data.quadratic = value.z;
-                SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.quadratic, &value.z, SHADER_UNIFORM_FLOAT);
-            }
             break;
 
         default:
@@ -2386,16 +2334,12 @@ float RLG_GetLightValue(unsigned int light, RLG_LightProperty property)
             result = l->data.outerCutOff;
             break;
 
-        case RLG_LIGHT_ATTENUATION_CONSTANT:
-            result = l->data.constant;
+        case RLG_LIGHT_DISTANCE:
+            result = l->data.distance;
             break;
 
-        case RLG_LIGHT_ATTENUATION_LINEAR:
-            result = l->data.linear;
-            break;
-
-        case RLG_LIGHT_ATTENUATION_QUADRATIC:
-            result = l->data.quadratic;
+        case RLG_LIGHT_ATTENUATION:
+            result = l->data.attenuation;
             break;
 
         default:
@@ -2429,12 +2373,6 @@ Vector3 RLG_GetLightVec3(unsigned int light, RLG_LightProperty property)
 
         case RLG_LIGHT_COLOR:
             result = l->data.color;
-            break;
-
-        case RLG_LIGHT_ATTENUATION_CLQ:
-            result.y = l->data.linear;
-            result.x = l->data.constant;
-            result.z = l->data.quadratic;
             break;
 
         default:
