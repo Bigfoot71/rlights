@@ -1,6 +1,7 @@
 #include "raylib.h"
 #include "raymath.h"
 
+#define RLG_MAX_LIGHTS_PER_MATERIAL 4
 #define RLIGHTS_IMPLEMENTATION
 #include "../rlights.h"
 
@@ -26,7 +27,7 @@ int main(void)
     camera.projection = CAMERA_PERSPECTIVE;             // Camera projection type
 
     // Init light system
-    RLG_Context rlgCtx = RLG_CreateContext(4);
+    RLG_Context rlgCtx = RLG_CreateContext();
     RLG_SetContext(rlgCtx);
 
     RLG_UseDefaultMap(MATERIAL_MAP_METALNESS, true);
@@ -83,7 +84,7 @@ int main(void)
                 RLG_DrawModel(cube, Vector3Zero(), 1.0f, WHITE);
 
                 // Draw spheres to show where the lights are
-                for (int i = 0; i < RLG_GetLightcount(); i++)
+                for (int i = 0; i < RLG_MAX_LIGHTS_PER_MATERIAL; i++)
                 {
                     if (RLG_IsLightUsed(i))
                     {

@@ -87,7 +87,7 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 ```c
 /* Context Management */
 
-RLG_Context RLG_CreateContext(unsigned int lightCount);
+RLG_Context RLG_CreateContext(void);
 void RLG_DestroyContext(RLG_Context ctx);
 
 void RLG_SetContext(RLG_Context ctx);
@@ -119,8 +119,6 @@ MaterialMap RLG_GetDefaultMap(MaterialMapIndex mapIndex);
 bool RLG_IsDefaultMapUsed(MaterialMapIndex mapIndex);
 
 /* Lighting Management */
-
-unsigned int RLG_GetLightcount(void);
 
 void RLG_UseLight(unsigned int light, bool active);
 bool RLG_IsLightUsed(unsigned int light);

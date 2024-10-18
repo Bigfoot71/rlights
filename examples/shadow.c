@@ -1,6 +1,6 @@
 #include "raylib.h"
-#include "raymath.h"
 
+#define RLG_MAX_LIGHTS_PER_MATERIAL 2
 #define RLIGHTS_IMPLEMENTATION
 #include "../rlights.h"
 
@@ -42,12 +42,12 @@ int main(void)
         .fovy = 45.0f
     };
 
-    RLG_Context rlgCtx = RLG_CreateContext(2);
+    RLG_Context rlgCtx = RLG_CreateContext();
     RLG_SetContext(rlgCtx);
 
     RLG_SetViewPositionV(camera.position);
 
-    for (int i = 0; i < RLG_GetLightcount(); i++)
+    for (int i = 0; i < RLG_MAX_LIGHTS_PER_MATERIAL; i++)
     {
         RLG_UseLight(i, true);
         RLG_SetLightType(i, RLG_OMNILIGHT);
@@ -80,7 +80,7 @@ int main(void)
 
             ClearBackground(BLACK);
 
-            for (int i = 0; i < RLG_GetLightcount(); i++)
+            for (int i = 0; i < RLG_MAX_LIGHTS_PER_MATERIAL; i++)
             {
                 int s = i == 0 ? 1 : -1;
                 RLG_SetLightXYZ(i, RLG_LIGHT_POSITION, s*5*cosf(GetTime()*(i+1)*0.5f), 2.5f, s*5*sinf(GetTime()*(i+1)*0.5f));
@@ -90,7 +90,7 @@ int main(void)
             }
 
             BeginMode3D(camera);
-                for (int i = 0; i < RLG_GetLightcount(); i++)
+                for (int i = 0; i < RLG_MAX_LIGHTS_PER_MATERIAL; i++)
                 {
                     DrawSphere(RLG_GetLightVec3(i, RLG_LIGHT_POSITION),
                         0.1f, RLG_GetLightColor(i));

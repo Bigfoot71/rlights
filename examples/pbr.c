@@ -15,7 +15,7 @@ int main(void)
         .fovy = 45.0f
     };
 
-    RLG_Context rlgCtx = RLG_CreateContext(1);
+    RLG_Context rlgCtx = RLG_CreateContext();
     RLG_SetContext(rlgCtx);
 
     RLG_UseMap(MATERIAL_MAP_NORMAL, true);

@@ -3,6 +3,33 @@
 
 #include <raylib.h>
 
+/*
+ * TODO: Implement `RLG_MAX_LIGHTS`, which would be a separate array containing all user-defined lights.
+ *       Then, during the rendering of a mesh, we will perform an AABB test to determine which light illuminates which mesh,
+ *       with a limit per shader defined by `RLG_MAX_LIGHTS_PER_MATERIAL`.
+ *
+ *       However, this would require a separate RLG_Model and/or RLG_Mesh struct...
+ *
+ *       With this, we would need to create a system where we can create multiple materials, each with its own specifications
+ *       defined by flags like `RLG_USE_NORMAL_MAP`, `RLG_RECEIVE_SHADOW`, etc. This would avoid all the branching
+ *       in the shaders since everything would be decided at compilation. This would replace the need for creating different contexts.
+ *
+ *       But again, this would probably require us to create our own RLG_Material...
+ */
+
+
+/* Config Defintions */
+
+//#ifndef RLG_MAX_LIGHTS
+//#   define RLG_MAX_LIGHTS                32   // Indicates the total number of lights manageable by a context
+//#endif
+
+#ifndef RLG_MAX_LIGHTS_PER_MATERIAL
+#   define RLG_MAX_LIGHTS_PER_MATERIAL     8    // Indicates the total number of lights that can illuminate a mesh
+#endif
+
+/* Definitions for managing OpenGL */
+
 #ifndef GL_HEADER
 #   if defined(GRAPHICS_API_OPENGL_ES2)
 #       define GL_HEADER "external/glad_gles2.h"    // Required for: OpenGL functionality
@@ -30,6 +57,8 @@
 #       define GLSL_VERSION 100
 #   endif //PLATFORM
 #endif //GLSL_VERSION
+
+/* Enum/Function Definitions */
 
 /**
  * @brief Enum representing different types of lights.
@@ -154,12 +183,11 @@ extern "C" {
 #endif
 
 /**
- * @brief Create a new lighting context with the desired number of lights.
- * 
- * @param lightCount The number of lights to initialize within the context.
+ * @brief Create a new rlights management context.
+ *
  * @return A new RLG_Context object representing the created lighting context.
  */
-RLG_Context RLG_CreateContext(unsigned int lightCount);
+RLG_Context RLG_CreateContext(void);
 
 /**
  * @brief Destroy a previously created lighting context and release associated resources.
@@ -303,13 +331,6 @@ MaterialMap RLG_GetDefaultMap(MaterialMapIndex mapIndex);
  * @return True if the default material map is used, false otherwise.
  */
 bool RLG_IsDefaultMapUsed(MaterialMapIndex mapIndex);
-
-/**
- * @brief Get the number of lights initialized sets in the shader.
- * 
- * @return The number of lights as an unsigned integer.
- */
-unsigned int RLG_GetLightcount(void);
 
 /**
  * @brief Activate or deactivate a specific light.
@@ -689,11 +710,15 @@ void RLG_UnloadSkybox(RLG_Skybox skybox);
 void RLG_DrawSkybox(RLG_Skybox skybox);
 
 
+/* Misc Helper Functions */
+
+unsigned int EXT_LoadShaderEx(const char** vsCodes, const char** fsCodes, int vsCount, int fsCount);
+
+
 #if defined(__cplusplus)
 }
 #endif
 
-#define RLIGHTS_IMPLEMENTATION
 #ifdef RLIGHTS_IMPLEMENTATION
 
 #include <raymath.h>
@@ -725,21 +750,21 @@ void RLG_DrawSkybox(RLG_Skybox skybox);
 
 /* Uniform names definitions */
 
-#define RLG_SHADER_MODEL_ATTRIB_POSITION             "vertexPosition"
-#define RLG_SHADER_MODEL_ATTRIB_TEXCOORD             "vertexTexCoord"
-#define RLG_SHADER_MODEL_ATTRIB_TEXCOORD2            "vertexTexCoord2"
-#define RLG_SHADER_MODEL_ATTRIB_NORMAL               "vertexNormal"
-#define RLG_SHADER_MODEL_ATTRIB_TANGENT              "vertexTangent"
-#define RLG_SHADER_MODEL_ATTRIB_COLOR                "vertexColor"
+#define RLG_SHADER_ATTRIB_POSITION              "vertexPosition"
+#define RLG_SHADER_ATTRIB_TEXCOORD              "vertexTexCoord"
+#define RLG_SHADER_ATTRIB_TEXCOORD2             "vertexTexCoord2"
+#define RLG_SHADER_ATTRIB_NORMAL                "vertexNormal"
+#define RLG_SHADER_ATTRIB_TANGENT               "vertexTangent"
+#define RLG_SHADER_ATTRIB_COLOR                 "vertexColor"
 
-#define RLG_SHADER_MODEL_UNIFORM_MATRIX_MVP          "mvp"
-#define RLG_SHADER_MODEL_UNIFORM_MATRIX_VIEW         "matView"
-#define RLG_SHADER_MODEL_UNIFORM_MATRIX_PROJECTION   "matProjection"
-#define RLG_SHADER_MODEL_UNIFORM_MATRIX_MODEL        "matModel"
-#define RLG_SHADER_MODEL_UNIFORM_MATRIX_NORMAL       "matNormal"
+#define RLG_SHADER_UNIFORM_MATRIX_MVP           "mvp"
+#define RLG_SHADER_UNIFORM_MATRIX_VIEW          "matView"
+#define RLG_SHADER_UNIFORM_MATRIX_PROJECTION    "matProjection"
+#define RLG_SHADER_UNIFORM_MATRIX_MODEL         "matModel"
+#define RLG_SHADER_UNIFORM_MATRIX_NORMAL        "matNormal"
 
-#define RLG_SHADER_MODEL_UNIFORM_COLOR_AMBIENT       "colAmbient"
-#define RLG_SHADER_MODEL_UNIFORM_VIEW_POSITION       "viewPos"
+#define RLG_SHADER_UNIFORM_COLOR_AMBIENT        "colAmbient"
+#define RLG_SHADER_UNIFORM_VIEW_POSITION        "viewPos"
 
 /* Embedded shaders definition */
 
@@ -747,6 +772,9 @@ void RLG_DrawSkybox(RLG_Skybox skybox);
 
 #define GLSL_VERSION_DEF \
     "#version " TOSTRING(GLSL_VERSION) "\n"
+
+#define GLSL_NUM_LIGHTS \
+    "#define NUM_LIGHTS " TOSTRING(RLG_MAX_LIGHTS_PER_MATERIAL) "\n"
 
 #if GLSL_VERSION < 330
 
@@ -782,24 +810,21 @@ void RLG_DrawSkybox(RLG_Skybox skybox);
 
 static const char G_VS_Model[] =
 {
-    GLSL_VERSION_DEF
-
 #   if GLSL_VERSION > 100
-    "#define NUM_LIGHTS %i\n"
     "uniform mat4 matLights[NUM_LIGHTS];"
     GLSL_VS_OUT("vec4 fragPosLightSpace[NUM_LIGHTS]")
 #   endif
 
-    GLSL_VS_IN("vec3 " RLG_SHADER_MODEL_ATTRIB_POSITION)
-    GLSL_VS_IN("vec2 " RLG_SHADER_MODEL_ATTRIB_TEXCOORD)
-    GLSL_VS_IN("vec4 " RLG_SHADER_MODEL_ATTRIB_TANGENT)
-    GLSL_VS_IN("vec3 " RLG_SHADER_MODEL_ATTRIB_NORMAL)
-    GLSL_VS_IN("vec4 " RLG_SHADER_MODEL_ATTRIB_COLOR)
+    GLSL_VS_IN("vec3 " RLG_SHADER_ATTRIB_POSITION)
+    GLSL_VS_IN("vec2 " RLG_SHADER_ATTRIB_TEXCOORD)
+    GLSL_VS_IN("vec4 " RLG_SHADER_ATTRIB_TANGENT)
+    GLSL_VS_IN("vec3 " RLG_SHADER_ATTRIB_NORMAL)
+    GLSL_VS_IN("vec4 " RLG_SHADER_ATTRIB_COLOR)
 
     "uniform lowp int useNormalMap;"
-    "uniform mat4 " RLG_SHADER_MODEL_UNIFORM_MATRIX_NORMAL ";"
-    "uniform mat4 " RLG_SHADER_MODEL_UNIFORM_MATRIX_MODEL ";"
-    "uniform mat4 " RLG_SHADER_MODEL_UNIFORM_MATRIX_MVP ";"
+    "uniform mat4 " RLG_SHADER_UNIFORM_MATRIX_NORMAL ";"
+    "uniform mat4 " RLG_SHADER_UNIFORM_MATRIX_MODEL ";"
+    "uniform mat4 " RLG_SHADER_UNIFORM_MATRIX_MVP ";"
 
     GLSL_VS_OUT("vec3 fragPosition")
     GLSL_VS_OUT("vec2 fragTexCoord")
@@ -809,16 +834,16 @@ static const char G_VS_Model[] =
 
     "void main()"
     "{"
-        "fragPosition = vec3(" RLG_SHADER_MODEL_UNIFORM_MATRIX_MODEL "*vec4(" RLG_SHADER_MODEL_ATTRIB_POSITION ", 1.0));"
-        "fragNormal = (" RLG_SHADER_MODEL_UNIFORM_MATRIX_NORMAL "*vec4(" RLG_SHADER_MODEL_ATTRIB_NORMAL ", 0.0)).xyz;"
+        "fragPosition = vec3(" RLG_SHADER_UNIFORM_MATRIX_MODEL "*vec4(" RLG_SHADER_ATTRIB_POSITION ", 1.0));"
+        "fragNormal = (" RLG_SHADER_UNIFORM_MATRIX_NORMAL "*vec4(" RLG_SHADER_ATTRIB_NORMAL ", 0.0)).xyz;"
 
-        "fragTexCoord = " RLG_SHADER_MODEL_ATTRIB_TEXCOORD ";"
-        "fragColor = " RLG_SHADER_MODEL_ATTRIB_COLOR ";"
+        "fragTexCoord = " RLG_SHADER_ATTRIB_TEXCOORD ";"
+        "fragColor = " RLG_SHADER_ATTRIB_COLOR ";"
 
         // The TBN matrix is used to transform vectors from tangent space to world space
         // It is currently used to transform normals from a normal map to world space normals
-        "vec3 T = normalize(vec3(" RLG_SHADER_MODEL_UNIFORM_MATRIX_MODEL "*vec4(" RLG_SHADER_MODEL_ATTRIB_TANGENT ".xyz, 0.0)));"
-        "vec3 B = cross(fragNormal, T)*" RLG_SHADER_MODEL_ATTRIB_TANGENT ".w;"
+        "vec3 T = normalize(vec3(" RLG_SHADER_UNIFORM_MATRIX_MODEL "*vec4(" RLG_SHADER_ATTRIB_TANGENT ".xyz, 0.0)));"
+        "vec3 B = cross(fragNormal, T)*" RLG_SHADER_ATTRIB_TANGENT ".w;"
         "TBN = mat3(T, B, fragNormal);"
 
 #       if GLSL_VERSION > 100
@@ -828,17 +853,15 @@ static const char G_VS_Model[] =
         "}"
 #       endif
 
-        "gl_Position = " RLG_SHADER_MODEL_UNIFORM_MATRIX_MVP "*vec4(" RLG_SHADER_MODEL_ATTRIB_POSITION ", 1.0);"
+        "gl_Position = " RLG_SHADER_UNIFORM_MATRIX_MVP "*vec4(" RLG_SHADER_ATTRIB_POSITION ", 1.0);"
     "}"
 };
 
 static const char G_FS_Model[] =
 {
-    GLSL_VERSION_DEF
     GLSL_TEXTURE_DEF
     GLSL_TEXTURE_CUBE_DEF
 
-    "#define NUM_LIGHTS"                " %i\n"
     "#define NUM_MATERIAL_MAPS"         " 7\n"
     "#define NUM_MATERIAL_CUBEMAPS"     " 2\n"
 
@@ -918,8 +941,8 @@ static const char G_FS_Model[] =
 
     "uniform float farPlane;"   ///< Used to scale depth values ​​when reading the depth cubemap (point shadows)
 
-    "uniform vec3 " RLG_SHADER_MODEL_UNIFORM_COLOR_AMBIENT ";"
-    "uniform vec3 " RLG_SHADER_MODEL_UNIFORM_VIEW_POSITION ";"
+    "uniform vec3 " RLG_SHADER_UNIFORM_COLOR_AMBIENT ";"
+    "uniform vec3 " RLG_SHADER_UNIFORM_VIEW_POSITION ";"
 
     "float DistributionGGX(float cosTheta, float alpha)"
     "{"
@@ -1036,7 +1059,7 @@ static const char G_FS_Model[] =
     "void main()"
     "{"
         // Compute the view direction vector for this fragment
-        "vec3 V = normalize(" RLG_SHADER_MODEL_UNIFORM_VIEW_POSITION " - fragPosition);"
+        "vec3 V = normalize(" RLG_SHADER_UNIFORM_VIEW_POSITION " - fragPosition);"
 
         // Compute fragTexCoord (UV), apply parallax if height map is enabled
         "vec2 uv = fragTexCoord;"
@@ -1180,7 +1203,7 @@ static const char G_FS_Model[] =
         "}"
 
         // Compute ambient
-        "vec3 ambient = " RLG_SHADER_MODEL_UNIFORM_COLOR_AMBIENT ";"
+        "vec3 ambient = " RLG_SHADER_UNIFORM_COLOR_AMBIENT ";"
         "if (cubemaps[IRRADIANCE].active != 0)"
         "{"
             "vec3 kS = F0 + (1.0 - F0)*SchlickFresnel(cNdotV);"
@@ -1516,8 +1539,8 @@ struct RLG_Light
 
 struct RLG_SkyboxHandler
 {
-    unsigned int vbo;   ///< VBO des positions du cube
-    unsigned int ebo;   ///< EBO (elements) du cube
+    unsigned int vbo;   ///< VBO of cube positions
+    unsigned int ebo;   ///< EBO (elements) of the cube
     unsigned int vao;   ///< VAO -> VBO + EBO
 
     unsigned int previousCubemapID;  /*< Indicates whether to update the data sent to the skybox
@@ -1542,9 +1565,8 @@ static struct RLG_Core
 
     /* Lighting shader data*/
 
+    struct RLG_Light lights[RLG_MAX_LIGHTS_PER_MATERIAL];
     struct RLG_Material material;
-    struct RLG_Light *lights;
-    unsigned int lightCount;
 
     Vector3 colAmbient;
     Vector3 viewPos;
@@ -1562,8 +1584,8 @@ static struct RLG_Core
 
 #ifndef NO_EMBEDDED_SHADERS
     static const char
-        *G_FS_CACHE_Model = G_VS_Model,
-        *G_VS_CACHE_Model = G_FS_Model;
+        *G_VS_CACHE_Model = G_VS_Model,
+        *G_FS_CACHE_Model = G_FS_Model;
     static const char
         *G_VS_CACHE_Depth = G_VS_Depth,
         *G_FS_CACHE_Depth = G_FS_Depth;
@@ -1597,7 +1619,7 @@ static struct RLG_Core
 
 /* Public API */
 
-RLG_Context RLG_CreateContext(unsigned int count)
+RLG_Context RLG_CreateContext(void)
 {
     // On-heap allocation for the context's core structure, initializing it with zeros
     struct RLG_Core *rlgCtx = (struct RLG_Core*)calloc(1, sizeof(struct RLG_Core));
@@ -1608,50 +1630,38 @@ RLG_Context RLG_CreateContext(unsigned int count)
         return NULL;
     }
 
-    // NOTE: The limit of 99 is because we measure the size of `G_FS_Model` with '%s'
-    if (count > 99)
-    {
-        TraceLog(LOG_WARNING, "The limit of lights supported by rlights is 99."
-                              "The number of lights has therefore been adjusted to this value.");
-        count = 99;
-    }
-
     // We check if all the shader codes are well defined
     if (G_FS_CACHE_Model == NULL) TraceLog(LOG_WARNING, "The lighting vertex shader has not been defined.");
     if (G_VS_CACHE_Model == NULL) TraceLog(LOG_WARNING, "The lighting fragment shader has not been defined.");
     if (G_VS_CACHE_Depth == NULL) TraceLog(LOG_WARNING, "The depth vertex shader has not been defined.");
     if (G_FS_CACHE_Depth == NULL) TraceLog(LOG_WARNING, "The depth fragment shader has not been defined.");
 
-    const char *lightVS = G_FS_CACHE_Model;
-    const char *lightFS = G_VS_CACHE_Model;
-
+    // Setup model shader code arrays
 #   ifndef NO_EMBEDDED_SHADERS
 
-#       if GLSL_VERSION > 100
-        bool vsFormated = (lightVS == G_VS_Model);
-        if (vsFormated)
-        {
-            // Format frag shader with lights count
-            char *fmtVert = (char*)malloc(sizeof(G_VS_Model));
-            snprintf(fmtVert, sizeof(G_VS_Model), G_VS_Model, count);
-            lightVS = fmtVert;
-        }
-#       endif
+    const int vsModelCount = 3;
+    const int fsModelCount = 3;
+    const char *vsModel[3] = { 0 };
+    const char *fsModel[3] = { 0 };
 
-        bool fsFormated = (lightFS == G_FS_Model);
-        if (fsFormated)
-        {
-            // Format frag shader with lights count
-            char *fmtFrag = (char*)malloc(sizeof(G_FS_Model));
-            snprintf(fmtFrag, sizeof(G_FS_Model), G_FS_Model, count);
-            lightFS = fmtFrag;
-        }
+    vsModel[0] = GLSL_VERSION_DEF;
+    vsModel[1] = GLSL_NUM_LIGHTS;
+    vsModel[2] = G_VS_CACHE_Model;
 
+    fsModel[0] = GLSL_VERSION_DEF;
+    fsModel[1] = GLSL_NUM_LIGHTS;
+    fsModel[2] = G_FS_CACHE_Model;
+
+#   else
+    const int vsModelCount = 1;
+    const int fsModelCount = 1;
+    const char *vsModel[1] = { G_VS_CACHE_Model };
+    const char *fsModel[1] = { G_FS_CACHE_Model };
 #   endif //NO_EMBEDDED_SHADERS
 
     // Load shader and get locations
     Shader lightShader = { 0 };
-    lightShader.id = rlLoadShaderCode(lightVS, lightFS);
+    lightShader.id = EXT_LoadShaderEx(vsModel, fsModel, vsModelCount, fsModelCount);
 
     // After shader loading, we TRY to set default location names
     if (lightShader.id > 0)
@@ -1660,23 +1670,23 @@ RLG_Context RLG_CreateContext(unsigned int count)
         lightShader.locs = (int*)malloc(RLG_COUNT_LOCS*sizeof(int));
 
         // Get handles to GLSL input attribute locations
-        lightShader.locs[RLG_LOC_VERTEX_POSITION]    = rlGetLocationAttrib(lightShader.id, RLG_SHADER_MODEL_ATTRIB_POSITION);
-        lightShader.locs[RLG_LOC_VERTEX_TEXCOORD01]  = rlGetLocationAttrib(lightShader.id, RLG_SHADER_MODEL_ATTRIB_TEXCOORD);
-        lightShader.locs[RLG_LOC_VERTEX_TEXCOORD02]  = rlGetLocationAttrib(lightShader.id, RLG_SHADER_MODEL_ATTRIB_TEXCOORD2);
-        lightShader.locs[RLG_LOC_VERTEX_NORMAL]      = rlGetLocationAttrib(lightShader.id, RLG_SHADER_MODEL_ATTRIB_NORMAL);
-        lightShader.locs[RLG_LOC_VERTEX_TANGENT]     = rlGetLocationAttrib(lightShader.id, RLG_SHADER_MODEL_ATTRIB_TANGENT);
-        lightShader.locs[RLG_LOC_VERTEX_COLOR]       = rlGetLocationAttrib(lightShader.id, RLG_SHADER_MODEL_ATTRIB_COLOR);
+        lightShader.locs[RLG_LOC_VERTEX_POSITION]    = rlGetLocationAttrib(lightShader.id, RLG_SHADER_ATTRIB_POSITION);
+        lightShader.locs[RLG_LOC_VERTEX_TEXCOORD01]  = rlGetLocationAttrib(lightShader.id, RLG_SHADER_ATTRIB_TEXCOORD);
+        lightShader.locs[RLG_LOC_VERTEX_TEXCOORD02]  = rlGetLocationAttrib(lightShader.id, RLG_SHADER_ATTRIB_TEXCOORD2);
+        lightShader.locs[RLG_LOC_VERTEX_NORMAL]      = rlGetLocationAttrib(lightShader.id, RLG_SHADER_ATTRIB_NORMAL);
+        lightShader.locs[RLG_LOC_VERTEX_TANGENT]     = rlGetLocationAttrib(lightShader.id, RLG_SHADER_ATTRIB_TANGENT);
+        lightShader.locs[RLG_LOC_VERTEX_COLOR]       = rlGetLocationAttrib(lightShader.id, RLG_SHADER_ATTRIB_COLOR);
 
         // Get handles to GLSL uniform locations (vertex shader)
-        lightShader.locs[RLG_LOC_MATRIX_MVP]         = rlGetLocationUniform(lightShader.id, RLG_SHADER_MODEL_UNIFORM_MATRIX_MVP);
-        lightShader.locs[RLG_LOC_MATRIX_VIEW]        = rlGetLocationUniform(lightShader.id, RLG_SHADER_MODEL_UNIFORM_MATRIX_VIEW);
-        lightShader.locs[RLG_LOC_MATRIX_PROJECTION]  = rlGetLocationUniform(lightShader.id, RLG_SHADER_MODEL_UNIFORM_MATRIX_PROJECTION);
-        lightShader.locs[RLG_LOC_MATRIX_MODEL]       = rlGetLocationUniform(lightShader.id, RLG_SHADER_MODEL_UNIFORM_MATRIX_MODEL);
-        lightShader.locs[RLG_LOC_MATRIX_NORMAL]      = rlGetLocationUniform(lightShader.id, RLG_SHADER_MODEL_UNIFORM_MATRIX_NORMAL);
+        lightShader.locs[RLG_LOC_MATRIX_MVP]         = rlGetLocationUniform(lightShader.id, RLG_SHADER_UNIFORM_MATRIX_MVP);
+        lightShader.locs[RLG_LOC_MATRIX_VIEW]        = rlGetLocationUniform(lightShader.id, RLG_SHADER_UNIFORM_MATRIX_VIEW);
+        lightShader.locs[RLG_LOC_MATRIX_PROJECTION]  = rlGetLocationUniform(lightShader.id, RLG_SHADER_UNIFORM_MATRIX_PROJECTION);
+        lightShader.locs[RLG_LOC_MATRIX_MODEL]       = rlGetLocationUniform(lightShader.id, RLG_SHADER_UNIFORM_MATRIX_MODEL);
+        lightShader.locs[RLG_LOC_MATRIX_NORMAL]      = rlGetLocationUniform(lightShader.id, RLG_SHADER_UNIFORM_MATRIX_NORMAL);
 
         // Get handles to GLSL uniform locations (fragment shader)
-        lightShader.locs[RLG_LOC_COLOR_AMBIENT]      = rlGetLocationUniform(lightShader.id, RLG_SHADER_MODEL_UNIFORM_COLOR_AMBIENT);
-        lightShader.locs[RLG_LOC_VECTOR_VIEW]        = rlGetLocationUniform(lightShader.id, RLG_SHADER_MODEL_UNIFORM_VIEW_POSITION);
+        lightShader.locs[RLG_LOC_COLOR_AMBIENT]      = rlGetLocationUniform(lightShader.id, RLG_SHADER_UNIFORM_COLOR_AMBIENT);
+        lightShader.locs[RLG_LOC_VECTOR_VIEW]        = rlGetLocationUniform(lightShader.id, RLG_SHADER_UNIFORM_VIEW_POSITION);
 
         lightShader.locs[RLG_LOC_COLOR_DIFFUSE]      = rlGetLocationUniform(lightShader.id, TextFormat("maps[%i].color", MATERIAL_MAP_ALBEDO));
         lightShader.locs[RLG_LOC_COLOR_SPECULAR]     = rlGetLocationUniform(lightShader.id, TextFormat("maps[%i].color", MATERIAL_MAP_METALNESS));
@@ -1703,14 +1713,6 @@ RLG_Context RLG_CreateContext(unsigned int count)
         // Definition of the lighting shader once initialization is successful
         rlgCtx->shaders[RLG_SHADER_MODEL] = lightShader;
     }
-
-    // Frees up space allocated for string formatting
-#   ifndef NO_EMBEDDED_SHADERS
-#   if GLSL_VERSION > 100
-    if (vsFormated) free((void*)lightVS);
-#   endif
-    if (fsFormated) free((void*)lightFS);
-#   endif //NO_EMBEDDED_SHADERS
 
     // Init default view position and ambient color
     rlgCtx->colAmbient = INIT_STRUCT(Vector3, 0.1f, 0.1f, 0.1f);
@@ -1746,8 +1748,7 @@ RLG_Context RLG_CreateContext(unsigned int count)
     rlgCtx->locLightingFar = rlGetLocationUniform(lightShader.id, "farPlane");
 
     // Allocation and initialization of the desired number of lights
-    rlgCtx->lights = (struct RLG_Light*)calloc(count, sizeof(struct RLG_Light));
-    for (unsigned int i = 0; i < count; i++)
+    for (int i = 0; i < RLG_MAX_LIGHTS_PER_MATERIAL; i++)
     {
         struct RLG_Light *light = &rlgCtx->lights[i];
 
@@ -1795,9 +1796,6 @@ RLG_Context RLG_CreateContext(unsigned int count)
         SetShaderValue(lightShader, light->locs.distance, &light->data.distance, SHADER_UNIFORM_FLOAT);
         SetShaderValue(lightShader, light->locs.attenuation, &light->data.attenuation, SHADER_UNIFORM_FLOAT);
     }
-
-    // Set light count
-    rlgCtx->lightCount = count;
 
     // Init default material maps
     Texture defaultTexture  = INIT_STRUCT_ZERO(Texture);
@@ -1927,24 +1925,16 @@ void RLG_DestroyContext(RLG_Context ctx)
         }
     }
 
-    if (pCtx->lights != NULL)
+    for (int i = 0; i < RLG_MAX_LIGHTS_PER_MATERIAL; i++)
     {
-        for (unsigned int i = 0; i < pCtx->lightCount; i++)
+        struct RLG_Light *light = &pCtx->lights[i];
+
+        if (light->data.shadowMap.id != 0)
         {
-            struct RLG_Light *light = &pCtx->lights[i];
-
-            if (light->data.shadowMap.id != 0)
-            {
-                rlUnloadTexture(light->data.shadowMap.depth.id);
-                rlUnloadFramebuffer(light->data.shadowMap.id);
-            }
+            rlUnloadTexture(light->data.shadowMap.depth.id);
+            rlUnloadFramebuffer(light->data.shadowMap.id);
         }
-
-        free(pCtx->lights);
-        pCtx->lights = NULL;
     }
-
-    pCtx->lightCount = 0;
 }
 
 void RLG_SetContext(RLG_Context ctx)
@@ -2142,16 +2132,11 @@ bool RLG_IsDefaultMapUsed(MaterialMapIndex mapIndex)
     return rlgCtx->usedDefaultMaps[mapIndex];
 }
 
-unsigned int RLG_GetLightcount(void)
-{
-    return rlgCtx->lightCount;
-}
-
 void RLG_UseLight(unsigned int light, bool active)
 {
-    if (light >= rlgCtx->lightCount)
+    if (light >= RLG_MAX_LIGHTS_PER_MATERIAL)
     {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_UseLight' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_UseLight' exceeds allocated number [MAX %i]", light, RLG_MAX_LIGHTS_PER_MATERIAL);
         return;
     }
 
@@ -2167,9 +2152,9 @@ void RLG_UseLight(unsigned int light, bool active)
 
 bool RLG_IsLightUsed(unsigned int light)
 {
-    if (light >= rlgCtx->lightCount)
+    if (light >= RLG_MAX_LIGHTS_PER_MATERIAL)
     {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_IsLightUsed' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_IsLightUsed' exceeds allocated number [MAX %i]", light, RLG_MAX_LIGHTS_PER_MATERIAL);
         return false;
     }
 
@@ -2178,9 +2163,9 @@ bool RLG_IsLightUsed(unsigned int light)
 
 void RLG_ToggleLight(unsigned int light)
 {
-    if (light >= rlgCtx->lightCount)
+    if (light >= RLG_MAX_LIGHTS_PER_MATERIAL)
     {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_ToggleLight' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_ToggleLight' exceeds allocated number [MAX %i]", light, RLG_MAX_LIGHTS_PER_MATERIAL);
         return;
     }
 
@@ -2193,9 +2178,9 @@ void RLG_ToggleLight(unsigned int light)
 
 void RLG_SetLightType(unsigned int light, RLG_LightType type)
 {
-    if (light >= rlgCtx->lightCount)
+    if (light >= RLG_MAX_LIGHTS_PER_MATERIAL)
     {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_SetLightType' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_SetLightType' exceeds allocated number [MAX %i]", light, RLG_MAX_LIGHTS_PER_MATERIAL);
         return;
     }
 
@@ -2219,9 +2204,9 @@ void RLG_SetLightType(unsigned int light, RLG_LightType type)
 
 RLG_LightType RLG_GetLightType(unsigned int light)
 {
-    if (light >= rlgCtx->lightCount)
+    if (light >= RLG_MAX_LIGHTS_PER_MATERIAL)
     {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_GetLightType' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_GetLightType' exceeds allocated number [MAX %i]", light, RLG_MAX_LIGHTS_PER_MATERIAL);
         return (RLG_LightType)0;
     }
 
@@ -2230,9 +2215,9 @@ RLG_LightType RLG_GetLightType(unsigned int light)
 
 void RLG_SetLightValue(unsigned int light, RLG_LightProperty property, float value)
 {
-    if (light >= rlgCtx->lightCount)
+    if (light >= RLG_MAX_LIGHTS_PER_MATERIAL)
     {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_SetLightValue' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_SetLightValue' exceeds allocated number [MAX %i]", light, RLG_MAX_LIGHTS_PER_MATERIAL);
         return;
     }
 
@@ -2316,9 +2301,9 @@ void RLG_SetLightValue(unsigned int light, RLG_LightProperty property, float val
 
 void RLG_SetLightXYZ(unsigned int light, RLG_LightProperty property, float x, float y, float z)
 {
-    if (light >= rlgCtx->lightCount)
+    if (light >= RLG_MAX_LIGHTS_PER_MATERIAL)
     {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_SetLightXYZ' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_SetLightXYZ' exceeds allocated number [MAX %i]", light, RLG_MAX_LIGHTS_PER_MATERIAL);
         return;
     }
 
@@ -2352,9 +2337,9 @@ void RLG_SetLightXYZ(unsigned int light, RLG_LightProperty property, float x, fl
 
 void RLG_SetLightVec3(unsigned int light, RLG_LightProperty property, Vector3 value)
 {
-    if (light >= rlgCtx->lightCount)
+    if (light >= RLG_MAX_LIGHTS_PER_MATERIAL)
     {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_SetLightVec3' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_SetLightVec3' exceeds allocated number [MAX %i]", light, RLG_MAX_LIGHTS_PER_MATERIAL);
         return;
     }
 
@@ -2387,9 +2372,9 @@ void RLG_SetLightVec3(unsigned int light, RLG_LightProperty property, Vector3 va
 
 void RLG_SetLightColor(unsigned int light, Color color)
 {
-    if (light >= rlgCtx->lightCount)
+    if (light >= RLG_MAX_LIGHTS_PER_MATERIAL)
     {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_SetLightColor' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_SetLightColor' exceeds allocated number [MAX %i]", light, RLG_MAX_LIGHTS_PER_MATERIAL);
         return;
     }
 
@@ -2409,9 +2394,9 @@ float RLG_GetLightValue(unsigned int light, RLG_LightProperty property)
 {
     float result = 0;
 
-    if (light >= rlgCtx->lightCount)
+    if (light >= RLG_MAX_LIGHTS_PER_MATERIAL)
     {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_GetLightValue' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_GetLightValue' exceeds allocated number [MAX %i]", light, RLG_MAX_LIGHTS_PER_MATERIAL);
         return result;
     }
 
@@ -2458,9 +2443,9 @@ Vector3 RLG_GetLightVec3(unsigned int light, RLG_LightProperty property)
 {
     Vector3 result = { 0 };
 
-    if (light >= rlgCtx->lightCount)
+    if (light >= RLG_MAX_LIGHTS_PER_MATERIAL)
     {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_GetLightVec3' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_GetLightVec3' exceeds allocated number [MAX %i]", light, RLG_MAX_LIGHTS_PER_MATERIAL);
         return result;
     }
 
@@ -2491,9 +2476,9 @@ Color RLG_GetLightColor(unsigned int light)
 {
     Color result = BLACK;
 
-    if (light >= rlgCtx->lightCount)
+    if (light >= RLG_MAX_LIGHTS_PER_MATERIAL)
     {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_GetLightColor' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_GetLightColor' exceeds allocated number [MAX %i]", light, RLG_MAX_LIGHTS_PER_MATERIAL);
         return result;
     }
 
@@ -2508,9 +2493,9 @@ Color RLG_GetLightColor(unsigned int light)
 
 void RLG_LightTranslate(unsigned int light, float x, float y, float z)
 {
-    if (light >= rlgCtx->lightCount)
+    if (light >= RLG_MAX_LIGHTS_PER_MATERIAL)
     {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_LightTranslate' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_LightTranslate' exceeds allocated number [MAX %i]", light, RLG_MAX_LIGHTS_PER_MATERIAL);
         return;
     }
 
@@ -2526,9 +2511,9 @@ void RLG_LightTranslate(unsigned int light, float x, float y, float z)
 
 void RLG_LightTranslateV(unsigned int light, Vector3 v)
 {
-    if (light >= rlgCtx->lightCount)
+    if (light >= RLG_MAX_LIGHTS_PER_MATERIAL)
     {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_LightTranslateV' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_LightTranslateV' exceeds allocated number [MAX %i]", light, RLG_MAX_LIGHTS_PER_MATERIAL);
         return;
     }
 
@@ -2543,9 +2528,9 @@ void RLG_LightTranslateV(unsigned int light, Vector3 v)
 
 void RLG_LightRotateX(unsigned int light, float degrees)
 {
-    if (light >= rlgCtx->lightCount)
+    if (light >= RLG_MAX_LIGHTS_PER_MATERIAL)
     {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_LightRotateX' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_LightRotateX' exceeds allocated number [MAX %i]", light, RLG_MAX_LIGHTS_PER_MATERIAL);
         return;
     }
 
@@ -2563,9 +2548,9 @@ void RLG_LightRotateX(unsigned int light, float degrees)
 
 void RLG_LightRotateY(unsigned int light, float degrees)
 {
-    if (light >= rlgCtx->lightCount)
+    if (light >= RLG_MAX_LIGHTS_PER_MATERIAL)
     {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_LightRotateY' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_LightRotateY' exceeds allocated number [MAX %i]", light, RLG_MAX_LIGHTS_PER_MATERIAL);
         return;
     }
 
@@ -2583,9 +2568,9 @@ void RLG_LightRotateY(unsigned int light, float degrees)
 
 void RLG_LightRotateZ(unsigned int light, float degrees)
 {
-    if (light >= rlgCtx->lightCount)
+    if (light >= RLG_MAX_LIGHTS_PER_MATERIAL)
     {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_LightRotateZ' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_LightRotateZ' exceeds allocated number [MAX %i]", light, RLG_MAX_LIGHTS_PER_MATERIAL);
         return;
     }
 
@@ -2603,9 +2588,9 @@ void RLG_LightRotateZ(unsigned int light, float degrees)
 
 void RLG_LightRotate(unsigned int light, Vector3 axis, float degrees)
 {
-    if (light >= rlgCtx->lightCount)
+    if (light >= RLG_MAX_LIGHTS_PER_MATERIAL)
     {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_LightRotate' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_LightRotate' exceeds allocated number [MAX %i]", light, RLG_MAX_LIGHTS_PER_MATERIAL);
         return;
     }
 
@@ -2650,9 +2635,9 @@ void RLG_SetLightTarget(unsigned int light, float x, float y, float z)
 
 void RLG_SetLightTargetV(unsigned int light, Vector3 targetPosition)
 {
-    if (light >= rlgCtx->lightCount)
+    if (light >= RLG_MAX_LIGHTS_PER_MATERIAL)
     {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_SetLightTarget' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_SetLightTarget' exceeds allocated number [MAX %i]", light, RLG_MAX_LIGHTS_PER_MATERIAL);
         return;
     }
 
@@ -2669,9 +2654,9 @@ Vector3 RLG_GetLightTarget(unsigned int light)
 {
     Vector3 result = INIT_STRUCT_ZERO(Vector3);
 
-    if (light >= rlgCtx->lightCount)
+    if (light >= RLG_MAX_LIGHTS_PER_MATERIAL)
     {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_GetLightTarget' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_GetLightTarget' exceeds allocated number [MAX %i]", light, RLG_MAX_LIGHTS_PER_MATERIAL);
         return result;
     }
 
@@ -2684,9 +2669,9 @@ Vector3 RLG_GetLightTarget(unsigned int light)
 void RLG_EnableShadow(unsigned int light, int shadowMapResolution)
 {
     // Check if the specified light ID is within the valid range
-    if (light >= rlgCtx->lightCount)
+    if (light >= RLG_MAX_LIGHTS_PER_MATERIAL)
     {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_EnableShadow' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_EnableShadow' exceeds allocated number [MAX %i]", light, RLG_MAX_LIGHTS_PER_MATERIAL);
         return;
     }
 
@@ -2713,7 +2698,7 @@ void RLG_EnableShadow(unsigned int light, int shadowMapResolution)
             glGenTextures(1, &sm->depth.id);
 
             glBindTexture(GL_TEXTURE_CUBE_MAP, sm->depth.id);
-            for (unsigned int i = 0; i < 6; ++i)
+            for (int i = 0; i < 6; ++i)
             {
                 glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT,
                     shadowMapResolution, shadowMapResolution, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
@@ -2779,9 +2764,9 @@ void RLG_EnableShadow(unsigned int light, int shadowMapResolution)
 
 void RLG_DisableShadow(unsigned int light)
 {
-    if (light >= rlgCtx->lightCount)
+    if (light >= RLG_MAX_LIGHTS_PER_MATERIAL)
     {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_DisableShadow' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_DisableShadow' exceeds allocated number [MAX %i]", light, RLG_MAX_LIGHTS_PER_MATERIAL);
         return;
     }
 
@@ -2805,9 +2790,9 @@ void RLG_DisableShadow(unsigned int light)
 
 bool RLG_IsShadowEnabled(unsigned int light)
 {
-    if (light >= rlgCtx->lightCount)
+    if (light >= RLG_MAX_LIGHTS_PER_MATERIAL)
     {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_IsShadowEnabled' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_IsShadowEnabled' exceeds allocated number [MAX %i]", light, RLG_MAX_LIGHTS_PER_MATERIAL);
         return false;
     }
 
@@ -2816,9 +2801,9 @@ bool RLG_IsShadowEnabled(unsigned int light)
 
 void RLG_SetShadowBias(unsigned int light, float value)
 {
-    if (light >= rlgCtx->lightCount)
+    if (light >= RLG_MAX_LIGHTS_PER_MATERIAL)
     {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_SetShadowBias' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_SetShadowBias' exceeds allocated number [MAX %i]", light, RLG_MAX_LIGHTS_PER_MATERIAL);
         return;
     }
 
@@ -2831,9 +2816,9 @@ void RLG_SetShadowBias(unsigned int light, float value)
 
 float RLG_GetShadowBias(unsigned int light)
 {
-    if (light >= rlgCtx->lightCount)
+    if (light >= RLG_MAX_LIGHTS_PER_MATERIAL)
     {
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_GetShadowBias' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_GetShadowBias' exceeds allocated number [MAX %i]", light, RLG_MAX_LIGHTS_PER_MATERIAL);
         return 0;
     }
 
@@ -2869,10 +2854,10 @@ void RLG_UpdateShadowMap(unsigned int light, RLG_DrawFunc drawFunc)
         return;  
     }
 
-    if (light >= rlgCtx->lightCount)
+    if (light >= RLG_MAX_LIGHTS_PER_MATERIAL)
     {
         // Log an error if the light ID exceeds the number of allocated lights
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_UpdateShadowMap' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_UpdateShadowMap' exceeds allocated number [MAX %i]", light, RLG_MAX_LIGHTS_PER_MATERIAL);
         return;
     }
 
@@ -2999,10 +2984,10 @@ void RLG_UpdateShadowMap(unsigned int light, RLG_DrawFunc drawFunc)
 
 Texture RLG_GetShadowMap(unsigned int light)
 {
-    if (light >= rlgCtx->lightCount)
+    if (light >= RLG_MAX_LIGHTS_PER_MATERIAL)
     {
         // Log an error if the light ID exceeds the number of allocated lights
-        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_GetShadowMap' exceeds allocated number [MAX %i]", light, rlgCtx->lightCount);
+        TraceLog(LOG_ERROR, "Light [ID %i] specified to 'RLG_GetShadowMap' exceeds allocated number [MAX %i]", light, RLG_MAX_LIGHTS_PER_MATERIAL);
         return INIT_STRUCT_ZERO(Texture);
     }
 
@@ -3311,7 +3296,7 @@ void RLG_DrawMesh(Mesh mesh, Material material, Matrix transform)
     }
 
     // Bind depth textures for shadow mapping
-    for (unsigned int i = 0; i < rlgCtx->lightCount; i++)
+    for (int i = 0; i < RLG_MAX_LIGHTS_PER_MATERIAL; i++)
     {
         const struct RLG_Light *l = &rlgCtx->lights[i];
 
@@ -3441,7 +3426,7 @@ void RLG_DrawMesh(Mesh mesh, Material material, Matrix transform)
     }
 
     // Unbind depth textures
-    for (unsigned int i = 0; i < rlgCtx->lightCount; i++)
+    for (int i = 0; i < RLG_MAX_LIGHTS_PER_MATERIAL; i++)
     {
         const struct RLG_Light *l = &rlgCtx->lights[i];
 
@@ -3879,6 +3864,76 @@ void RLG_DrawSkybox(RLG_Skybox skybox)
 
     rlEnableBackfaceCulling();
     rlEnableDepthMask();
+}
+
+/* Helper Function Declarations */
+
+unsigned int EXT_LoadShaderEx(const char** vsCodes, const char** fsCodes, int vsCount, int fsCount)
+{
+    GLint success;
+    GLchar infoLog[512];
+
+    /* Compile Vertex Shader */
+
+    GLuint vs = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vs, vsCount, vsCodes, 0);
+    glCompileShader(vs);
+
+    glGetShaderiv(vs, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        glGetShaderInfoLog(vs, sizeof(infoLog), 0, infoLog);
+        TraceLog(LOG_ERROR, "Failed to compile vertex shader: %s\n", infoLog);
+        glDeleteShader(vs);
+        return 0;
+    }
+
+    /* Compile Fragment Shader */
+
+    GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fs, fsCount, fsCodes, 0);
+    glCompileShader(fs);
+
+    glGetShaderiv(fs, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        glGetShaderInfoLog(fs, sizeof(infoLog), 0, infoLog);
+        TraceLog(LOG_ERROR, "Failed to compile fragment shader: %s\n", infoLog);
+        glDeleteShader(fs);
+        return 0;
+    }
+
+    /* Link Shaders */
+
+    GLuint program = glCreateProgram();
+
+    if (program == 0) {
+        TraceLog(LOG_ERROR, "Failed to create shader program\n");
+        glDeleteShader(vs);
+        glDeleteShader(fs);
+        return 0;
+    }
+
+    glAttachShader(program, vs);
+    glAttachShader(program, fs);
+
+    glBindAttribLocation(program, 0, RLG_SHADER_ATTRIB_POSITION);
+    glBindAttribLocation(program, 1, RLG_SHADER_ATTRIB_TEXCOORD);
+    glBindAttribLocation(program, 2, RLG_SHADER_ATTRIB_NORMAL);
+    glBindAttribLocation(program, 3, RLG_SHADER_ATTRIB_COLOR);
+    glBindAttribLocation(program, 4, RLG_SHADER_ATTRIB_TANGENT);
+    glBindAttribLocation(program, 5, RLG_SHADER_ATTRIB_TEXCOORD2);
+
+    glLinkProgram(program);
+
+    glGetProgramiv(program, GL_LINK_STATUS, &success);
+    if (!success) {
+        glGetProgramInfoLog(program, sizeof(infoLog), 0, infoLog);
+        TraceLog(LOG_ERROR, "Failed to link program shader: %s\n", infoLog);
+    }
+
+    glDeleteShader(vs);
+    glDeleteShader(fs);
+
+    return program;
 }
 
 #undef TOSTRING

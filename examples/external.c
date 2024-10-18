@@ -9,8 +9,8 @@
 
 static void LoadShaderCode(int lightCount, char** lightVS, char** lightFS)
 {
-    char *tempVS = LoadFileText("../shaders/glsl330/lights.vs");
-    char *tempFS = LoadFileText("../shaders/glsl330/lights.fs");
+    char *tempVS = LoadFileText("../shaders/glsl330/model.vs");
+    char *tempFS = LoadFileText("../shaders/glsl330/model.fs");
 
     unsigned int lenVS = strlen(tempVS);
     unsigned int lenFS = strlen(tempFS);
@@ -40,9 +40,9 @@ int main(void)
     const int lightCount = 1;
 
     LoadShaderCode(lightCount, &lightVS, &lightFS);
-    RLG_SetCustomShaderCode(RLG_SHADER_LIGHTING, lightVS, lightFS);
+    RLG_SetCustomShaderCode(RLG_SHADER_MODEL, lightVS, lightFS);
 
-    RLG_Context rlgCtx = RLG_CreateContext(1);
+    RLG_Context rlgCtx = RLG_CreateContext();
     RLG_SetContext(rlgCtx);
 
     RLG_UseLight(0, true);
