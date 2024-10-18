@@ -127,9 +127,6 @@ typedef enum {
 typedef struct {
     TextureCubemap cubemap;       ///< The cubemap texture representing the skybox.
     TextureCubemap irradiance;    ///< The irradiance cubemap texture for diffuse lighting.
-    int vboPostionsID;            ///< The ID of the vertex buffer object for positions.
-    int vboIndicesID;             ///< The ID of the vertex buffer object for indices.
-    int vaoID;                    ///< The ID of the vertex array object.
     bool isHDR;                   ///< Flag indicating if the skybox is HDR (high dynamic range).
 } RLG_Skybox;
 
@@ -696,6 +693,7 @@ void RLG_DrawSkybox(RLG_Skybox skybox);
 }
 #endif
 
+#define RLIGHTS_IMPLEMENTATION
 #ifdef RLIGHTS_IMPLEMENTATION
 
 #include <raymath.h>
@@ -713,19 +711,11 @@ void RLG_DrawSkybox(RLG_Skybox skybox);
 // In C++, use the brace initializer list syntax: type{...}
 // In C, use the designated initializer syntax: (type){...}
 #ifdef __cplusplus
+    #define INIT_STRUCT_ZERO(type) {}
     #define INIT_STRUCT(type, ...) { __VA_ARGS__ }
 #else
-    #define INIT_STRUCT(type, ...) (type) { __VA_ARGS__ }
-#endif
-
-// Macro to initialize a structure with zeros
-// NOTE: Undefine at the end of the header
-// In C++, use the brace initializer list syntax: type{}
-// In C, use the designated initializer syntax: (type){0}
-#ifdef __cplusplus
-    #define INIT_STRUCT_ZERO(type) {}
-#else
     #define INIT_STRUCT_ZERO(type) (type) { 0 }
+    #define INIT_STRUCT(type, ...) (type) { __VA_ARGS__ }
 #endif
 
 /* Helper defintions */
@@ -1524,8 +1514,12 @@ struct RLG_Light
     data;
 };
 
-struct RLG_SkyboxHandling
+struct RLG_SkyboxHandler
 {
+    unsigned int vbo;   ///< VBO des positions du cube
+    unsigned int ebo;   ///< EBO (elements) du cube
+    unsigned int vao;   ///< VAO -> VBO + EBO
+
     unsigned int previousCubemapID;  /*< Indicates whether to update the data sent to the skybox
                                          shader if different from the ID of the skybox to render */
     int locDoGamma;
@@ -1544,7 +1538,7 @@ static struct RLG_Core
 
     /* Skybox handling data */
 
-    struct RLG_SkyboxHandling skybox;
+    struct RLG_SkyboxHandler skybox;
 
     /* Lighting shader data*/
 
@@ -1854,12 +1848,75 @@ RLG_Context RLG_CreateContext(unsigned int count)
     rlgCtx->shaders[RLG_SHADER_SKYBOX] = LoadShaderFromMemory(G_VS_CACHE_Skybox, G_FS_CACHE_Skybox);
     rlgCtx->skybox.locDoGamma = rlGetLocationUniform(rlgCtx->shaders[RLG_SHADER_SKYBOX].id, "doGamma");
 
+    // Load skybox vertex array
+    // Define the positions of the vertices for a cube
+    static const float skyboxPositions[] =
+    {
+        // Front face
+        -0.5f, -0.5f,  0.5f,    // Vertex 0
+         0.5f, -0.5f,  0.5f,    // Vertex 1
+         0.5f,  0.5f,  0.5f,    // Vertex 2
+        -0.5f,  0.5f,  0.5f,    // Vertex 3
+
+        // Back face
+        -0.5f, -0.5f, -0.5f,    // Vertex 4
+         0.5f, -0.5f, -0.5f,    // Vertex 5
+         0.5f,  0.5f, -0.5f,    // Vertex 6
+        -0.5f,  0.5f, -0.5f     // Vertex 7
+    };
+
+    // Define the indices for drawing the cube faces
+    const unsigned short skyboxIndices[] =
+    {
+        // Front face
+        0, 1, 2,
+        2, 3, 0,
+
+        // Right face
+        1, 5, 6,
+        6, 2, 1,
+
+        // Back face
+        5, 4, 7,
+        7, 6, 5,
+
+        // Left face
+        4, 0, 3,
+        3, 7, 4,
+
+        // Top face
+        3, 2, 6,
+        6, 7, 3,
+
+        // Bottom face
+        4, 5, 1,
+        1, 0, 4
+    };
+
+    // Load vertex array object (VAO) and bind it
+    rlgCtx->skybox.vao = rlLoadVertexArray();
+    rlEnableVertexArray(rlgCtx->skybox.vao);
+    {
+        // Load vertex buffer object (VBO) for positions and bind it
+        rlgCtx->skybox.vbo = rlLoadVertexBuffer(skyboxPositions, sizeof(skyboxPositions), false);
+        rlSetVertexAttribute(0, 3, RL_FLOAT, 0, 0, 0);
+        rlEnableVertexAttribute(0);
+
+        // Load element buffer object (EBO) for indices and bind it
+        rlgCtx->skybox.ebo = rlLoadVertexBufferElement(skyboxIndices, sizeof(skyboxIndices), false);
+    }
+    rlDisableVertexArray();
+
     return (RLG_Context)rlgCtx;
 }
 
 void RLG_DestroyContext(RLG_Context ctx)
 {
     struct RLG_Core *pCtx = (struct RLG_Core*)ctx;
+
+    rlUnloadVertexBuffer(rlgCtx->skybox.ebo);
+    rlUnloadVertexBuffer(rlgCtx->skybox.vbo);
+    rlUnloadVertexArray(rlgCtx->skybox.vao);
 
     for (int i = 0; i < RLG_COUNT_SHADERS; i++)
     {
@@ -3451,65 +3508,7 @@ void RLG_DrawModelEx(Model model, Vector3 position, Vector3 rotationAxis, float 
 
 RLG_Skybox RLG_LoadSkybox(const char* skyboxFileName)
 {
-    // Define the positions of the vertices for a cube
-    static const float positions[] =
-    {
-        // Front face
-        -0.5f, -0.5f,  0.5f,    // Vertex 0
-         0.5f, -0.5f,  0.5f,    // Vertex 1
-         0.5f,  0.5f,  0.5f,    // Vertex 2
-        -0.5f,  0.5f,  0.5f,    // Vertex 3
-
-        // Back face
-        -0.5f, -0.5f, -0.5f,    // Vertex 4
-         0.5f, -0.5f, -0.5f,    // Vertex 5
-         0.5f,  0.5f, -0.5f,    // Vertex 6
-        -0.5f,  0.5f, -0.5f     // Vertex 7
-    };
-
-    // Define the indices for drawing the cube faces
-    const unsigned short indices[] =
-    {
-        // Front face
-        0, 1, 2,
-        2, 3, 0,
-
-        // Right face
-        1, 5, 6,
-        6, 2, 1,
-
-        // Back face
-        5, 4, 7,
-        7, 6, 5,
-
-        // Left face
-        4, 0, 3,
-        3, 7, 4,
-
-        // Top face
-        3, 2, 6,
-        6, 7, 3,
-
-        // Bottom face
-        4, 5, 1,
-        1, 0, 4
-    };
-
     RLG_Skybox skybox = { 0 };
-
-    // Load vertex array object (VAO) and bind it
-    skybox.vaoID = rlLoadVertexArray();
-    rlEnableVertexArray(skybox.vaoID);
-    {
-        // Load vertex buffer object (VBO) for positions and bind it
-        skybox.vboPostionsID = rlLoadVertexBuffer(positions, sizeof(positions), false);
-        rlSetVertexAttribute(0, 3, RL_FLOAT, 0, 0, 0);
-        rlEnableVertexAttribute(0);
-
-        // Load element buffer object (EBO) for indices and bind it
-        skybox.vboIndicesID = rlLoadVertexBufferElement(indices, sizeof(indices), false);
-    }
-    rlDisableVertexArray();
 
     // Load the cubemap texture from the image file
     Image img = LoadImage(skyboxFileName);
@@ -3603,65 +3602,7 @@ RLG_Skybox RLG_LoadSkybox(const char* skyboxFileName)
 
 RLG_Skybox RLG_LoadSkyboxHDR(const char* skyboxFileName, int size, int format)
 {
-    // Define the positions of the vertices for a cube
-    static const float positions[] =
-    {
-        // Front face
-        -0.5f, -0.5f,  0.5f,    // Vertex 0
-         0.5f, -0.5f,  0.5f,    // Vertex 1
-         0.5f,  0.5f,  0.5f,    // Vertex 2
-        -0.5f,  0.5f,  0.5f,    // Vertex 3
-
-        // Back face
-        -0.5f, -0.5f, -0.5f,    // Vertex 4
-         0.5f, -0.5f, -0.5f,    // Vertex 5
-         0.5f,  0.5f, -0.5f,    // Vertex 6
-        -0.5f,  0.5f, -0.5f     // Vertex 7
-    };
-
-    // Define the indices for drawing the cube faces
-    const unsigned short indices[] =
-    {
-        // Front face
-        0, 1, 2,
-        2, 3, 0,
-
-        // Right face
-        1, 5, 6,
-        6, 2, 1,
-
-        // Back face
-        5, 4, 7,
-        7, 6, 5,
-
-        // Left face
-        4, 0, 3,
-        3, 7, 4,
-
-        // Top face
-        3, 2, 6,
-        6, 7, 3,
-
-        // Bottom face
-        4, 5, 1,
-        1, 0, 4
-    };
-
     RLG_Skybox skybox = { 0 };
-
-    // Generate a vertex array object (VAO) for the skybox
-    skybox.vaoID = rlLoadVertexArray();
-    rlEnableVertexArray(skybox.vaoID);
-    {
-        // Load the vertex positions into a vertex buffer object (VBO)
-        skybox.vboPostionsID = rlLoadVertexBuffer(positions, sizeof(positions), false);
-        rlSetVertexAttribute(0, 3, RL_FLOAT, 0, 0, 0);
-        rlEnableVertexAttribute(0);
-
-        // Load the indices into an element buffer object (EBO)
-        skybox.vboIndicesID = rlLoadVertexBufferElement(indices, sizeof(indices), false);
-    }
-    rlDisableVertexArray();
 
     // Create a framebuffer object (FBO) to generate the skybox and irradiance map
     unsigned int fbo = rlLoadFramebuffer(0, 0);
@@ -3837,10 +3778,6 @@ void RLG_UnloadSkybox(RLG_Skybox skybox)
 {
     UnloadTexture(skybox.cubemap);
     UnloadTexture(skybox.irradiance);
-
-    rlUnloadVertexArray(skybox.vaoID);
-    rlUnloadVertexBuffer(skybox.vboIndicesID);
-    rlUnloadVertexBuffer(skybox.vboPostionsID);
 }
 
 void RLG_DrawSkybox(RLG_Skybox skybox)
@@ -3876,16 +3813,16 @@ void RLG_DrawSkybox(RLG_Skybox skybox)
     }
 
     // Try binding vertex array objects (VAO) or use VBOs if not possible
-    if (!rlEnableVertexArray(skybox.vaoID))
+    if (!rlEnableVertexArray(rlgCtx->skybox.vao))
     {
         // Bind mesh VBO data: vertex position (shader-location = 0)
-        rlEnableVertexBuffer(skybox.vboPostionsID);
+        rlEnableVertexBuffer(rlgCtx->skybox.vbo);
         rlSetVertexAttribute(shader->locs[SHADER_LOC_VERTEX_POSITION], 3, RL_FLOAT, 0, 0, 0);
         rlEnableVertexAttribute(shader->locs[SHADER_LOC_VERTEX_POSITION]);
 
-        if (skybox.vboIndicesID != 0)
+        if (rlgCtx->skybox.ebo != 0)
         {
-            rlEnableVertexBufferElement(skybox.vboIndicesID);
+            rlEnableVertexBufferElement(rlgCtx->skybox.ebo);
         }
     }
 
@@ -3911,7 +3848,7 @@ void RLG_DrawSkybox(RLG_Skybox skybox)
         rlSetUniformMatrix(shader->locs[SHADER_LOC_MATRIX_MVP], matModelViewProjection);
 
         // Draw mesh
-        if (skybox.vboIndicesID != 0)
+        if (rlgCtx->skybox.ebo != 0)
         {
             rlDrawVertexArrayElements(0, 36, 0);
         }
