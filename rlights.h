@@ -44,7 +44,7 @@ typedef enum {
  * @brief Enum representing different types of shaders.
  */
 typedef enum {
-    RLG_SHADER_LIGHTING = 0,                ///< Enum representing the main lighting shader.
+    RLG_SHADER_MODEL = 0,                   ///< Enum representing the main lighting shader.
     RLG_SHADER_DEPTH,                       ///< Enum representing the depth writing shader for shadow maps.
     RLG_SHADER_DEPTH_CUBEMAP,               ///< Enum representing the depth writing shader for shadow cubemaps.
     RLG_SHADER_EQUIRECTANGULAR_TO_CUBEMAP,  ///< Enum representing the shader for generating skyboxes from HDR textures.
@@ -735,21 +735,21 @@ void RLG_DrawSkybox(RLG_Skybox skybox);
 
 /* Uniform names definitions */
 
-#define RLG_SHADER_LIGHTING_ATTRIB_POSITION             "vertexPosition"
-#define RLG_SHADER_LIGHTING_ATTRIB_TEXCOORD             "vertexTexCoord"
-#define RLG_SHADER_LIGHTING_ATTRIB_TEXCOORD2            "vertexTexCoord2"
-#define RLG_SHADER_LIGHTING_ATTRIB_NORMAL               "vertexNormal"
-#define RLG_SHADER_LIGHTING_ATTRIB_TANGENT              "vertexTangent"
-#define RLG_SHADER_LIGHTING_ATTRIB_COLOR                "vertexColor"
+#define RLG_SHADER_MODEL_ATTRIB_POSITION             "vertexPosition"
+#define RLG_SHADER_MODEL_ATTRIB_TEXCOORD             "vertexTexCoord"
+#define RLG_SHADER_MODEL_ATTRIB_TEXCOORD2            "vertexTexCoord2"
+#define RLG_SHADER_MODEL_ATTRIB_NORMAL               "vertexNormal"
+#define RLG_SHADER_MODEL_ATTRIB_TANGENT              "vertexTangent"
+#define RLG_SHADER_MODEL_ATTRIB_COLOR                "vertexColor"
 
-#define RLG_SHADER_LIGHTING_UNIFORM_MATRIX_MVP          "mvp"
-#define RLG_SHADER_LIGHTING_UNIFORM_MATRIX_VIEW         "matView"
-#define RLG_SHADER_LIGHTING_UNIFORM_MATRIX_PROJECTION   "matProjection"
-#define RLG_SHADER_LIGHTING_UNIFORM_MATRIX_MODEL        "matModel"
-#define RLG_SHADER_LIGHTING_UNIFORM_MATRIX_NORMAL       "matNormal"
+#define RLG_SHADER_MODEL_UNIFORM_MATRIX_MVP          "mvp"
+#define RLG_SHADER_MODEL_UNIFORM_MATRIX_VIEW         "matView"
+#define RLG_SHADER_MODEL_UNIFORM_MATRIX_PROJECTION   "matProjection"
+#define RLG_SHADER_MODEL_UNIFORM_MATRIX_MODEL        "matModel"
+#define RLG_SHADER_MODEL_UNIFORM_MATRIX_NORMAL       "matNormal"
 
-#define RLG_SHADER_LIGHTING_UNIFORM_COLOR_AMBIENT       "colAmbient"
-#define RLG_SHADER_LIGHTING_UNIFORM_VIEW_POSITION       "viewPos"
+#define RLG_SHADER_MODEL_UNIFORM_COLOR_AMBIENT       "colAmbient"
+#define RLG_SHADER_MODEL_UNIFORM_VIEW_POSITION       "viewPos"
 
 /* Embedded shaders definition */
 
@@ -790,7 +790,9 @@ void RLG_DrawSkybox(RLG_Skybox skybox);
 
 /* Shader */
 
-static const char rlgLightingVS[] = GLSL_VERSION_DEF
+static const char G_VS_Model[] =
+{
+    GLSL_VERSION_DEF
 
 #   if GLSL_VERSION > 100
     "#define NUM_LIGHTS %i\n"
@@ -798,16 +800,16 @@ static const char rlgLightingVS[] = GLSL_VERSION_DEF
     GLSL_VS_OUT("vec4 fragPosLightSpace[NUM_LIGHTS]")
 #   endif
 
-    GLSL_VS_IN("vec3 " RLG_SHADER_LIGHTING_ATTRIB_POSITION)
-    GLSL_VS_IN("vec2 " RLG_SHADER_LIGHTING_ATTRIB_TEXCOORD)
-    GLSL_VS_IN("vec4 " RLG_SHADER_LIGHTING_ATTRIB_TANGENT)
-    GLSL_VS_IN("vec3 " RLG_SHADER_LIGHTING_ATTRIB_NORMAL)
-    GLSL_VS_IN("vec4 " RLG_SHADER_LIGHTING_ATTRIB_COLOR)
+    GLSL_VS_IN("vec3 " RLG_SHADER_MODEL_ATTRIB_POSITION)
+    GLSL_VS_IN("vec2 " RLG_SHADER_MODEL_ATTRIB_TEXCOORD)
+    GLSL_VS_IN("vec4 " RLG_SHADER_MODEL_ATTRIB_TANGENT)
+    GLSL_VS_IN("vec3 " RLG_SHADER_MODEL_ATTRIB_NORMAL)
+    GLSL_VS_IN("vec4 " RLG_SHADER_MODEL_ATTRIB_COLOR)
 
     "uniform lowp int useNormalMap;"
-    "uniform mat4 " RLG_SHADER_LIGHTING_UNIFORM_MATRIX_NORMAL ";"
-    "uniform mat4 " RLG_SHADER_LIGHTING_UNIFORM_MATRIX_MODEL ";"
-    "uniform mat4 " RLG_SHADER_LIGHTING_UNIFORM_MATRIX_MVP ";"
+    "uniform mat4 " RLG_SHADER_MODEL_UNIFORM_MATRIX_NORMAL ";"
+    "uniform mat4 " RLG_SHADER_MODEL_UNIFORM_MATRIX_MODEL ";"
+    "uniform mat4 " RLG_SHADER_MODEL_UNIFORM_MATRIX_MVP ";"
 
     GLSL_VS_OUT("vec3 fragPosition")
     GLSL_VS_OUT("vec2 fragTexCoord")
@@ -817,16 +819,16 @@ static const char rlgLightingVS[] = GLSL_VERSION_DEF
 
     "void main()"
     "{"
-        "fragPosition = vec3(" RLG_SHADER_LIGHTING_UNIFORM_MATRIX_MODEL "*vec4(" RLG_SHADER_LIGHTING_ATTRIB_POSITION ", 1.0));"
-        "fragNormal = (" RLG_SHADER_LIGHTING_UNIFORM_MATRIX_NORMAL "*vec4(" RLG_SHADER_LIGHTING_ATTRIB_NORMAL ", 0.0)).xyz;"
+        "fragPosition = vec3(" RLG_SHADER_MODEL_UNIFORM_MATRIX_MODEL "*vec4(" RLG_SHADER_MODEL_ATTRIB_POSITION ", 1.0));"
+        "fragNormal = (" RLG_SHADER_MODEL_UNIFORM_MATRIX_NORMAL "*vec4(" RLG_SHADER_MODEL_ATTRIB_NORMAL ", 0.0)).xyz;"
 
-        "fragTexCoord = " RLG_SHADER_LIGHTING_ATTRIB_TEXCOORD ";"
-        "fragColor = " RLG_SHADER_LIGHTING_ATTRIB_COLOR ";"
+        "fragTexCoord = " RLG_SHADER_MODEL_ATTRIB_TEXCOORD ";"
+        "fragColor = " RLG_SHADER_MODEL_ATTRIB_COLOR ";"
 
         // The TBN matrix is used to transform vectors from tangent space to world space
         // It is currently used to transform normals from a normal map to world space normals
-        "vec3 T = normalize(vec3(" RLG_SHADER_LIGHTING_UNIFORM_MATRIX_MODEL "*vec4(" RLG_SHADER_LIGHTING_ATTRIB_TANGENT ".xyz, 0.0)));"
-        "vec3 B = cross(fragNormal, T)*" RLG_SHADER_LIGHTING_ATTRIB_TANGENT ".w;"
+        "vec3 T = normalize(vec3(" RLG_SHADER_MODEL_UNIFORM_MATRIX_MODEL "*vec4(" RLG_SHADER_MODEL_ATTRIB_TANGENT ".xyz, 0.0)));"
+        "vec3 B = cross(fragNormal, T)*" RLG_SHADER_MODEL_ATTRIB_TANGENT ".w;"
         "TBN = mat3(T, B, fragNormal);"
 
 #       if GLSL_VERSION > 100
@@ -836,11 +838,15 @@ static const char rlgLightingVS[] = GLSL_VERSION_DEF
         "}"
 #       endif
 
-        "gl_Position = " RLG_SHADER_LIGHTING_UNIFORM_MATRIX_MVP "*vec4(" RLG_SHADER_LIGHTING_ATTRIB_POSITION ", 1.0);"
-    "}";
+        "gl_Position = " RLG_SHADER_MODEL_UNIFORM_MATRIX_MVP "*vec4(" RLG_SHADER_MODEL_ATTRIB_POSITION ", 1.0);"
+    "}"
+};
 
-static const char rlgLightingFS[] = GLSL_VERSION_DEF
-    GLSL_TEXTURE_DEF GLSL_TEXTURE_CUBE_DEF
+static const char G_FS_Model[] =
+{
+    GLSL_VERSION_DEF
+    GLSL_TEXTURE_DEF
+    GLSL_TEXTURE_CUBE_DEF
 
     "#define NUM_LIGHTS"                " %i\n"
     "#define NUM_MATERIAL_MAPS"         " 7\n"
@@ -922,8 +928,8 @@ static const char rlgLightingFS[] = GLSL_VERSION_DEF
 
     "uniform float farPlane;"   ///< Used to scale depth values ​​when reading the depth cubemap (point shadows)
 
-    "uniform vec3 " RLG_SHADER_LIGHTING_UNIFORM_COLOR_AMBIENT ";"
-    "uniform vec3 " RLG_SHADER_LIGHTING_UNIFORM_VIEW_POSITION ";"
+    "uniform vec3 " RLG_SHADER_MODEL_UNIFORM_COLOR_AMBIENT ";"
+    "uniform vec3 " RLG_SHADER_MODEL_UNIFORM_VIEW_POSITION ";"
 
     "float DistributionGGX(float cosTheta, float alpha)"
     "{"
@@ -1040,7 +1046,7 @@ static const char rlgLightingFS[] = GLSL_VERSION_DEF
     "void main()"
     "{"
         // Compute the view direction vector for this fragment
-        "vec3 V = normalize(" RLG_SHADER_LIGHTING_UNIFORM_VIEW_POSITION " - fragPosition);"
+        "vec3 V = normalize(" RLG_SHADER_MODEL_UNIFORM_VIEW_POSITION " - fragPosition);"
 
         // Compute fragTexCoord (UV), apply parallax if height map is enabled
         "vec2 uv = fragTexCoord;"
@@ -1184,7 +1190,7 @@ static const char rlgLightingFS[] = GLSL_VERSION_DEF
         "}"
 
         // Compute ambient
-        "vec3 ambient = " RLG_SHADER_LIGHTING_UNIFORM_COLOR_AMBIENT ";"
+        "vec3 ambient = " RLG_SHADER_MODEL_UNIFORM_COLOR_AMBIENT ";"
         "if (cubemaps[IRRADIANCE].active != 0)"
         "{"
             "vec3 kS = F0 + (1.0 - F0)*SchlickFresnel(cNdotV);"
@@ -1222,59 +1228,88 @@ static const char rlgLightingFS[] = GLSL_VERSION_DEF
 
         // Compute the final fragment color by combining diffuse, specular, and emission contributions
         GLSL_FINAL_COLOR("vec4(diffuse + specLighting + emission, 1.0)")
-    "}";
+    "}"
+};
 
-static const char rlgDepthVS[] = GLSL_VERSION_DEF
+static const char G_VS_Depth[] =
+{
+    GLSL_VERSION_DEF
     GLSL_VS_IN("vec3 vertexPosition")
     "uniform mat4 mvp;"
     "void main()"
     "{"
         "gl_Position = mvp*vec4(vertexPosition, 1.0);"
-    "}";
+    "}"
+};
 
-static const char rlgDepthFS[] = GLSL_VERSION_DEF
+static const char G_FS_Depth[] =
+{
+    GLSL_VERSION_DEF
     GLSL_PRECISION("mediump float")
-    "void main()"
-    "{}";
+    "void main(){}"
+};
 
-static const char rlgDepthCubemapVS[] = GLSL_VERSION_DEF
+static const char G_VS_DepthCubemap[] =
+{
+    GLSL_VERSION_DEF
+
     GLSL_VS_IN("vec3 vertexPosition")
     GLSL_VS_OUT("vec3 fragPosition")
+
     "uniform mat4 matModel;"
     "uniform mat4 mvp;"
+
     "void main()"
     "{"
         "fragPosition = vec3(matModel*vec4(vertexPosition, 1.0));"
         "gl_Position = mvp*vec4(vertexPosition, 1.0);"
-    "}";
+    "}"
+};
 
-static const char rlgDepthCubemapFS[] = GLSL_VERSION_DEF
+static const char G_FS_DepthCubemap[] =
+{
+    GLSL_VERSION_DEF
+
     GLSL_PRECISION("mediump float")
     GLSL_FS_IN("vec3 fragPosition")
+
     "uniform vec3 lightPos;"
     "uniform float farPlane;"
+
     "void main()"
     "{"
         "float lightDistance = length(fragPosition - lightPos);"
         "lightDistance = lightDistance/farPlane;"
         "gl_FragDepth = lightDistance;"
-    "}";
+    "}"
+};
 
-static const char rlgShadowMapFS[] = GLSL_VERSION_DEF
+// NOTE: This shader is no longer used currently, I keep it just in case
+static const char G_FS_DEBUG_DepthMapDrawing[] =
+{
+    GLSL_VERSION_DEF
+
     GLSL_PRECISION("mediump float")
     GLSL_FS_IN("vec2 fragTexCoord")
+
     "uniform sampler2D texture0;"
     "uniform float near;"
     "uniform float far;"
+
     GLSL_FS_OUT_DEF
+
     "void main()"
     "{"
         "float depth = TEX(texture0, vec2(fragTexCoord.x, 1.0 - fragTexCoord.y)).r;"
         "depth = (2.0*near*far)/(far + near - (depth*2.0 - 1.0)*(far - near));"
         GLSL_FINAL_COLOR("vec4(vec3(depth/far), 1.0)")
-    "}";
+    "}"
+};
 
-static const char rlgCubemapVS[] = GLSL_VERSION_DEF
+static const char G_VS_Cubemap[] =
+{
+    GLSL_VERSION_DEF
+
     GLSL_VS_IN("vec3 vertexPosition")
     GLSL_VS_OUT("vec3 fragPosition")
 
@@ -1285,9 +1320,12 @@ static const char rlgCubemapVS[] = GLSL_VERSION_DEF
     "{"
         "fragPosition = vertexPosition;"
         "gl_Position = matProjection*matView*vec4(vertexPosition, 1.0);"
-    "}";
+    "}"
+};
 
-static const char rlgEquirectangularToCubemapFS[] = GLSL_VERSION_DEF
+static const char G_FS_EquirectangularToCubemap[] =
+{
+    GLSL_VERSION_DEF
     GLSL_TEXTURE_DEF
 
     GLSL_PRECISION("mediump float")
@@ -1309,9 +1347,12 @@ static const char rlgEquirectangularToCubemapFS[] = GLSL_VERSION_DEF
         "vec2 uv = SampleSphericalMap(normalize(fragPosition));"
         "vec3 color = TEX(equirectangularMap, uv).rgb;"
         GLSL_FINAL_COLOR("vec4(color, 1.0)")
-    "}";
+    "}"
+};
 
-static const char rlgIrradianceConvolutionFS[] = GLSL_VERSION_DEF
+static const char G_FS_IrradianceConvolution[] =
+{
+    GLSL_VERSION_DEF
     GLSL_TEXTURE_CUBE_DEF
 
     "#define PI 3.14159265359\n"
@@ -1358,9 +1399,13 @@ static const char rlgIrradianceConvolutionFS[] = GLSL_VERSION_DEF
 
         "irradiance = PI * irradiance * (1.0 / float(nrSamples));"
         GLSL_FINAL_COLOR("vec4(irradiance, 1.0)")
-    "}";
+    "}"
+};
 
-static const char rlgSkyboxVS[] = GLSL_VERSION_DEF
+static const char G_VS_Skybox[] =
+{
+    GLSL_VERSION_DEF
+
     GLSL_VS_IN("vec3 vertexPosition")
     GLSL_VS_OUT("vec3 fragPosition")
 
@@ -1373,9 +1418,12 @@ static const char rlgSkyboxVS[] = GLSL_VERSION_DEF
         "mat4 rotView = mat4(mat3(matView));"
         "vec4 clipPos = matProjection*rotView*vec4(vertexPosition, 1.0);"
         "gl_Position = clipPos;"
-    "}";
+    "}"
+};
 
-static const char rlgSkyboxFS[] = GLSL_VERSION_DEF
+static const char G_FS_Skybox[] =
+{
+    GLSL_VERSION_DEF
     GLSL_TEXTURE_CUBE_DEF
 
     GLSL_PRECISION("mediump float")
@@ -1396,7 +1444,8 @@ static const char rlgSkyboxFS[] = GLSL_VERSION_DEF
         "}"
 
         GLSL_FINAL_COLOR("vec4(color, 1.0)")
-    "}";
+    "}"
+};
 
 #endif //NO_EMBEDDED_SHADERS
 
@@ -1519,37 +1568,37 @@ static struct RLG_Core
 
 #ifndef NO_EMBEDDED_SHADERS
     static const char
-        *rlgCachedLightingVS = rlgLightingVS,
-        *rlgCachedLightingFS = rlgLightingFS;
+        *G_FS_CACHE_Model = G_VS_Model,
+        *G_VS_CACHE_Model = G_FS_Model;
     static const char
-        *rlgCachedDepthVS = rlgDepthVS,
-        *rlgCachedDepthFS = rlgDepthFS;
+        *G_VS_CACHE_Depth = G_VS_Depth,
+        *G_FS_CACHE_Depth = G_FS_Depth;
     static const char
-        *rlgCachedDepthCubemapVS = rlgDepthCubemapVS,
-        *rlgCachedDepthCubemapFS = rlgDepthCubemapFS;
+        *G_VS_CACHE_DepthCubemap = G_VS_DepthCubemap,
+        *G_FS_CACHE_DepthCubemap = G_FS_DepthCubemap;
     static const char
-        *rlgCachedIrradianceConvolutionVS = rlgCubemapVS,
-        *rlgCachedIrradianceConvolutionFS = rlgIrradianceConvolutionFS;
+        *G_VS_CACHE_IrradianceConvolution = G_VS_Cubemap,
+        *G_FS_CACHE_IrradianceConvolution = G_FS_IrradianceConvolution;
     static const char
-        *rlgCachedEquirectangularToCubemapVS = rlgCubemapVS,
-        *rlgCachedEquirectangularToCubemapFS = rlgEquirectangularToCubemapFS;
+        *G_VS_CACHE_EquirectangularToCubemap = G_VS_Cubemap,
+        *G_FS_CACHE_EquirectangularToCubemap = G_FS_EquirectangularToCubemap;
     static const char
-        *rlgCachedSkyboxVS = rlgSkyboxVS,
-        *rlgCachedSkyboxFS = rlgSkyboxFS;
+        *G_VS_CACHE_Skybox = G_VS_Skybox,
+        *G_FS_CACHE_Skybox = G_FS_Skybox;
 #else
     static const char
-        *rlgCachedLightingVS                    = NULL,
-        *rlgCachedLightingFS                    = NULL,
-        *rlgCachedDepthVS                       = NULL,
-        *rlgCachedDepthFS                       = NULL,
-        *rlgCachedDepthCubemapVS                = NULL,
-        *rlgCachedDepthCubemapFS                = NULL,
-        *rlgCachedIrradianceConvolutionVS       = NULL,
-        *rlgCachedIrradianceConvolutionFS       = NULL,
-        *rlgCachedEquirectangularToCubemapVS    = NULL,
-        *rlgCachedEquirectangularToCubemapFS    = NULL,
-        *rlgCachedSkyboxVS                      = NULL,
-        *rlgCachedSkyboxFS                      = NULL;
+        *G_FS_CACHE_Model                       = NULL,
+        *G_VS_CACHE_Model                       = NULL,
+        *G_VS_CACHE_Depth                       = NULL,
+        *G_FS_CACHE_Depth                       = NULL,
+        *G_VS_CACHE_DepthCubemap                = NULL,
+        *G_FS_CACHE_DepthCubemap                = NULL,
+        *G_VS_CACHE_IrradianceConvolution       = NULL,
+        *G_FS_CACHE_IrradianceConvolution       = NULL,
+        *G_VS_CACHE_EquirectangularToCubemap    = NULL,
+        *G_FS_CACHE_EquirectangularToCubemap    = NULL,
+        *G_VS_CACHE_Skybox                      = NULL,
+        *G_FS_CACHE_Skybox                      = NULL;
 #endif //NO_EMBEDDED_SHADERS
 
 /* Public API */
@@ -1565,7 +1614,7 @@ RLG_Context RLG_CreateContext(unsigned int count)
         return NULL;
     }
 
-    // NOTE: The limit of 99 is because we measure the size of `rlgLightingFS` with '%s'
+    // NOTE: The limit of 99 is because we measure the size of `G_FS_Model` with '%s'
     if (count > 99)
     {
         TraceLog(LOG_WARNING, "The limit of lights supported by rlights is 99."
@@ -1574,33 +1623,33 @@ RLG_Context RLG_CreateContext(unsigned int count)
     }
 
     // We check if all the shader codes are well defined
-    if (rlgCachedLightingVS == NULL) TraceLog(LOG_WARNING, "The lighting vertex shader has not been defined.");
-    if (rlgCachedLightingFS == NULL) TraceLog(LOG_WARNING, "The lighting fragment shader has not been defined.");
-    if (rlgCachedDepthVS == NULL) TraceLog(LOG_WARNING, "The depth vertex shader has not been defined.");
-    if (rlgCachedDepthFS == NULL) TraceLog(LOG_WARNING, "The depth fragment shader has not been defined.");
+    if (G_FS_CACHE_Model == NULL) TraceLog(LOG_WARNING, "The lighting vertex shader has not been defined.");
+    if (G_VS_CACHE_Model == NULL) TraceLog(LOG_WARNING, "The lighting fragment shader has not been defined.");
+    if (G_VS_CACHE_Depth == NULL) TraceLog(LOG_WARNING, "The depth vertex shader has not been defined.");
+    if (G_FS_CACHE_Depth == NULL) TraceLog(LOG_WARNING, "The depth fragment shader has not been defined.");
 
-    const char *lightVS = rlgCachedLightingVS;
-    const char *lightFS = rlgCachedLightingFS;
+    const char *lightVS = G_FS_CACHE_Model;
+    const char *lightFS = G_VS_CACHE_Model;
 
 #   ifndef NO_EMBEDDED_SHADERS
 
 #       if GLSL_VERSION > 100
-        bool vsFormated = (lightVS == rlgLightingVS);
+        bool vsFormated = (lightVS == G_VS_Model);
         if (vsFormated)
         {
             // Format frag shader with lights count
-            char *fmtVert = (char*)malloc(sizeof(rlgLightingVS));
-            snprintf(fmtVert, sizeof(rlgLightingVS), rlgLightingVS, count);
+            char *fmtVert = (char*)malloc(sizeof(G_VS_Model));
+            snprintf(fmtVert, sizeof(G_VS_Model), G_VS_Model, count);
             lightVS = fmtVert;
         }
 #       endif
 
-        bool fsFormated = (lightFS == rlgLightingFS);
+        bool fsFormated = (lightFS == G_FS_Model);
         if (fsFormated)
         {
             // Format frag shader with lights count
-            char *fmtFrag = (char*)malloc(sizeof(rlgLightingFS));
-            snprintf(fmtFrag, sizeof(rlgLightingFS), rlgLightingFS, count);
+            char *fmtFrag = (char*)malloc(sizeof(G_FS_Model));
+            snprintf(fmtFrag, sizeof(G_FS_Model), G_FS_Model, count);
             lightFS = fmtFrag;
         }
 
@@ -1617,23 +1666,23 @@ RLG_Context RLG_CreateContext(unsigned int count)
         lightShader.locs = (int*)malloc(RLG_COUNT_LOCS*sizeof(int));
 
         // Get handles to GLSL input attribute locations
-        lightShader.locs[RLG_LOC_VERTEX_POSITION]    = rlGetLocationAttrib(lightShader.id, RLG_SHADER_LIGHTING_ATTRIB_POSITION);
-        lightShader.locs[RLG_LOC_VERTEX_TEXCOORD01]  = rlGetLocationAttrib(lightShader.id, RLG_SHADER_LIGHTING_ATTRIB_TEXCOORD);
-        lightShader.locs[RLG_LOC_VERTEX_TEXCOORD02]  = rlGetLocationAttrib(lightShader.id, RLG_SHADER_LIGHTING_ATTRIB_TEXCOORD2);
-        lightShader.locs[RLG_LOC_VERTEX_NORMAL]      = rlGetLocationAttrib(lightShader.id, RLG_SHADER_LIGHTING_ATTRIB_NORMAL);
-        lightShader.locs[RLG_LOC_VERTEX_TANGENT]     = rlGetLocationAttrib(lightShader.id, RLG_SHADER_LIGHTING_ATTRIB_TANGENT);
-        lightShader.locs[RLG_LOC_VERTEX_COLOR]       = rlGetLocationAttrib(lightShader.id, RLG_SHADER_LIGHTING_ATTRIB_COLOR);
+        lightShader.locs[RLG_LOC_VERTEX_POSITION]    = rlGetLocationAttrib(lightShader.id, RLG_SHADER_MODEL_ATTRIB_POSITION);
+        lightShader.locs[RLG_LOC_VERTEX_TEXCOORD01]  = rlGetLocationAttrib(lightShader.id, RLG_SHADER_MODEL_ATTRIB_TEXCOORD);
+        lightShader.locs[RLG_LOC_VERTEX_TEXCOORD02]  = rlGetLocationAttrib(lightShader.id, RLG_SHADER_MODEL_ATTRIB_TEXCOORD2);
+        lightShader.locs[RLG_LOC_VERTEX_NORMAL]      = rlGetLocationAttrib(lightShader.id, RLG_SHADER_MODEL_ATTRIB_NORMAL);
+        lightShader.locs[RLG_LOC_VERTEX_TANGENT]     = rlGetLocationAttrib(lightShader.id, RLG_SHADER_MODEL_ATTRIB_TANGENT);
+        lightShader.locs[RLG_LOC_VERTEX_COLOR]       = rlGetLocationAttrib(lightShader.id, RLG_SHADER_MODEL_ATTRIB_COLOR);
 
         // Get handles to GLSL uniform locations (vertex shader)
-        lightShader.locs[RLG_LOC_MATRIX_MVP]         = rlGetLocationUniform(lightShader.id, RLG_SHADER_LIGHTING_UNIFORM_MATRIX_MVP);
-        lightShader.locs[RLG_LOC_MATRIX_VIEW]        = rlGetLocationUniform(lightShader.id, RLG_SHADER_LIGHTING_UNIFORM_MATRIX_VIEW);
-        lightShader.locs[RLG_LOC_MATRIX_PROJECTION]  = rlGetLocationUniform(lightShader.id, RLG_SHADER_LIGHTING_UNIFORM_MATRIX_PROJECTION);
-        lightShader.locs[RLG_LOC_MATRIX_MODEL]       = rlGetLocationUniform(lightShader.id, RLG_SHADER_LIGHTING_UNIFORM_MATRIX_MODEL);
-        lightShader.locs[RLG_LOC_MATRIX_NORMAL]      = rlGetLocationUniform(lightShader.id, RLG_SHADER_LIGHTING_UNIFORM_MATRIX_NORMAL);
+        lightShader.locs[RLG_LOC_MATRIX_MVP]         = rlGetLocationUniform(lightShader.id, RLG_SHADER_MODEL_UNIFORM_MATRIX_MVP);
+        lightShader.locs[RLG_LOC_MATRIX_VIEW]        = rlGetLocationUniform(lightShader.id, RLG_SHADER_MODEL_UNIFORM_MATRIX_VIEW);
+        lightShader.locs[RLG_LOC_MATRIX_PROJECTION]  = rlGetLocationUniform(lightShader.id, RLG_SHADER_MODEL_UNIFORM_MATRIX_PROJECTION);
+        lightShader.locs[RLG_LOC_MATRIX_MODEL]       = rlGetLocationUniform(lightShader.id, RLG_SHADER_MODEL_UNIFORM_MATRIX_MODEL);
+        lightShader.locs[RLG_LOC_MATRIX_NORMAL]      = rlGetLocationUniform(lightShader.id, RLG_SHADER_MODEL_UNIFORM_MATRIX_NORMAL);
 
         // Get handles to GLSL uniform locations (fragment shader)
-        lightShader.locs[RLG_LOC_COLOR_AMBIENT]      = rlGetLocationUniform(lightShader.id, RLG_SHADER_LIGHTING_UNIFORM_COLOR_AMBIENT);
-        lightShader.locs[RLG_LOC_VECTOR_VIEW]        = rlGetLocationUniform(lightShader.id, RLG_SHADER_LIGHTING_UNIFORM_VIEW_POSITION);
+        lightShader.locs[RLG_LOC_COLOR_AMBIENT]      = rlGetLocationUniform(lightShader.id, RLG_SHADER_MODEL_UNIFORM_COLOR_AMBIENT);
+        lightShader.locs[RLG_LOC_VECTOR_VIEW]        = rlGetLocationUniform(lightShader.id, RLG_SHADER_MODEL_UNIFORM_VIEW_POSITION);
 
         lightShader.locs[RLG_LOC_COLOR_DIFFUSE]      = rlGetLocationUniform(lightShader.id, TextFormat("maps[%i].color", MATERIAL_MAP_ALBEDO));
         lightShader.locs[RLG_LOC_COLOR_SPECULAR]     = rlGetLocationUniform(lightShader.id, TextFormat("maps[%i].color", MATERIAL_MAP_METALNESS));
@@ -1658,7 +1707,7 @@ RLG_Context RLG_CreateContext(unsigned int count)
         lightShader.locs[RLG_LOC_HEIGHT_SCALE]       = rlGetLocationUniform(lightShader.id, TextFormat("maps[%i].value", MATERIAL_MAP_HEIGHT));
 
         // Definition of the lighting shader once initialization is successful
-        rlgCtx->shaders[RLG_SHADER_LIGHTING] = lightShader;
+        rlgCtx->shaders[RLG_SHADER_MODEL] = lightShader;
     }
 
     // Frees up space allocated for string formatting
@@ -1778,10 +1827,10 @@ RLG_Context RLG_CreateContext(unsigned int count)
     rlgCtx->defaultMaps[MATERIAL_MAP_HEIGHT].value = 0.05f;
 
     // Load depth shader (used for shadow casting)
-    rlgCtx->shaders[RLG_SHADER_DEPTH] = LoadShaderFromMemory(rlgCachedDepthVS, rlgCachedDepthFS);
+    rlgCtx->shaders[RLG_SHADER_DEPTH] = LoadShaderFromMemory(G_VS_CACHE_Depth, G_FS_CACHE_Depth);
 
     // Load depth cubemap shader (used for omnilight shadow casting)
-    rlgCtx->shaders[RLG_SHADER_DEPTH_CUBEMAP] = LoadShaderFromMemory(rlgCachedDepthCubemapVS, rlgCachedDepthCubemapFS);
+    rlgCtx->shaders[RLG_SHADER_DEPTH_CUBEMAP] = LoadShaderFromMemory(G_VS_CACHE_DepthCubemap, G_FS_CACHE_DepthCubemap);
     rlgCtx->locDepthCubemapLightPos = rlGetLocationUniform(rlgCtx->shaders[RLG_SHADER_DEPTH_CUBEMAP].id, "lightPos");
     rlgCtx->locDepthCubemapFar = rlGetLocationUniform(rlgCtx->shaders[RLG_SHADER_DEPTH_CUBEMAP].id, "farPlane");
 
@@ -1795,14 +1844,14 @@ RLG_Context RLG_CreateContext(unsigned int count)
 
     // Load equirectangular to cubemap shader (used for skybox cubemap generation)
     rlgCtx->shaders[RLG_SHADER_EQUIRECTANGULAR_TO_CUBEMAP] = LoadShaderFromMemory(
-        rlgCachedEquirectangularToCubemapVS, rlgCachedEquirectangularToCubemapFS);
+        G_VS_CACHE_EquirectangularToCubemap, G_FS_CACHE_EquirectangularToCubemap);
 
     // Load irradiance convolution shader (used to generate irradiance map of the skybox cubemap)
     rlgCtx->shaders[RLG_SHADER_IRRADIANCE_CONVOLUTION] = LoadShaderFromMemory(
-        rlgCachedIrradianceConvolutionVS, rlgCachedIrradianceConvolutionFS);
+        G_VS_CACHE_IrradianceConvolution, G_FS_CACHE_IrradianceConvolution);
 
     // Load skybox shader
-    rlgCtx->shaders[RLG_SHADER_SKYBOX] = LoadShaderFromMemory(rlgCachedSkyboxVS, rlgCachedSkyboxFS);
+    rlgCtx->shaders[RLG_SHADER_SKYBOX] = LoadShaderFromMemory(G_VS_CACHE_Skybox, G_FS_CACHE_Skybox);
     rlgCtx->skybox.locDoGamma = rlGetLocationUniform(rlgCtx->shaders[RLG_SHADER_SKYBOX].id, "doGamma");
 
     return (RLG_Context)rlgCtx;
@@ -1855,34 +1904,34 @@ void RLG_SetCustomShaderCode(RLG_Shader shader, const char *vsCode, const char *
 {
     switch (shader)
     {
-        case RLG_SHADER_LIGHTING:
-            rlgCachedLightingVS = vsCode;
-            rlgCachedLightingFS = fsCode;
+        case RLG_SHADER_MODEL:
+            G_FS_CACHE_Model = vsCode;
+            G_VS_CACHE_Model = fsCode;
             break;
 
         case RLG_SHADER_DEPTH:
-            rlgCachedDepthVS = vsCode;
-            rlgCachedDepthFS = fsCode;
+            G_VS_CACHE_Depth = vsCode;
+            G_FS_CACHE_Depth = fsCode;
             break;
 
         case RLG_SHADER_DEPTH_CUBEMAP:
-            rlgCachedDepthCubemapVS = vsCode;
-            rlgCachedDepthCubemapFS = fsCode;
+            G_VS_CACHE_DepthCubemap = vsCode;
+            G_FS_CACHE_DepthCubemap = fsCode;
             break;
 
         case RLG_SHADER_EQUIRECTANGULAR_TO_CUBEMAP:
-            rlgCachedEquirectangularToCubemapVS = vsCode;
-            rlgCachedEquirectangularToCubemapFS = fsCode;
+            G_VS_CACHE_EquirectangularToCubemap = vsCode;
+            G_FS_CACHE_EquirectangularToCubemap = fsCode;
             break;
 
         case RLG_SHADER_IRRADIANCE_CONVOLUTION:
-            rlgCachedIrradianceConvolutionVS = vsCode;
-            rlgCachedIrradianceConvolutionFS = fsCode;
+            G_VS_CACHE_IrradianceConvolution = vsCode;
+            G_FS_CACHE_IrradianceConvolution = fsCode;
             break;
 
         case RLG_SHADER_SKYBOX:
-            rlgCachedSkyboxVS = vsCode;
-            rlgCachedSkyboxFS = fsCode;
+            G_VS_CACHE_Skybox = vsCode;
+            G_FS_CACHE_Skybox = fsCode;
             break;
 
         default:
@@ -1908,12 +1957,12 @@ void RLG_SetViewPosition(float x, float y, float z)
 
 void RLG_SetViewPositionV(Vector3 position)
 {
-    int loc = rlgCtx->shaders[RLG_SHADER_LIGHTING].locs[RLG_LOC_VECTOR_VIEW];
+    int loc = rlgCtx->shaders[RLG_SHADER_MODEL].locs[RLG_LOC_VECTOR_VIEW];
 
     if (loc != -1)
     {
         rlgCtx->viewPos = position;
-        SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING],
+        SetShaderValue(rlgCtx->shaders[RLG_SHADER_MODEL],
             loc, &rlgCtx->viewPos, SHADER_UNIFORM_VEC3);
     }
 
@@ -1926,7 +1975,7 @@ Vector3 RLG_GetViewPosition(void)
 
 void RLG_SetAmbientColor(Color color)
 {
-    int loc = rlgCtx->shaders[RLG_SHADER_LIGHTING].locs[RLG_LOC_COLOR_AMBIENT];
+    int loc = rlgCtx->shaders[RLG_SHADER_MODEL].locs[RLG_LOC_COLOR_AMBIENT];
 
     if (loc != -1)
     {
@@ -1934,7 +1983,7 @@ void RLG_SetAmbientColor(Color color)
         rlgCtx->colAmbient.y = (float)color.g/255.0f;
         rlgCtx->colAmbient.z = (float)color.b/255.0f;
 
-        SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING],
+        SetShaderValue(rlgCtx->shaders[RLG_SHADER_MODEL],
             loc, &rlgCtx->colAmbient, SHADER_UNIFORM_VEC3);
     }
 }
@@ -1956,7 +2005,7 @@ void RLG_SetParallaxLayers(int min, int max)
         min != rlgCtx->material.data.parallaxMinLayers)
     {
         rlgCtx->material.data.parallaxMinLayers = min;
-        SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING],
+        SetShaderValue(rlgCtx->shaders[RLG_SHADER_MODEL],
             rlgCtx->material.locs.parallaxMinLayers,
             &min, RL_SHADER_UNIFORM_INT);
     }
@@ -1965,7 +2014,7 @@ void RLG_SetParallaxLayers(int min, int max)
         max != rlgCtx->material.data.parallaxMaxLayers)
     {
         rlgCtx->material.data.parallaxMaxLayers = max;
-        SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING],
+        SetShaderValue(rlgCtx->shaders[RLG_SHADER_MODEL],
             rlgCtx->material.locs.parallaxMaxLayers,
             &max, RL_SHADER_UNIFORM_INT);
     }
@@ -1986,7 +2035,7 @@ void RLG_UseMap(MaterialMapIndex mapIndex, bool active)
         {
             int v = (int)active;
             rlgCtx->material.data.useMaps[mapIndex] = active;
-            SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], rlgCtx->material.locs.useMaps[mapIndex], &v, SHADER_UNIFORM_INT);
+            SetShaderValue(rlgCtx->shaders[RLG_SHADER_MODEL], rlgCtx->material.locs.useMaps[mapIndex], &v, SHADER_UNIFORM_INT);
         }
     }
 }
@@ -2054,7 +2103,7 @@ void RLG_UseLight(unsigned int light, bool active)
     if (active != l->data.enabled)
     {
         l->data.enabled = (int)active;
-        SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING],
+        SetShaderValue(rlgCtx->shaders[RLG_SHADER_MODEL],
             l->locs.enabled, &l->data.enabled, SHADER_UNIFORM_INT);
     }
 }
@@ -2081,7 +2130,7 @@ void RLG_ToggleLight(unsigned int light)
     struct RLG_Light *l = &rlgCtx->lights[light];
 
     l->data.enabled = !l->data.enabled;
-    SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.enabled,
+    SetShaderValue(rlgCtx->shaders[RLG_SHADER_MODEL], l->locs.enabled,
         &l->data.enabled, SHADER_UNIFORM_INT);
 }
 
@@ -2106,7 +2155,7 @@ void RLG_SetLightType(unsigned int light, RLG_LightType type)
         }
 
         l->data.type = (int)type;
-        SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.type,
+        SetShaderValue(rlgCtx->shaders[RLG_SHADER_MODEL], l->locs.type,
             &l->data.type, SHADER_UNIFORM_INT);
     }
 }
@@ -2136,7 +2185,7 @@ void RLG_SetLightValue(unsigned int light, RLG_LightProperty property, float val
     {
         case RLG_LIGHT_COLOR:
             l->data.color = INIT_STRUCT(Vector3, value, value, value);
-            SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.color,
+            SetShaderValue(rlgCtx->shaders[RLG_SHADER_MODEL], l->locs.color,
                 &l->data.color, SHADER_UNIFORM_VEC3);
             break;
 
@@ -2144,7 +2193,7 @@ void RLG_SetLightValue(unsigned int light, RLG_LightProperty property, float val
             if (value != l->data.energy)
             {
                 l->data.energy = value;
-                SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.energy,
+                SetShaderValue(rlgCtx->shaders[RLG_SHADER_MODEL], l->locs.energy,
                     &l->data.energy, SHADER_UNIFORM_FLOAT);
             }
             break;
@@ -2153,7 +2202,7 @@ void RLG_SetLightValue(unsigned int light, RLG_LightProperty property, float val
             if (value != l->data.specular)
             {
                 l->data.specular = value;
-                SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.specular,
+                SetShaderValue(rlgCtx->shaders[RLG_SHADER_MODEL], l->locs.specular,
                     &l->data.specular, SHADER_UNIFORM_FLOAT);
             }
             break;
@@ -2162,7 +2211,7 @@ void RLG_SetLightValue(unsigned int light, RLG_LightProperty property, float val
             if (value != l->data.size)
             {
                 l->data.size = value;
-                SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.size,
+                SetShaderValue(rlgCtx->shaders[RLG_SHADER_MODEL], l->locs.size,
                     &l->data.size, SHADER_UNIFORM_FLOAT);
             }
             break;
@@ -2172,7 +2221,7 @@ void RLG_SetLightValue(unsigned int light, RLG_LightProperty property, float val
             {
                 l->data.innerCutOff = value;
                 float c = cosf(value*DEG2RAD);
-                SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.innerCutOff,
+                SetShaderValue(rlgCtx->shaders[RLG_SHADER_MODEL], l->locs.innerCutOff,
                     &c, SHADER_UNIFORM_FLOAT);
             }
             break;
@@ -2182,7 +2231,7 @@ void RLG_SetLightValue(unsigned int light, RLG_LightProperty property, float val
             {
                 l->data.outerCutOff = value;
                 float c = cosf(value*DEG2RAD);
-                SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.outerCutOff,
+                SetShaderValue(rlgCtx->shaders[RLG_SHADER_MODEL], l->locs.outerCutOff,
                     &c, SHADER_UNIFORM_FLOAT);
             }
             break;
@@ -2191,7 +2240,7 @@ void RLG_SetLightValue(unsigned int light, RLG_LightProperty property, float val
             if (value != l->data.distance)
             {
                 l->data.distance = value;
-                SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.distance, &value, SHADER_UNIFORM_FLOAT);
+                SetShaderValue(rlgCtx->shaders[RLG_SHADER_MODEL], l->locs.distance, &value, SHADER_UNIFORM_FLOAT);
             }
             break;
 
@@ -2199,7 +2248,7 @@ void RLG_SetLightValue(unsigned int light, RLG_LightProperty property, float val
             if (value != l->data.attenuation)
             {
                 l->data.attenuation = value;
-                SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.attenuation, &value, SHADER_UNIFORM_FLOAT);
+                SetShaderValue(rlgCtx->shaders[RLG_SHADER_MODEL], l->locs.attenuation, &value, SHADER_UNIFORM_FLOAT);
             }
             break;
 
@@ -2223,19 +2272,19 @@ void RLG_SetLightXYZ(unsigned int light, RLG_LightProperty property, float x, fl
     {
         case RLG_LIGHT_POSITION:
             l->data.position = value;
-            SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.position,
+            SetShaderValue(rlgCtx->shaders[RLG_SHADER_MODEL], l->locs.position,
                 &value, SHADER_UNIFORM_VEC3);
             break;
 
         case RLG_LIGHT_DIRECTION:
             l->data.direction = value;
-            SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.direction,
+            SetShaderValue(rlgCtx->shaders[RLG_SHADER_MODEL], l->locs.direction,
                 &value, SHADER_UNIFORM_VEC3);
             break;
 
         case RLG_LIGHT_COLOR:
             l->data.color = value;
-            SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.color,
+            SetShaderValue(rlgCtx->shaders[RLG_SHADER_MODEL], l->locs.color,
                 &value, SHADER_UNIFORM_VEC3);
             break;
 
@@ -2258,19 +2307,19 @@ void RLG_SetLightVec3(unsigned int light, RLG_LightProperty property, Vector3 va
     {
         case RLG_LIGHT_POSITION:
             l->data.position = value;
-            SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.position,
+            SetShaderValue(rlgCtx->shaders[RLG_SHADER_MODEL], l->locs.position,
                 &value, SHADER_UNIFORM_VEC3);
             break;
 
         case RLG_LIGHT_DIRECTION:
             l->data.direction = value;
-            SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.direction,
+            SetShaderValue(rlgCtx->shaders[RLG_SHADER_MODEL], l->locs.direction,
                 &value, SHADER_UNIFORM_VEC3);
             break;
 
         case RLG_LIGHT_COLOR:
             l->data.color = value;
-            SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.color,
+            SetShaderValue(rlgCtx->shaders[RLG_SHADER_MODEL], l->locs.color,
                 &value, SHADER_UNIFORM_VEC3);
             break;
 
@@ -2295,7 +2344,7 @@ void RLG_SetLightColor(unsigned int light, Color color)
     struct RLG_Light *l = &rlgCtx->lights[light];
 
     l->data.color = nCol;
-    SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.color,
+    SetShaderValue(rlgCtx->shaders[RLG_SHADER_MODEL], l->locs.color,
         &nCol, SHADER_UNIFORM_VEC3);
 }
 
@@ -2414,7 +2463,7 @@ void RLG_LightTranslate(unsigned int light, float x, float y, float z)
     l->data.position.y += y;
     l->data.position.z += z;
 
-    SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.position,
+    SetShaderValue(rlgCtx->shaders[RLG_SHADER_MODEL], l->locs.position,
         &l->data.position, SHADER_UNIFORM_VEC3);
 }
 
@@ -2431,7 +2480,7 @@ void RLG_LightTranslateV(unsigned int light, Vector3 v)
     l->data.position.y += v.y;
     l->data.position.z += v.z;
 
-    SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.position,
+    SetShaderValue(rlgCtx->shaders[RLG_SHADER_MODEL], l->locs.position,
         &l->data.position, SHADER_UNIFORM_VEC3);
 }
 
@@ -2451,7 +2500,7 @@ void RLG_LightRotateX(unsigned int light, float degrees)
     l->data.direction.y = l->data.direction.y*c + l->data.direction.z*s;
     l->data.direction.z = -l->data.direction.y*s + l->data.direction.z*c;
 
-    SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.direction,
+    SetShaderValue(rlgCtx->shaders[RLG_SHADER_MODEL], l->locs.direction,
         &l->data.direction, SHADER_UNIFORM_VEC3);
 }
 
@@ -2471,7 +2520,7 @@ void RLG_LightRotateY(unsigned int light, float degrees)
     l->data.direction.x = l->data.direction.x*c - l->data.direction.z*s;
     l->data.direction.z = l->data.direction.x*s + l->data.direction.z*c;
 
-    SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.direction,
+    SetShaderValue(rlgCtx->shaders[RLG_SHADER_MODEL], l->locs.direction,
         &l->data.direction, SHADER_UNIFORM_VEC3);
 }
 
@@ -2491,7 +2540,7 @@ void RLG_LightRotateZ(unsigned int light, float degrees)
     l->data.direction.x = l->data.direction.x*c + l->data.direction.y*s;
     l->data.direction.y = -l->data.direction.x*s + l->data.direction.y*c;
 
-    SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.direction,
+    SetShaderValue(rlgCtx->shaders[RLG_SHADER_MODEL], l->locs.direction,
         &l->data.direction, SHADER_UNIFORM_VEC3);
 }
 
@@ -2533,7 +2582,7 @@ void RLG_LightRotate(unsigned int light, Vector3 axis, float degrees)
         rotatedQuat.x, rotatedQuat.y, rotatedQuat.z
     ));
 
-    SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.direction,
+    SetShaderValue(rlgCtx->shaders[RLG_SHADER_MODEL], l->locs.direction,
         &l->data.direction, SHADER_UNIFORM_VEC3);
 }
 
@@ -2555,7 +2604,7 @@ void RLG_SetLightTargetV(unsigned int light, Vector3 targetPosition)
     l->data.direction = Vector3Normalize(Vector3Subtract(
         targetPosition, l->data.position));
 
-    SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.direction,
+    SetShaderValue(rlgCtx->shaders[RLG_SHADER_MODEL], l->locs.direction,
         &l->data.direction, SHADER_UNIFORM_VEC3);
 }
 
@@ -2656,18 +2705,18 @@ void RLG_EnableShadow(unsigned int light, int shadowMapResolution)
 
         // REVIEW: Should this value be modifiable by the user?
         float texelSize = 1.0f/shadowMapResolution;
-        SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.shadowMapTxlSz,
+        SetShaderValue(rlgCtx->shaders[RLG_SHADER_MODEL], l->locs.shadowMapTxlSz,
             &texelSize, SHADER_UNIFORM_FLOAT);
 
         // Set the depth bias value based on the light type
         l->data.depthBias = (l->data.type == RLG_OMNILIGHT) ? 0.05f : 0.0002f;
-        SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.depthBias,
+        SetShaderValue(rlgCtx->shaders[RLG_SHADER_MODEL], l->locs.depthBias,
             &l->data.depthBias, SHADER_UNIFORM_FLOAT);
     }
 
     // Enable shadows for the light and send the information to the shader
     l->data.shadow = true;
-    SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.shadow,
+    SetShaderValue(rlgCtx->shaders[RLG_SHADER_MODEL], l->locs.shadow,
         &l->data.shadow, SHADER_UNIFORM_INT);
 }
 
@@ -2692,7 +2741,7 @@ void RLG_DisableShadow(unsigned int light)
 
         // Send info to the shader
         l->data.shadow = false;
-        SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.shadow,
+        SetShaderValue(rlgCtx->shaders[RLG_SHADER_MODEL], l->locs.shadow,
             &l->data.shadow, SHADER_UNIFORM_INT);
     }
 }
@@ -2719,7 +2768,7 @@ void RLG_SetShadowBias(unsigned int light, float value)
     struct RLG_Light *l = &rlgCtx->lights[light];
 
     l->data.depthBias = value;
-    SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.depthBias,
+    SetShaderValue(rlgCtx->shaders[RLG_SHADER_MODEL], l->locs.depthBias,
         &value, SHADER_UNIFORM_FLOAT);
 }
 
@@ -2830,7 +2879,7 @@ void RLG_UpdateShadowMap(unsigned int light, RLG_DrawFunc drawFunc)
             &rlgCtx->zFar, SHADER_UNIFORM_FLOAT);
 
         // Send zFar to the lighting shader to scale depth from [0..1] to [0..zFar]
-        SetShaderValue(rlgCtx->shaders[RLG_SHADER_LIGHTING],
+        SetShaderValue(rlgCtx->shaders[RLG_SHADER_MODEL],
             rlgCtx->locLightingFar, &rlgCtx->zFar,
             SHADER_UNIFORM_FLOAT);
     }
@@ -2862,7 +2911,7 @@ void RLG_UpdateShadowMap(unsigned int light, RLG_DrawFunc drawFunc)
 
             // Calculate and send the view-projection matrix to the lighting shader for later rendering
             Matrix viewProj = MatrixMultiply(matView, rlGetMatrixProjection());
-            SetShaderValueMatrix(rlgCtx->shaders[RLG_SHADER_LIGHTING], l->locs.vpMatrix, viewProj);
+            SetShaderValueMatrix(rlgCtx->shaders[RLG_SHADER_MODEL], l->locs.vpMatrix, viewProj);
         }
 
         // Apply the view matrix for rendering into the depth texture
@@ -3002,7 +3051,7 @@ void RLG_CastModelEx(Shader shader, Model model, Vector3 position, Vector3 rotat
 
 void RLG_DrawMesh(Mesh mesh, Material material, Matrix transform)
 {
-    const Shader *shader = &rlgCtx->shaders[RLG_SHADER_LIGHTING];
+    const Shader *shader = &rlgCtx->shaders[RLG_SHADER_MODEL];
 
     // Bind shader program
     rlEnableShader(shader->id);
