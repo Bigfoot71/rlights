@@ -2892,7 +2892,7 @@ void RLG_UpdateShadowMap(unsigned int light, RLG_DrawFunc drawFunc)
             break;
         case RLG_SPOTLIGHT:
             // Perspective projection for spotlight
-            rlMultMatrixf(MatrixToFloat(MatrixPerspective(l->data.outerCutOff*DEG2RAD, 1.0, 0.01, l->data.distance)));
+            rlMultMatrixf(MatrixToFloat(MatrixPerspective(90*DEG2RAD, 1.0, 0.01, l->data.distance)));
             break;
         case RLG_OMNILIGHT:
             // Perspective projection for omnidirectional light
