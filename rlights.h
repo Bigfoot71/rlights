@@ -2889,6 +2889,7 @@ void RLG_UpdateShadowMap(unsigned int light, RLG_DrawFunc drawFunc)
         case RLG_DIRLIGHT:
             // Orthographic projection for directional
             rlOrtho(-10.0, 10.0, -10.0, 10.0, rlgCtx->zNear, rlgCtx->zFar);
+            break;
         case RLG_SPOTLIGHT:
             // Perspective projection for spotlight
             rlMultMatrixf(MatrixToFloat(MatrixPerspective(l->data.outerCutOff*DEG2RAD, 1.0, 0.01, l->data.distance)));
