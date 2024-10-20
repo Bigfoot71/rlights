@@ -1759,8 +1759,8 @@ RLG_Context RLG_CreateContext(void)
         light->data.energy         = 1.0f;
         light->data.specular       = 1.0f;
         light->data.size           = 0.0f;
-        light->data.innerCutOff    = -1.0f;
-        light->data.outerCutOff    = -1.0f;
+        light->data.innerCutOff    = 180;
+        light->data.outerCutOff    = 180;
         light->data.distance       = 8.0f;
         light->data.attenuation    = 1.0f;
         light->data.shadowMapTxlSz = 0.0f;
@@ -1791,8 +1791,8 @@ RLG_Context RLG_CreateContext(void)
         SetShaderValue(lightShader, light->locs.color, &light->data.color, SHADER_UNIFORM_VEC3);
         SetShaderValue(lightShader, light->locs.energy, &light->data.energy, SHADER_UNIFORM_FLOAT);
         SetShaderValue(lightShader, light->locs.specular, &light->data.specular, SHADER_UNIFORM_FLOAT);
-        SetShaderValue(lightShader, light->locs.innerCutOff, &light->data.innerCutOff, SHADER_UNIFORM_FLOAT);
-        SetShaderValue(lightShader, light->locs.outerCutOff, &light->data.outerCutOff, SHADER_UNIFORM_FLOAT);
+        SetShaderValue(lightShader, light->locs.innerCutOff, (float[1]) { -1 }, SHADER_UNIFORM_FLOAT);
+        SetShaderValue(lightShader, light->locs.outerCutOff, (float[1]) { -1 }, SHADER_UNIFORM_FLOAT);
         SetShaderValue(lightShader, light->locs.distance, &light->data.distance, SHADER_UNIFORM_FLOAT);
         SetShaderValue(lightShader, light->locs.attenuation, &light->data.attenuation, SHADER_UNIFORM_FLOAT);
     }
