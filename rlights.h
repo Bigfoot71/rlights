@@ -2694,9 +2694,7 @@ void RLG_EnableShadow(unsigned int light, int shadowMapResolution)
         // If the light is an omnidirectional light, set up a cube map for shadows
         if (l->data.type == RLG_OMNILIGHT)
         {
-            glGenFramebuffers(1, &sm->id);
             glGenTextures(1, &sm->depth.id);
-
             glBindTexture(GL_TEXTURE_CUBE_MAP, sm->depth.id);
             glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
             glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -2710,6 +2708,7 @@ void RLG_EnableShadow(unsigned int light, int shadowMapResolution)
             }
             glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 
+            glGenFramebuffers(1, &sm->id);
             glBindFramebuffer(GL_FRAMEBUFFER, sm->id);
             glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, sm->depth.id, 0);
             glDrawBuffer(GL_NONE);
