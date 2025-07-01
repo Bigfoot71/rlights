@@ -44,6 +44,8 @@
 #   endif
 #endif
 
+#define _RLIGHTS_RL55_MIPMAP_COUNT 0
+
 #include GL_HEADER
 
 #ifdef GL_EXT_HEADER
@@ -1918,7 +1920,7 @@ void RLG_DestroyContext(RLG_Context ctx)
 
     for (int i = 0; i < RLG_COUNT_SHADERS; i++)
     {
-        if (IsShaderReady(pCtx->shaders[i]))
+        if (IsShaderValid(pCtx->shaders[i]))
         {
             UnloadShader(pCtx->shaders[i]);
             pCtx->shaders[i] = INIT_STRUCT_ZERO(Shader);
@@ -2731,7 +2733,7 @@ void RLG_EnableShadow(unsigned int light, int shadowMapResolution)
         else
         {
             // Set up a 2D texture for shadow map for other light types
-            sm->id = rlLoadFramebuffer(shadowMapResolution, shadowMapResolution);
+            sm->id = rlLoadFramebuffer();
             sm->width = sm->height = shadowMapResolution;
             rlEnableFramebuffer(sm->id);
 
@@ -3509,12 +3511,12 @@ RLG_Skybox RLG_LoadSkybox(const char* skyboxFileName)
         unsigned int rbo = rlLoadTextureDepth(size, size, true);
 
         // Create a cubemap texture to hold the HDR data
-        skybox.irradiance.id = rlLoadTextureCubemap(NULL, size, skybox.cubemap.format);
+        skybox.irradiance.id = rlLoadTextureCubemap(NULL, size, skybox.cubemap.format, _RLIGHTS_RL55_MIPMAP_COUNT);
         rlCubemapParameters(skybox.irradiance.id, RL_TEXTURE_MIN_FILTER, RL_TEXTURE_FILTER_LINEAR);
         rlCubemapParameters(skybox.irradiance.id, GL_TEXTURE_MAG_FILTER, RL_TEXTURE_FILTER_LINEAR);
 
         // Create and configure the framebuffer
-        unsigned int fbo = rlLoadFramebuffer(size, size);
+        unsigned int fbo = rlLoadFramebuffer();
         rlFramebufferAttach(fbo, rbo, RL_ATTACHMENT_DEPTH, RL_ATTACHMENT_RENDERBUFFER, 0);
         rlFramebufferAttach(fbo, skybox.irradiance.id, RL_ATTACHMENT_COLOR_CHANNEL0, RL_ATTACHMENT_CUBEMAP_POSITIVE_X, 0);
 
@@ -3590,7 +3592,7 @@ RLG_Skybox RLG_LoadSkyboxHDR(const char* skyboxFileName, int size, int format)
     RLG_Skybox skybox = { 0 };
 
     // Create a framebuffer object (FBO) to generate the skybox and irradiance map
-    unsigned int fbo = rlLoadFramebuffer(0, 0);
+    unsigned int fbo = rlLoadFramebuffer();
 
     // Generate the cubemap for the skybox
     {
@@ -3601,7 +3603,7 @@ RLG_Skybox RLG_LoadSkyboxHDR(const char* skyboxFileName, int size, int format)
         unsigned int rbo = rlLoadTextureDepth(size, size, true);
 
         // Create a cubemap texture to hold the HDR data
-        skybox.cubemap.id = rlLoadTextureCubemap(NULL, size, format);
+        skybox.cubemap.id = rlLoadTextureCubemap(NULL, size, format, _RLIGHTS_RL55_MIPMAP_COUNT);
 
         // Configure the framebuffer with the renderbuffer and cubemap texture
         rlFramebufferAttach(fbo, rbo, RL_ATTACHMENT_DEPTH, RL_ATTACHMENT_RENDERBUFFER, 0);
@@ -3680,12 +3682,12 @@ RLG_Skybox RLG_LoadSkyboxHDR(const char* skyboxFileName, int size, int format)
         unsigned int rbo = rlLoadTextureDepth(irrSize, irrSize, true);
 
         // Create a cubemap texture to hold the irradiance data
-        skybox.irradiance.id = rlLoadTextureCubemap(NULL, irrSize, skybox.cubemap.format);
+        skybox.irradiance.id = rlLoadTextureCubemap(NULL, irrSize, skybox.cubemap.format, _RLIGHTS_RL55_MIPMAP_COUNT);
         rlCubemapParameters(skybox.irradiance.id, RL_TEXTURE_MIN_FILTER, RL_TEXTURE_FILTER_LINEAR);
         rlCubemapParameters(skybox.irradiance.id, GL_TEXTURE_MAG_FILTER, RL_TEXTURE_FILTER_LINEAR);
 
         // Create and configure the framebuffer
-        unsigned int fbo = rlLoadFramebuffer(irrSize, irrSize);
+        unsigned int fbo = rlLoadFramebuffer();
         rlFramebufferAttach(fbo, rbo, RL_ATTACHMENT_DEPTH, RL_ATTACHMENT_RENDERBUFFER, 0);
         rlFramebufferAttach(fbo, skybox.irradiance.id, RL_ATTACHMENT_COLOR_CHANNEL0, RL_ATTACHMENT_CUBEMAP_POSITIVE_X, 0);
 
